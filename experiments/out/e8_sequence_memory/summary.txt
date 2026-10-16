@@ -1,25 +1,30 @@
 E8 Long-term sequence memory
 ============================
-Arena, 5 NPCs + 1 rival, 4 seeds x 1500 s; memory on vs off (pain-aversion metric learning on in both).
+Arena, 5 NPCs + 1 rival, 4 seeds x 1500 s (pain-aversion metric learning on in all).
 
-                                         memory ON            memory OFF
-NPC mean pain                       -0.368 ± 0.109        -0.171 ± 0.027
-engagements                         18.000 ± 7.106        10.750 ± 5.403
-solo engagements                    13.750 ± 3.631         9.750 ± 4.815
-total NPC injury                     7.815 ± 4.031         3.740 ± 1.764
-NPC immobile fraction                0.026 ± 0.010         0.014 ± 0.010
+                                      lambda=2            lambda=1                 off
+NPC mean pain                   -0.350 ± 0.083      -0.231 ± 0.146      -0.171 ± 0.027
+engagements                     23.000 ± 2.739      20.750 ± 1.299      10.750 ± 5.403
+solo engagements                20.250 ± 3.562      18.000 ± 1.414       9.750 ± 4.815
+total NPC injury                10.751 ± 0.940      10.095 ± 0.533       3.740 ± 1.764
+NPC immobile fraction            0.054 ± 0.010       0.041 ± 0.005       0.014 ± 0.010
+replaying fraction               0.447 ± 0.025       0.258 ± 0.075                   -
+stored appetitive             106.000 ± 12.227     94.500 ± 25.676                   -
+stored aversive               195.250 ± 10.034      87.250 ± 6.759                   -
+recalled appetitive             54.500 ± 6.344    106.000 ± 36.980                   -
+recalled aversive              208.500 ± 9.314     45.750 ± 14.532                   -
 
-Memory activity (NPCs, per seed):
-  seed 0: stored 125 appetitive / 60 aversive, merged 89, recalled 189x, replaying 32% of the time; pain change over 4 s after a replay starts +0.073 vs +0.045 after random ticks
-          memory-space signatures (npc0..npc4, rival): [(6, 2), (7, 1), (4, 4), (4, 4), (3, 5), (5, 2)]
-  seed 1: stored 129 appetitive / 56 aversive, merged 68, recalled 139x, replaying 24% of the time; pain change over 4 s after a replay starts +0.043 vs +0.011 after random ticks
-          memory-space signatures (npc0..npc4, rival): [(5, 3), (4, 4), (7, 1), (7, 1), (3, 5), (4, 4)]
-  seed 2: stored 84 appetitive / 74 aversive, merged 69, recalled 190x, replaying 32% of the time; pain change over 4 s after a replay starts +0.074 vs +0.051 after random ticks
-          memory-space signatures (npc0..npc4, rival): [(3, 5), (5, 3), (4, 4), (2, 6), (5, 3), (0, 0)]
-  seed 3: stored 87 appetitive / 87 aversive, merged 78, recalled 242x, replaying 41% of the time; pain change over 4 s after a replay starts +0.013 vs +0.069 after random ticks
-          memory-space signatures (npc0..npc4, rival): [(2, 6), (5, 3), (4, 4), (3, 5), (6, 2), (0, 0)]
+Memory activity with loss aversion (NPCs, per seed):
+  seed 0: stored 98 appetitive / 180 aversive, merged 131, recalled 57 appetitive / 202 aversive, replaying 44% of the time; pain change over 4 s after a replay starts +0.021 vs -0.000 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(3, 5), (5, 3), (1, 7), (4, 4), (3, 5), (0, 8)]
+  seed 1: stored 108 appetitive / 195 aversive, merged 115, recalled 61 appetitive / 212 aversive, replaying 46% of the time; pain change over 4 s after a replay starts +0.098 vs +0.007 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(3, 5), (2, 6), (1, 7), (3, 5), (3, 5), (2, 6)]
+  seed 2: stored 93 appetitive / 198 aversive, merged 88, recalled 44 appetitive / 198 aversive, replaying 41% of the time; pain change over 4 s after a replay starts -0.013 vs -0.001 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(1, 7), (2, 6), (3, 5), (2, 6), (2, 6), (1, 7)]
+  seed 3: stored 125 appetitive / 208 aversive, merged 143, recalled 56 appetitive / 222 aversive, replaying 47% of the time; pain change over 4 s after a replay starts -0.007 vs +0.029 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(3, 5), (1, 7), (2, 6), (2, 6), (2, 6), (0, 8)]
 
-Memory Clifford space of npc0 (seed 0): signature Cl(6, 2), eigenvalues [11.506, 4.897, 1.005, 0.818, -0.541, 0.409, 0.286, -0.259]
+Memory Clifford space of npc0 (seed 0): signature Cl(3, 5), eigenvalues [16.083, -11.037, -2.759, -2.138, -1.595, 1.193, 0.965, -0.826]
   Basis = leading eigenvectors of the valence-weighted second moment of stored (key, sequence) vectors;
   approach memories contribute +strength, escape memories -strength, so eigenvalue signs give the signature.
   Planes between two approach (or two escape) modes are elliptic; mixed approach/escape planes are hyperbolic,

@@ -3,8 +3,12 @@
 Behaviour sequences that ended in high reward (appetitive) or high pain relief
 (aversive) are stored with the sense data present when they began, and replayed
 as attractors when that sense data is approximately present in short-term memory.
-Compared: memory on vs off, 4 seeds x 1500 s, everything else equal.  Then the
-memory Clifford space: basis, signature Cl(p, q), and where memories lie in it.
+Compared, 4 seeds x 1500 s, everything else equal:
+  off          no long-term memory
+  lambda=1     memory, pain and reward weighted equally
+  lambda=2     memory with loss aversion: pain counts double when forming a memory,
+               and escape memories are twice as easy to trigger
+Then the memory Clifford space: basis, signature Cl(p, q), and where memories lie.
 """
 
 import os
@@ -40,11 +44,15 @@ def replay_outcomes(log, n_npcs, horizon_ticks=20):
     return np.array(starts), np.array(rand)
 
 
-rows = {True: [], False: []}
+CONDITIONS = {"lambda=2": LTMConfig(loss_aversion=2.0),
+              "lambda=1": LTMConfig(loss_aversion=1.0),
+              "off": None}
+rows = {name: [] for name in CONDITIONS}
 keep = None
-for use in (True, False):
+for name, ltm_cfg in CONDITIONS.items():
+    use = ltm_cfg is not None
     for sd in SEEDS:
-        ar = Arena(ArenaConfig(seed=sd, ltm=LTMConfig() if use else None))
+        ar = Arena(ArenaConfig(seed=sd, ltm=ltm_cfg))
         log = ar.run(T)
         n = ar.cfg.n_npcs
         r = dict(
@@ -61,6 +69,8 @@ for use in (True, False):
             r["stored_av"] = sum(e["what"] == "stored" and e["kind"] == AVERSIVE for e in ev)
             r["merged"] = sum(e["what"] == "merged" for e in ev)
             r["recalls"] = sum(e["what"] == "recalled" for e in ev)
+            r["recall_app"] = sum(e["what"] == "recalled" and e["kind"] == APPETITIVE for e in ev)
+            r["recall_av"] = sum(e["what"] == "recalled" and e["kind"] == AVERSIVE for e in ev)
             d_rep, d_rand = replay_outcomes(log, n)
             r["dpain_replay"], r["dpain_random"] = float(d_rep.mean()), float(d_rand.mean())
             sigs = []
@@ -68,9 +78,9 @@ for use in (True, False):
                 sp = a.ltm.build_space()
                 sigs.append(sp.signature if sp else (0, 0))
             r["signatures"] = sigs
-            if sd == SEEDS[0]:
+            if sd == SEEDS[0] and name == "lambda=2":
                 keep = ar
-        rows[use].append(r)
+        rows[name].append(r)
 
 # ---- memory Clifford space of one NPC -------------------------------------
 a0 = next(a for a in keep.agents if a.faction == NPC_FACTION and (a.ltm.slots["active"] == 1).sum() >= 4)
@@ -123,28 +133,31 @@ for ax, k, title in ((axes[1][0], APPETITIVE, "strongest appetitive memory"),
 save(fig, OUT, "memory_space.png")
 
 
-def agg(key, use=True):
-    x = np.array([r[key] for r in rows[use]], float)
+def agg(key, name):
+    x = np.array([r[key] for r in rows[name]], float)
     return f"{x.mean():.3f} ± {x.std():.3f}"
 
 
 lines = [
     "E8 Long-term sequence memory",
     "============================",
-    f"Arena, 5 NPCs + 1 rival, {len(SEEDS)} seeds x {T:.0f} s; memory on vs off (pain-aversion metric learning on in both).",
+    f"Arena, 5 NPCs + 1 rival, {len(SEEDS)} seeds x {T:.0f} s (pain-aversion metric learning on in all).",
     "",
-    f"{'':28s}{'memory ON':>22s}{'memory OFF':>22s}",
+    f"{'':26s}" + "".join(f"{n:>20s}" for n in CONDITIONS),
 ]
 for k, lab in (("pain", "NPC mean pain"), ("engagements", "engagements"), ("solo", "solo engagements"),
                ("npc_injury", "total NPC injury"), ("immobile", "NPC immobile fraction")):
-    lines.append(f"{lab:28s}{agg(k, True):>22s}{agg(k, False):>22s}")
+    lines.append(f"{lab:26s}" + "".join(f"{agg(k, n):>20s}" for n in CONDITIONS))
+for k, lab in (("replay", "replaying fraction"), ("stored_app", "stored appetitive"), ("stored_av", "stored aversive"),
+               ("recall_app", "recalled appetitive"), ("recall_av", "recalled aversive")):
+    lines.append(f"{lab:26s}" + "".join(f"{agg(k, n) if n != 'off' else '-':>20s}" for n in CONDITIONS))
 lines += [
     "",
-    "Memory activity (NPCs, per seed):",
+    "Memory activity with loss aversion (NPCs, per seed):",
 ]
-for sd, r in zip(SEEDS, rows[True]):
+for sd, r in zip(SEEDS, rows["lambda=2"]):
     lines.append(f"  seed {sd}: stored {r['stored_app']} appetitive / {r['stored_av']} aversive, merged {r['merged']}, "
-                 f"recalled {r['recalls']}x, replaying {r['replay']:.0%} of the time; "
+                 f"recalled {r['recall_app']} appetitive / {r['recall_av']} aversive, replaying {r['replay']:.0%} of the time; "
                  f"pain change over 4 s after a replay starts {r['dpain_replay']:+.3f} vs {r['dpain_random']:+.3f} after random ticks")
     lines.append(f"          memory-space signatures (npc0..npc4, rival): {r['signatures']}")
 lines += [

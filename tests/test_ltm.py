@@ -43,16 +43,16 @@ def test_reward_is_appetitive_and_similar_events_merge_into_one_attractor():
     m = SequenceMemory(LTMConfig())
     ctx = np.full(8, 0.3, np.float32)
     C = np.array([0.6, -0.2, 0.0, 0.4])                   # fighting together
-    ev1 = _feed(m, ctx, C, list(np.linspace(0.2, -0.8, 16)))
+    ev1 = _feed(m, ctx, C, list(np.linspace(0.0, -0.8, 16)))
     assert ev1["kind"] == APPETITIVE
     _feed(m, ctx, C, [0.0] * m.cfg.cooldown)
-    ev2 = _feed(m, ctx + 0.05, C, list(np.linspace(0.2, -0.8, 16)))
+    ev2 = _feed(m, ctx + 0.05, C, list(np.linspace(0.0, -0.8, 16)))
     assert ev2["what"] == "merged" and ev2["slot"] == ev1["slot"]
     assert (m.slots["active"] == 1).sum() == 1
 
 
 def test_recall_fires_only_when_the_context_is_in_stm_and_replays_in_order():
-    m = SequenceMemory(LTMConfig())
+    m = SequenceMemory(LTMConfig(match_radius=0.5, activation=0.5))
     key = np.array([0.9, 0.5, 0.0, 0.4, 0.2, 1.0, 0.1, 0.0], np.float32)
     seq = np.stack([np.array([0.0, 0.0, 0.1 * k, -0.5]) for k in range(16)])
     m.store(key, seq, AVERSIVE, 1.0)
@@ -69,7 +69,7 @@ def test_recall_fires_only_when_the_context_is_in_stm_and_replays_in_order():
 
 
 def test_attractor_settles_on_the_stronger_of_two_nearby_memories():
-    m = SequenceMemory(LTMConfig(merge_radius=0.01))
+    m = SequenceMemory(LTMConfig(merge_radius=0.01, match_radius=0.5, activation=0.5))
     k1 = np.full(8, 0.5, np.float32)
     k2 = k1 + np.float32(0.1)
     m.store(k1, np.full((16, 4), 1.0), APPETITIVE, 0.2)
@@ -100,3 +100,38 @@ def test_arena_with_ltm_runs():
     log = ar.run(200.0)
     assert np.all(np.isfinite(log["C"]))
     assert "replay" in log
+
+
+def test_loss_aversion_forming_pain_counts_double():
+    c = LTMConfig()
+    ctx = np.full(8, 0.2, np.float32)
+    C = np.zeros(4)
+    # a relief of x and a reward of x: the relief memory is twice as strong
+    m1, m2 = SequenceMemory(c), SequenceMemory(c)
+    e1 = _feed(m1, ctx, C, [0.5] * 8 + list(np.linspace(0.5, 0.0, 8)))     # relief 0.5
+    e2 = _feed(m2, ctx, C, [0.0] * 8 + list(np.linspace(0.0, -0.5, 8)))    # reward 0.5
+    assert e1["kind"] == AVERSIVE and e2["kind"] == APPETITIVE
+    assert np.isclose(m1.slots["strength"][e1["slot"]], 2 * m2.slots["strength"][e2["slot"]], rtol=1e-5)
+    # half the formation threshold is enough for pain, not for reward
+    x = 0.6 * c.form_threshold
+    m3, m4 = SequenceMemory(c), SequenceMemory(c)
+    assert _feed(m3, ctx, C, [x] * 8 + list(np.linspace(x, 0.0, 8))) is not None
+    assert _feed(m4, ctx, C, [0.0] * 8 + list(np.linspace(0.0, -x, 8))) is None
+
+
+def test_loss_aversion_triggering_escape_basin_is_wider():
+    c = LTMConfig()
+    key = np.full(8, 0.5, np.float32)
+    seq = np.zeros((16, 4))
+    # a cue at squared mismatch 1.5 x match_radius^2 (activation exp(-1.5) for a reward
+    # memory, exp(-0.75) for an escape memory) against threshold exp(-x) in between
+    off = np.sqrt(1.5) * c.match_radius / np.sqrt(8)
+    cue = key + np.float32(off)
+    c2 = LTMConfig(activation=float(np.exp(-1.0)))
+    fired = {}
+    for kind in (APPETITIVE, AVERSIVE):
+        m = SequenceMemory(c2)
+        m.store(key, seq, kind, 1.0)
+        m.observe(cue, np.zeros(4), 0.0, 0.0)
+        fired[kind] = m.recall() is not None
+    assert fired[AVERSIVE] and not fired[APPETITIVE]

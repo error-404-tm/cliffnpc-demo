@@ -97,8 +97,14 @@ class LTMConfig:
     n_slots: int = 64                   # memory slots
     n_modes: int = 8                    # basis vectors of the memory Clifford space
     vec_dim: int = 128                  # padded memory vector length (key + sequence)
-    relief_threshold: float = 0.6       # pain drop over a sequence that counts as relief
-    reward_threshold: float = 0.4       # net pleasure (negative pain) that counts as reward
+    # Loss aversion (Kahneman-Tversky, lambda ~ 2): a loss weighs twice a gain.
+    #   forming:    weighted valence = loss_aversion * relief (vs. 1 * reward); the
+    #               memory's strength is the weighted valence, and the same
+    #               formation threshold applies, so half the pain suffices;
+    #   triggering: escape memories tolerate loss_aversion x the squared mismatch
+    #               between key and STM (twice the evidence budget, sqrt(2) basin).
+    loss_aversion: float = 2.0
+    form_threshold: float = 0.4         # weighted valence needed to form a memory
     merge_radius: float = 0.35          # keys this close (and similar sequences) are merged
     match_radius: float = 0.25          # key distance scale for recall ("approximately present")
     activation: float = 0.8             # attractor activation threshold (0..1)

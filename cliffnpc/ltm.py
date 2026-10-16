@@ -173,15 +173,14 @@ class SequenceMemory:
         if self.hist_n < c.seq_len:
             return None
         pains = self._chrono(self.pain, self.hist_n, c.seq_len)
-        # relief: pain removed (only the positive part counts); reward: pleasure gained
+        # relief: pain removed (only the positive part counts); reward: pleasure gained.
+        # Loss aversion: the pain side weighs loss_aversion times as much.
         relief = float(max(pains[:-1].max(), 0.0) - max(pains[-1], 0.0))
-        reward = float(max(-pains[-1], 0.0)) if pains[0] - pains[-1] > 0.5 * c.reward_threshold else 0.0
-        if relief >= c.relief_threshold and relief >= reward:
-            kind, val = AVERSIVE, relief
-        elif reward >= c.reward_threshold:
-            kind, val = APPETITIVE, reward
-        else:
+        reward = float(max(-pains[-1], 0.0)) if pains[0] - pains[-1] > 0.5 * c.form_threshold else 0.0
+        w_relief, w_reward = c.loss_aversion * relief, reward
+        if max(w_relief, w_reward) < c.form_threshold:
             return None
+        kind, val = (AVERSIVE, w_relief) if w_relief >= w_reward else (APPETITIVE, w_reward)
         seq = self._chrono(self.beh, self.hist_n, c.seq_len)
         key = self._chrono(self.sense_hist, self.hist_n, c.seq_len)[0]
         self.cool = c.cooldown
@@ -189,6 +188,8 @@ class SequenceMemory:
 
     # --- store ---------------------------------------------------------------
     def store(self, key: np.ndarray, seq: np.ndarray, kind: int, valence: float) -> dict:
+        """valence: the *weighted* valence (loss aversion already applied); it
+        becomes the memory's strength."""
         c = self.cfg
         s = self.slots
         act = np.nonzero(s["active"] == 1)[0]
@@ -243,13 +244,15 @@ class SequenceMemory:
             return None
         stm = self.stm[:n_stm]
         keys = s["key"][act]
-        d2 = ((stm[:, None, :] - keys[None, :, :]) ** 2).sum(-1) / c.match_radius ** 2
+        # loss aversion: escape memories tolerate loss_aversion x the squared mismatch
+        tol = np.where(s["kind"][act] == AVERSIVE, c.loss_aversion, 1.0) * c.match_radius ** 2
+        d2 = ((stm[:, None, :] - keys[None, :, :]) ** 2).sum(-1) / tol
         support = np.exp(-d2.min(axis=0))              # how present each key is in STM
         cue = stm[np.unravel_index(np.argmin(d2), d2.shape)[0]].astype(float)
         logw = np.log(np.maximum(s["strength"][act], 1e-6))
         q = cue
         for _ in range(c.hopfield_iters):              # settle into a basin
-            e = -((keys - q) ** 2).sum(-1) / c.match_radius ** 2
+            e = -((keys - q) ** 2).sum(-1) / tol
             w = np.exp(c.hopfield_beta * e + logw - (c.hopfield_beta * e + logw).max())
             w /= w.sum()
             q = w @ keys
