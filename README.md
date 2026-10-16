@@ -18,23 +18,51 @@ cliffnpc/
   sim.py        single-NPC main loop (multirate, optional surprise gating), logging
   memory.py     Phase 3: episodes, place rotors, collective metric, LOD transitions, gossip
   village.py    Phase 3: many tiered NPCs, social graph
+  viewer.py     live viewer (matplotlib window, or headless GIF/MP4 render)
   config.py     every tunable constant
 experiments/    e1..e6, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/          37 tests (Phase 1 geometry + Phase 3 memory)
+tests/          39 tests (Phase 1 geometry, Phase 3 memory, viewer smoke test)
 ```
 
 ## Running it
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 37 tests, ~5 s
+.venv/bin/python -m pytest -q          # 39 tests, ~8 s
 experiments/run_all.sh                 # all experiments; e6 takes ~4 min
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
 
 The venv was created with `python3 -m venv .venv && .venv/bin/pip install numpy
-scipy matplotlib pytest` (Python 3.14, NumPy 2.5, SciPy 1.18). No live viewer
-was built; the spec marks it optional.
+scipy matplotlib pytest` (Python 3.14, NumPy 2.5, SciPy 1.18).
+
+## Live viewer
+
+```bash
+.venv/bin/python -m cliffnpc.viewer                    # interactive window (needs a display)
+.venv/bin/python -m cliffnpc.viewer --save run.gif --seconds 60 --threat-at 20   # headless
+```
+
+Panels:
+* **World:** the NPC is coloured by regime (blue deliberative, red reactive, grey
+  null), with its sensor radius, trail, food, home, peers, the haunted disc, and the
+  threat (large while attacking).
+* **Drives:** each drive's coefficient ("does") next to its projection ("feels").
+* **Light cone:** the state in the NPC's own orthonormal frame, so
+  s = x² − y² exactly. x is the size of the hunger/social/explore part and y is threat.
+* **Learned personality:** g − η as a heatmap, with the numbers in the info panel.
+* **Strip chart:** the last 60 s of s/|C|² (reactive stretches shaded) and frustration |C∧B|.
+
+Controls: `space` pause, `t` threat attacks now, `h` haunted disc on/off, `r` reset,
+`+`/`-` speed, `q` quit, left click moves the food, right click moves home.
+
+It uses only matplotlib (TkAgg). The interactive mode blits: static parts are
+drawn once, and only the moving artists are redrawn each frame. Scale changes are
+quantized so full redraws stay rare. Text is by far the slowest thing to draw
+here (~30 ms per block), so the two text panels re-render every 10th frame and
+their cached pixels are pasted in between. That gives about 18 fps on this
+machine (a full redraw is ~400 ms). `--save` renders every frame in full, so a
+60 s GIF takes a few minutes.
 
 ## Conventions (fixed in `algebra.py`)
 
@@ -144,5 +172,5 @@ of cognitive ticks are skipped with identical meals and cone crossings over
 * Place-memory replay exists, but no experiment demonstrates it persisting yet.
 * A hyperbolic personality plane needs a real saturation law; the state cap is
   only a NaN guard.
-* Not done: Cl(3,1,1) null-direction drift, reconstructive recall, a live
-  viewer, porting to a GA library (Kingdon).
+* Not done: Cl(3,1,1) null-direction drift, reconstructive recall, a village
+  mode for the viewer, porting to a GA library (Kingdon).

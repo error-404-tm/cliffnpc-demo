@@ -86,6 +86,8 @@ class Threat:
     lair: np.ndarray
     # Optional scripted attack windows [(t_start, t_end), ...]; overrides period.
     schedule: list | None = None
+    # Extra one-off attack windows (e.g. triggered from the viewer); always honoured.
+    forced: list = field(default_factory=list)
     active: bool = True
     contact_radius: float = 1.5
     wander_sigma: float = 3.0        # spread of idle wandering around the lair
@@ -96,6 +98,9 @@ class Threat:
         """Start time of the attack window containing t, or None."""
         if not self.active:
             return None
+        for a, b in self.forced:
+            if a <= t < b:
+                return a
         if self.schedule is not None:
             for a, b in self.schedule:
                 if a <= t < b:
@@ -103,6 +108,10 @@ class Threat:
             return None
         start = (t // self.period) * self.period + self.period - self.attack_len
         return start if t >= start else None
+
+    def force_attack(self, t: float, length: float | None = None) -> None:
+        """Start an attack now, independent of the periodic schedule."""
+        self.forced.append((t, t + (self.attack_len if length is None else length)))
 
     def attacking(self, t: float) -> bool:
         w = self.window(t)
