@@ -8,6 +8,8 @@ Compared, 4 seeds x 1500 s, everything else equal:
   lambda=1     memory, pain and reward weighted equally
   lambda=2     memory with loss aversion: pain counts double when forming a memory,
                and escape memories are twice as easy to trigger
+Recall is gated by present affect: a relief memory needs the pain it relieved to
+be present now; reward memories are weighted by present reward (floor 0.5).
 Then the memory Clifford space: basis, signature Cl(p, q), and where memories lie.
 """
 
@@ -71,6 +73,9 @@ for name, ltm_cfg in CONDITIONS.items():
             r["recalls"] = sum(e["what"] == "recalled" for e in ev)
             r["recall_app"] = sum(e["what"] == "recalled" and e["kind"] == APPETITIVE for e in ev)
             r["recall_av"] = sum(e["what"] == "recalled" and e["kind"] == AVERSIVE for e in ev)
+            av = [e for e in ev if e["what"] == "recalled" and e["kind"] == AVERSIVE]
+            r["relief_pain"] = float(np.mean([e["pain_now"] for e in av])) if av else float("nan")
+            r["relief_painless"] = float(np.mean([e["pain_now"] < 0.05 for e in av])) if av else float("nan")
             d_rep, d_rand = replay_outcomes(log, n)
             r["dpain_replay"], r["dpain_random"] = float(d_rep.mean()), float(d_rand.mean())
             sigs = []
@@ -149,7 +154,8 @@ for k, lab in (("pain", "NPC mean pain"), ("engagements", "engagements"), ("solo
                ("npc_injury", "total NPC injury"), ("immobile", "NPC immobile fraction")):
     lines.append(f"{lab:26s}" + "".join(f"{agg(k, n):>20s}" for n in CONDITIONS))
 for k, lab in (("replay", "replaying fraction"), ("stored_app", "stored appetitive"), ("stored_av", "stored aversive"),
-               ("recall_app", "recalled appetitive"), ("recall_av", "recalled aversive")):
+               ("recall_app", "recalled appetitive"), ("recall_av", "recalled aversive"),
+               ("relief_pain", "pain at relief recall"), ("relief_painless", "relief recalls w/o pain")):
     lines.append(f"{lab:26s}" + "".join(f"{agg(k, n) if n != 'off' else '-':>20s}" for n in CONDITIONS))
 lines += [
     "",

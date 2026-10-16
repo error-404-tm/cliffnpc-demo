@@ -236,7 +236,8 @@ class Arena:
         if self.cfg.learning:
             npc.commit_frame(a.affect.learn(npc.L), ok)
         if a.ltm is not None:
-            a.ltm.observe(sense_vector(self, a, X, p), npc.C, a.affect.pain, self.t)
+            a.ltm.observe(sense_vector(self, a, X, p), npc.C, a.affect.pain, self.t,
+                          affect=a.affect.cfg.weights * a.affect.a)
         if a.mobile and p.threat_vec is not None:
             self.decisions.append((self.t, i, self.allies_near(a), *map(float, npc.C)))
 

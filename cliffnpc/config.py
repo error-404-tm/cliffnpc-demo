@@ -105,6 +105,14 @@ class LTMConfig:
     #               between key and STM (twice the evidence budget, sqrt(2) basin).
     loss_aversion: float = 2.0
     form_threshold: float = 0.4         # weighted valence needed to form a memory
+    # Present-affect gating: a memory records which pains it relieved (or which
+    # rewards it brought) as a profile over the affect axes; recall is weighted
+    # by the agent's present affect along that profile.  Relief memories need
+    # that pain to be present now; reward memories are boosted by present reward.
+    affect_dim: int = 4                 # hunger, social, injury, unattributed (power of two)
+    gate_scale: float = 0.3             # pain/reward (weighted affect units) for gate ~ tanh(1)
+    reward_floor: float = 0.5           # reward-memory gate with no reward present (0 = strict)
+    relief_release: float = 0.25        # a relief replay stops when its pain gate drops below this
     merge_radius: float = 0.35          # keys this close (and similar sequences) are merged
     match_radius: float = 0.25          # key distance scale for recall ("approximately present")
     activation: float = 0.8             # attractor activation threshold (0..1)

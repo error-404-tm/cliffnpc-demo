@@ -68,6 +68,7 @@ def memory_dtype(cfg: LTMConfig) -> np.dtype:
         ("strength", "<f4"),
         ("t", "<f4"),
         ("uses", "<f4"),
+        ("profile", "<f4", (cfg.affect_dim,)),   # affect axes this memory relieved / rewarded
         ("kind", "<i4"),
         ("active", "<i4"),
     ], align=True)
@@ -79,7 +80,7 @@ def memory_dtype(cfg: LTMConfig) -> np.dtype:
 
 def check_pow2(cfg: LTMConfig) -> None:
     for name in ("sense_dim", "stm_len", "seq_len", "hist_len", "stride", "n_slots",
-                 "n_modes", "vec_dim"):
+                 "n_modes", "vec_dim", "affect_dim"):
         if not is_pow2(getattr(cfg, name)):
             raise ValueError(f"LTMConfig.{name} must be a power of two")
     if cfg.hist_len < cfg.seq_len:
@@ -130,6 +131,9 @@ class SequenceMemory:
         self.beh = aligned_zeros((c.hist_len, 4), f4)
         self.pain = aligned_zeros((c.hist_len,), f4)
         self.sense_hist = aligned_zeros((c.hist_len, c.sense_dim), f4)
+        self.aff_hist = aligned_zeros((c.hist_len, c.affect_dim), f4)
+        self.aff_now = aligned_zeros((c.affect_dim,), f4)   # present weighted affect
+        self.gate = 0.0
         self.slots = aligned_zeros((c.n_slots,), memory_dtype(c))
         self.stm_n = self.hist_n = 0
         self.tick = 0
@@ -150,11 +154,22 @@ class SequenceMemory:
         return buf[idx]
 
     # --- observe -------------------------------------------------------------
-    def observe(self, sense: np.ndarray, C: np.ndarray, pain: float, t: float) -> dict | None:
+    def observe(self, sense: np.ndarray, C: np.ndarray, pain: float, t: float,
+                affect: np.ndarray | None = None) -> dict | None:
         """Record one cognitive tick; every `stride` ticks also sample behaviour,
-        and store a sequence if it ended in relief or reward."""
+        and store a sequence if it ended in relief or reward.
+
+        affect: the present *weighted* affect per axis (+ pain, - reward), whose
+        sum is `pain`.  Without it, the pain is filed on the last
+        ("unattributed") axis.
+        """
         c = self.cfg
         self.t = t
+        self.aff_now[:] = 0.0
+        if affect is None:
+            self.aff_now[-1] = pain
+        else:
+            self.aff_now[:len(affect)] = affect
         self.stm[self.stm_n % c.stm_len] = sense
         self.stm_n += 1
         self.tick += 1
@@ -164,6 +179,7 @@ class SequenceMemory:
         self.beh[k] = C
         self.pain[k] = pain
         self.sense_hist[k] = sense
+        self.aff_hist[k] = self.aff_now
         self.hist_n += 1
         act = self.slots["active"] == 1
         self.slots["strength"][act] *= (1.0 - c.decay)
@@ -183,15 +199,26 @@ class SequenceMemory:
         kind, val = (AVERSIVE, w_relief) if w_relief >= w_reward else (APPETITIVE, w_reward)
         seq = self._chrono(self.beh, self.hist_n, c.seq_len)
         key = self._chrono(self.sense_hist, self.hist_n, c.seq_len)[0]
+        A = self._chrono(self.aff_hist, self.hist_n, c.seq_len)
+        if kind == AVERSIVE:     # which pains went away
+            prof = np.maximum(A[:-1].max(axis=0), 0) - np.maximum(A[-1], 0)
+        else:                    # which rewards appeared
+            prof = np.maximum(-A[-1], 0) - np.maximum(-A[0], 0)
         self.cool = c.cooldown
-        return self.store(key, seq, kind, val)
+        return self.store(key, seq, kind, val, np.maximum(prof, 0))
 
     # --- store ---------------------------------------------------------------
-    def store(self, key: np.ndarray, seq: np.ndarray, kind: int, valence: float) -> dict:
+    def store(self, key: np.ndarray, seq: np.ndarray, kind: int, valence: float,
+              profile: np.ndarray | None = None) -> dict:
         """valence: the *weighted* valence (loss aversion already applied); it
-        becomes the memory's strength."""
+        becomes the memory's strength.  profile: affect axes it relieved/rewarded
+        (normalized here; default: all axes equally)."""
         c = self.cfg
         s = self.slots
+        prof = np.ones(c.affect_dim) if profile is None else np.asarray(profile, float)
+        if np.linalg.norm(prof) < 1e-9:
+            prof = np.ones(c.affect_dim)
+        prof = prof / np.linalg.norm(prof)
         act = np.nonzero(s["active"] == 1)[0]
         if len(act):
             dk = np.linalg.norm(s["key"][act] - key, axis=1)
@@ -202,6 +229,8 @@ class SequenceMemory:
                 w0, w1 = float(s["strength"][j]), valence
                 s["key"][j] = (w0 * s["key"][j] + w1 * key) / (w0 + w1)
                 s["seq"][j] = (w0 * s["seq"][j] + w1 * seq) / (w0 + w1)
+                p = w0 * s["profile"][j] + w1 * prof
+                s["profile"][j] = p / max(np.linalg.norm(p), 1e-9)
                 s["strength"][j] = w0 + w1
                 s["valence"][j] = max(float(s["valence"][j]), valence)
                 s["t"][j] = self.t
@@ -217,11 +246,29 @@ class SequenceMemory:
         s["strength"][j] = valence
         s["t"][j] = self.t
         s["kind"][j] = kind
+        s["profile"][j] = prof
         s["active"][j] = 1
         ev = dict(t=self.t, what="stored", slot=j, kind=kind, valence=valence,
                   evicted=not len(free))
         self.events.append(ev)
         return ev
+
+    # --- present-affect gate -------------------------------------------------
+    def gates(self, idx: np.ndarray) -> np.ndarray:
+        """Weight of each memory given the present affect.
+
+        Relief memory: tanh(present pain on the axes it relieved / scale), so ~0
+        when that pain is not happening.  Reward memory: floor + (1 - floor) *
+        tanh(present reward on its axes / scale).
+        """
+        c = self.cfg
+        s = self.slots
+        pain_now = np.maximum(self.aff_now, 0.0)
+        reward_now = np.maximum(-self.aff_now, 0.0)
+        prof = s["profile"][idx]
+        g_relief = np.tanh(prof @ pain_now / c.gate_scale)
+        g_reward = c.reward_floor + (1 - c.reward_floor) * np.tanh(prof @ reward_now / c.gate_scale)
+        return np.where(s["kind"][idx] == AVERSIVE, g_relief, g_reward)
 
     # --- recall --------------------------------------------------------------
     def recall(self) -> np.ndarray | None:
@@ -231,6 +278,9 @@ class SequenceMemory:
         s = self.slots
         if self.replay_slot >= 0:
             j, k = self.replay_slot, self.replay_step // c.stride
+            self.gate = float(self.gates(np.array([j]))[0])
+            if s["kind"][j] == AVERSIVE and self.gate < c.relief_release:
+                k = c.seq_len            # the pain is gone: stop seeking relief from it
             if k >= c.seq_len:
                 self.replay_slot = -1
                 self.activation = 0.0
@@ -247,9 +297,10 @@ class SequenceMemory:
         # loss aversion: escape memories tolerate loss_aversion x the squared mismatch
         tol = np.where(s["kind"][act] == AVERSIVE, c.loss_aversion, 1.0) * c.match_radius ** 2
         d2 = ((stm[:, None, :] - keys[None, :, :]) ** 2).sum(-1) / tol
-        support = np.exp(-d2.min(axis=0))              # how present each key is in STM
+        gate = self.gates(act)                          # present pain / reward weighting
+        support = np.exp(-d2.min(axis=0)) * gate        # how present each key is in STM
         cue = stm[np.unravel_index(np.argmin(d2), d2.shape)[0]].astype(float)
-        logw = np.log(np.maximum(s["strength"][act], 1e-6))
+        logw = np.log(np.maximum(s["strength"][act] * gate, 1e-12))
         q = cue
         for _ in range(c.hopfield_iters):              # settle into a basin
             e = -((keys - q) ** 2).sum(-1) / tol
@@ -258,13 +309,15 @@ class SequenceMemory:
             q = w @ keys
         win = int(np.argmax(w))
         self.activation = float(support[win])
+        self.gate = float(gate[win])
         if self.activation < c.activation:
             return None
         j = int(act[win])
         s["uses"][j] += 1
         self.replay_slot, self.replay_step = j, 1
         self.events.append(dict(t=self.t, what="recalled", slot=j, kind=int(s["kind"][j]),
-                                activation=self.activation))
+                                activation=self.activation, gate=self.gate,
+                                pain_now=float(np.maximum(self.aff_now, 0).sum())))
         return s["seq"][j][0].astype(float)
 
     # --- memory Clifford space ----------------------------------------------

@@ -60,7 +60,7 @@ def test_recall_fires_only_when_the_context_is_in_stm_and_replays_in_order():
     for _ in range(40):                                   # unrelated situation
         m.observe(other + 0.9, np.zeros(4), 0.0, 0.0)
     assert m.recall() is None
-    m.observe(key + 0.05, np.zeros(4), 0.0, 0.0)          # approximately present
+    m.observe(key + 0.05, np.zeros(4), 1.0, 0.0)          # approximately present, pain present
     first = m.recall()
     assert first is not None and np.allclose(first, seq[0])
     replayed = [first] + [m.recall() for _ in range(16 * m.cfg.stride - 1)]
@@ -74,7 +74,7 @@ def test_attractor_settles_on_the_stronger_of_two_nearby_memories():
     k2 = k1 + np.float32(0.1)
     m.store(k1, np.full((16, 4), 1.0), APPETITIVE, 0.2)
     m.store(k2, np.full((16, 4), -1.0), APPETITIVE, 3.0)
-    m.observe(0.5 * (k1 + k2), np.zeros(4), 0.0, 0.0)     # ambiguous cue, between them
+    m.observe(0.5 * (k1 + k2), np.zeros(4), -1.0, 0.0)    # ambiguous cue, between them
     target = m.recall()
     assert target is not None and np.allclose(target, -1.0)
 
@@ -132,6 +132,57 @@ def test_loss_aversion_triggering_escape_basin_is_wider():
     for kind in (APPETITIVE, AVERSIVE):
         m = SequenceMemory(c2)
         m.store(key, seq, kind, 1.0)
-        m.observe(cue, np.zeros(4), 0.0, 0.0)
+        m.observe(cue, np.zeros(4), 1.0 if kind == AVERSIVE else -1.0, 0.0)   # matching affect present
         fired[kind] = m.recall() is not None
     assert fired[AVERSIVE] and not fired[APPETITIVE]
+
+
+def _injury_relief_memory(cfg=None):
+    m = SequenceMemory(cfg or LTMConfig(match_radius=0.5, activation=0.5))
+    key = np.full(8, 0.4, np.float32)
+    m.store(key, np.zeros((16, 4)), AVERSIVE, 1.0, profile=np.array([0.0, 0.0, 1.0, 0.0]))
+    return m, key
+
+
+def test_relief_needs_that_pain_to_be_present_now():
+    for affect, should_fire in (([0.0, 0.0, 0.0], False),      # no pain at all
+                                ([0.8, 0.0, 0.0], False),      # only hungry: wrong pain
+                                ([0.0, -0.5, 0.0], False),     # pleasant company
+                                ([0.0, 0.0, 1.2], True)):      # injured: the pain it relieved
+        m, key = _injury_relief_memory()
+        m.observe(key, np.zeros(4), float(sum(affect)), 0.0, affect=np.array(affect))
+        assert (m.recall() is not None) == should_fire, affect
+
+
+def test_relief_replay_stops_when_the_pain_goes_away():
+    m, key = _injury_relief_memory()
+    m.observe(key, np.zeros(4), 1.2, 0.0, affect=np.array([0.0, 0.0, 1.2]))
+    assert m.recall() is not None and m.replay_slot >= 0
+    m.observe(key, np.zeros(4), 0.0, 0.0, affect=np.array([0.0, 0.0, 0.0]))
+    assert m.recall() is None and m.replay_slot == -1
+
+
+def test_reward_memories_are_weighted_by_present_reward():
+    strict = LTMConfig(match_radius=0.5, activation=0.5, reward_floor=0.0)
+    key = np.full(8, 0.4, np.float32)
+    fired = []
+    for affect in ([0.0, 0.0, 0.0], [0.0, -0.6, 0.0]):
+        m = SequenceMemory(strict)
+        m.store(key, np.zeros((16, 4)), APPETITIVE, 1.0, profile=np.array([0.0, 1.0, 0.0, 0.0]))
+        m.observe(key, np.zeros(4), float(sum(affect)), 0.0, affect=np.array(affect))
+        fired.append(m.recall() is not None)
+    assert fired == [False, True]
+
+
+def test_stored_profile_names_the_relieved_pain():
+    m = SequenceMemory(LTMConfig())
+    ctx = np.full(8, 0.2, np.float32)
+    first = None
+    for k in range(16):
+        inj = 1.5 if k < 8 else 1.5 * (15 - k) / 7
+        for _ in range(m.cfg.stride):
+            ev = m.observe(ctx, np.zeros(4), 0.2 + inj, 0.0, affect=np.array([0.2, 0.0, inj]))
+            first = first or ev
+    assert first["kind"] == AVERSIVE
+    prof = m.slots["profile"][first["slot"]]
+    assert np.argmax(prof) == 2 and prof[0] < 0.1       # injury relieved; hunger untouched
