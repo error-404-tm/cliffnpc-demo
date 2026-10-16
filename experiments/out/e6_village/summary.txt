@@ -1,0 +1,30 @@
+E6 Village (Phase 3)
+====================
+30 villagers: 3 episodic, 9 metric, 18 background; social graph 61 edges; 4 runs of 300 s (gossip on/off x event on/off) in 266 s wall time.
+Threat attacked villager 0 at t=60s; 3 villagers sensed it: [0, 1, 29].
+
+Event footprint |g_i(with event) - g_i(without)| for individuals (episodic+metric), by graph distance:
+  distance 0: at t=170s with gossip 0.0287, without 0.0832;  with gossip: half of peak after 5 s, peak 0.1499 at +10 s
+  distance 1: at t=170s with gossip 0.0106, without 0.0033;  with gossip: half of peak after 17 s, peak 0.0142 at +54 s
+  distance 2: at t=170s with gossip 0.0020, without 0.0087;  with gossip: half of peak after 25 s, peak 0.0037 at +56 s
+  distance 3: at t=170s with gossip 0.0032, without 0.0003;  with gossip: half of peak after 43 s, peak 0.0044 at +58 s
+  distance 4: at t=170s with gossip 0.0035, without 0.0016;  with gossip: half of peak after 76 s, peak 0.0040 at +100 s
+  distance 5: at t=170s with gossip 0.0056, without 0.0069;  with gossip: half of peak after 75 s, peak 0.0057 at +110 s
+  collective metric footprint at t=170s: with gossip 0.0029, without 0.0015
+
+LOD transitions:
+  promoted background villager 14 (far side of the ring) at t=180: |g_new - g_collective| = 0.0319; the collective had drifted |g_col - eta| = 0.0237 since the start, so the newcomer starts
+  with the town's current temperament (its recent history), plus a small personal perturbation.
+  demoted episodic villager 4 at t=220: 8 stored episodes consolidated chronologically (plus 57 folded earlier on eviction); |delta g| from the consolidation = 0.0041.
+
+Reading:
+  * With gossip the footprint travels outward along the social graph: the time to reach half its
+    peak grows with every hop, and the size drops sharply after the first hop.  Reputation and
+    fear spread as a change in how people feel, not as stored facts.
+  * Gossip also comforts the victims: the directly hit villagers end up with a smaller footprint
+    than without gossip, because their neighbours' calmer metrics pull them back.
+  * Without gossip, footprints beyond distance 0 are not transmitted metric.  They come from
+    behaviour: villagers sense each other as peers, so the attack changes everyone's trajectories
+    a little (chaotic divergence), and with it their residuals.
+  * Background villagers cost almost nothing individually, yet they feel the event through the
+    collective metric, which also receives the individuals' diffusion.

@@ -1,0 +1,30 @@
+E2 Light-cone snap
+==================
+Full sim, 500 s, threat attacks every 120 s:
+  deliberative->reactive crossings: 7 (4 threat-driven, 3 transits)
+  threat #1: crossed at t=116.2s (closest approach t=126.4s, d=0.0); reactive for 16.6s; velocity toward threat +1.28 before -> already in contact
+  threat #2: crossed at t=235.6s (closest approach t=240.8s, d=0.0); reactive for 24.4s; velocity toward threat +1.17 before -> already in contact
+  threat #3: crossed at t=355.6s (closest approach t=359.6s, d=0.0); reactive for 21.8s; velocity toward threat +0.98 before -> +4.99 after
+  threat #4: crossed at t=473.4s (closest approach t=484.4s, d=0.0); reactive for 23.0s; velocity toward threat +1.31 before -> +4.99 after
+  Each threat approach pushes the state through the null cone a few seconds before contact, and
+  steering becomes threat-dominated.  This temperament fights (C⁴ > 0, approach): it was hungry and
+  home-leaning, and the e34 generator M(e4,e3) turns 'home' into 'fight' (the sign of C³ when the
+  threat arrives picks fight or flight, see coupling.CHANNELS).  It stays reactive for ~15-25 s
+  because threat damping is the slowest (fear lingers).
+  transit: t=152.2s, reactive for 0.4s, hunger +0.82 -> +0.26 with residual threat +0.30
+  transit: t=278.4s, reactive for 0.4s, hunger +0.87 -> +0.30 with residual threat +0.33
+  transit: t=395.4s, reactive for 0.4s, hunger +0.84 -> +0.27 with residual threat +0.31
+  Transits are a second, unplanned way to snap: when eating sweeps hunger through zero while
+  fear from the last encounter is still decaying, the state briefly becomes threat-dominated.
+  It is a real knife-edge (§2.3), but the steering might want hysteresis to ignore it.
+
+Mechanism (drive space only, constant boost for 8 time units):
+  (a) no damping                                s: +0.198 -> +0.198
+  (b) isotropic damping 0.2                     s: +0.198 -> +0.008
+  (c) anisotropic (explore 0.5, threat 0.04)    s: +0.198 -> -0.654
+  (a) max |s(t) - s(0)| = 1.2e-13: a boost is an isometry, so on its own it can NEVER cross
+      the cone; it only drives the state toward the null direction (s/|C|^2 -> 0).
+  CORRECTION TO SPEC §2.3: 'boosts can carry a state across the cone' needs a non-isometric partner.
+  Here it is the per-drive damping: with gamma_explore > gamma_threat the dominant eigenvector of
+  (phi K - Gamma) in the e3-e4 plane has |C4| > |C3|, i.e. it is timelike.  Fear lingering longer
+  than curiosity is what makes the snap possible.

@@ -1,0 +1,28 @@
+E5 Personality threshold
+========================
+Plane type of e2^e3 over the sweep: hyperbolic: |g23| > 1.00; parabolic: g23 = -1.00, +1.00; elliptic: |g23| < 1.00  (expected threshold |g23| = 1)
+Growth rate of M23 matches sqrt(g23^2 - 1): max deviation 4.44e-16.
+Metric family keeps signature (3,1) at every sweep point: True (with threat-social entanglement c=1.2).
+Without entanglement (c=0) the signature is lost for |g23| >= 1.00 (becomes (2,2) or degenerate),
+  Signature (3,1) allows exactly one timelike direction in the g-orthogonal sense.  If e2^e3 is
+  Lorentzian, its g-orthogonal complement must be positive definite, so e4 has to lean into the
+  social-explore plane (here g24 != 0) and take its timelike character from that plane.  Personally:
+  in a group-wanderlust NPC, threat is no longer independent of the social drive.
+
+Flow exp(t M23), max |C| over t in [0,12] from |C0|=0.32:
+  g23= 0.00:     0.316
+  g23= 0.50:     0.416
+  g23= 0.95:     1.269
+  g23= 1.05:    31.801
+  g23= 1.30:  6587.854
+
+NPC parked among peers (peer channel drives e23 rotation), learning frozen:
+  g23=0.5: max |C^i| = 0.707, final C = [ 0.707  0.151 -0.102 -0.05 ]
+  g23=1.3: max |C^i| = 5.236, final C = [ 0.302  2.942 -5.221 -0.01 ]
+
+Reading: below the threshold, peer density produces a bounded social<->explore tradeoff.  Above it
+the same forcing produces exponential reinforcement.  Here damping cannot hold it and the state
+saturates at the safety cap (|C| = 6.0) within ~10 s: one personality number crossing 1
+changes the qualitative dynamics, as §2.4 predicts.  Game-design consequence: a hyperbolic
+personality plane needs a real saturation law (e.g. damping that grows with |C|), not just the NaN
+guard.  The signature caveat above is worth carrying back into the design.

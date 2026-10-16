@@ -1,0 +1,34 @@
+E3 Order dependence
+===================
+NPC fixed at [40.0, 40.0]; events at t=50s and t=150s (20 s each); compared at t=400s.
+
+default (felt residual + forgetting)   ||g_TF - g_FT||_F = 0.0265   (mean ||g - eta||_F = 0.0314, ratio 84.5%)
+                                       signature TF (3, 1, 0), FT (3, 1, 0)
+no forgetting                          ||g_TF - g_FT||_F = 0.0069   (mean ||g - eta||_F = 0.4601, ratio 1.5%)
+                                       signature TF (3, 1, 0), FT (3, 1, 0)
+no forgetting, raw residual            ||g_TF - g_FT||_F = 0.0081   (mean ||g - eta||_F = 0.4589, ratio 1.8%)
+                                       signature TF (3, 1, 0), FT (3, 1, 0)
+... and no sensitivity/frustration scaling ||g_TF - g_FT||_F = 0.0000   (mean ||g - eta||_F = 0.4863, ratio 0.0%)
+                                       signature TF (3, 1, 0), FT (3, 1, 0)
+
+Reading:
+  * With forgetting (default) the final g depends strongly on order (84% of the surviving
+    change), but that is mostly recency: the later event has decayed less.  That is real temporal
+    memory, but any leaky accumulator does the same.
+  * Without forgetting, what is left is path dependence: 1.5% (felt residual), 1.8% (raw).
+    It comes from the state-dependent scales: the sensitivities |g^ii| (the first event changes how
+    strongly the second is weighted) and the frustration |C^B| (fear still lingering when the meal
+    arrives).
+  * With those scales off as well, the difference is 2.7e-05.  The matrix-exponential
+    commutator alone gives no usable memory at slow learning rates.
+
+Why (important for §5.2): for L <- exp(eps A) L with eta-self-adjoint A, the induced change is
+dg = L^T (2 eta A) L eps.  If the generator's image in g, here sigma c c^T, does not depend on the
+current g, the flow on g is additive and commutes to first order; only O(eps^2) terms remember
+order.  'Trauma then comfort != comfort then trauma' therefore needs a generator that depends on the
+current geometry at first order (sensitivities, frustration, felt residual, or a nonlinear A(r, g)),
+or large single-event updates (unit test: two strong events at eps=0.3 differ by a few percent).
+The felt residual (r lowered with g) only matters once g has sizeable off-diagonals, which this short
+scripted run never builds.
+Also fixed while building this experiment: world time used to accumulate float error, which
+shifted scripted events by one physics step and faked about 10% order dependence.
