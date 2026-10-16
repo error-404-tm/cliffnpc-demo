@@ -13,7 +13,7 @@ Three conditions, no threat:
 
 import numpy as np
 
-from common import DRIVE_COLORS, DRIVE_LABELS, outdir, plt, save, write_summary
+from common import DRIVE_COLORS, DRIVE_LABELS, outdir, plt, pmap, save, write_summary
 
 from cliffnpc import algebra as ga
 from cliffnpc.cognition import NPC
@@ -57,8 +57,11 @@ def cycle_stats(t, C1, t_min=300.0):
     return periods, np.array(amps)
 
 
-cfg, logB = closed_loop()
-_, logC = closed_loop(C_init=[1.0, 0.1, 0.6, -0.05], seed=3)
+def _closed(job):
+    return closed_loop(*job)
+
+
+(cfg, logB), (_, logC) = pmap(_closed, [(None, 0), ([1.0, 0.1, 0.6, -0.05], 3)])
 trajA = open_loop([1.0, 0.1, 0.6, -0.05], cfg)
 
 tB, CB = logB["t"], logB["C"]

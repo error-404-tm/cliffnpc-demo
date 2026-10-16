@@ -2,18 +2,18 @@ E2 Light-cone snap
 ==================
 Full sim, 500 s, threat attacks every 120 s:
   deliberative->reactive crossings: 7 (4 threat-driven, 3 transits)
-  threat #1: crossed at t=116.2s (closest approach t=126.4s, d=0.0); reactive for 16.6s; velocity toward threat +1.28 before -> already in contact
-  threat #2: crossed at t=235.6s (closest approach t=240.8s, d=0.0); reactive for 24.4s; velocity toward threat +1.17 before -> already in contact
-  threat #3: crossed at t=355.6s (closest approach t=359.6s, d=0.0); reactive for 21.8s; velocity toward threat +0.98 before -> +4.99 after
-  threat #4: crossed at t=473.4s (closest approach t=484.4s, d=0.0); reactive for 23.0s; velocity toward threat +1.31 before -> +4.99 after
+  threat #1: crossed at t=115.4s (closest approach t=118.8s, d=0.0); reactive for 9.6s; velocity toward threat +1.39 before -> already in contact
+  threat #2: crossed at t=234.0s (closest approach t=239.2s, d=0.0); reactive for 14.8s; velocity toward threat +0.89 before -> already in contact
+  threat #3: crossed at t=353.6s (closest approach t=361.6s, d=0.0); reactive for 20.2s; velocity toward threat +1.03 before -> already in contact
+  threat #4: crossed at t=474.8s (closest approach t=477.6s, d=0.0); reactive for 21.6s; velocity toward threat +1.23 before -> already in contact
   Each threat approach pushes the state through the null cone a few seconds before contact, and
   steering becomes threat-dominated.  This temperament fights (C⁴ > 0, approach): it was hungry and
   home-leaning, and the e34 generator M(e4,e3) turns 'home' into 'fight' (the sign of C³ when the
-  threat arrives picks fight or flight, see coupling.CHANNELS).  It stays reactive for ~15-25 s
+  threat arrives picks fight or flight, see coupling.CHANNELS).  It stays reactive for ~10-20 s
   because threat damping is the slowest (fear lingers).
-  transit: t=152.2s, reactive for 0.4s, hunger +0.82 -> +0.26 with residual threat +0.30
-  transit: t=278.4s, reactive for 0.4s, hunger +0.87 -> +0.30 with residual threat +0.33
-  transit: t=395.4s, reactive for 0.4s, hunger +0.84 -> +0.27 with residual threat +0.31
+  transit: t=142.0s, reactive for 0.4s, hunger +0.80 -> +0.25 with residual threat +0.32
+  transit: t=266.6s, reactive for 0.4s, hunger +0.85 -> +0.28 with residual threat +0.33
+  transit: t=393.2s, reactive for 0.4s, hunger +0.87 -> +0.30 with residual threat +0.32
   Transits are a second, unplanned way to snap: when eating sweeps hunger through zero while
   fear from the last encounter is still decaying, the state briefly becomes threat-dominated.
   It is a real knife-edge (§2.3), but the steering might want hysteresis to ignore it.

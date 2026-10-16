@@ -9,14 +9,14 @@ Part 1, pure transport (one loop, C = 0.5 e2):
   expected for an enclosing loop: Phi*pi*R^2 = 0.804248 rad (46.08 deg); outside: 0
 
 Part 2, full cognition (3 loops with coupling off, then free with coupling on):
-  |C_A - C_B| at release: 0.0282  (state norm ~0.79)
-  max |C_A - C_B| during loops: 0.0303
+  |C_A - C_B| at release: 0.0279  (state norm ~0.79)
+  max |C_A - C_B| during loops: 0.0302
   decay of the state difference after release: 1/e in 4.4 s
-  |C_A - C_B| at the end (t=388s): 4.65e-02
-  position difference at the end: 3.78  (max after release 7.49)
-  meal times A: [97.2, 144.0, 189.6, 232.8, 276.2, 319.6, 362.8]
-  meal times B: [97.2, 142.2, 187.8, 231.0, 274.2, 317.6, 363.2]
-  lag A - B   : [0.0, 1.8, 1.8, 1.8, 2.0, 2.0, -0.4] s
+  |C_A - C_B| at the end (t=388s): 2.15e-02
+  position difference at the end: 3.71  (max after release 12.07)
+  meal times A: [97.2, 142.0, 182.0, 222.2, 262.2, 307.8, 347.8]
+  meal times B: [97.2, 139.6, 182.8, 226.0, 266.0, 306.2, 349.4]
+  lag A - B   : [0.0, 2.4, -0.8, -3.8, -3.8, 1.6, -1.6] s
 
 Reading:
   * Holonomy is exactly topological: the result depends only on whether the loop encloses the

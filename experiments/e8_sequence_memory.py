@@ -18,7 +18,7 @@ import os
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
-from common import outdir, plt, save, write_summary  # noqa: E402
+from common import outdir, plt, pmap, save, write_summary  # noqa: E402
 
 from cliffnpc.arena import NPC_FACTION, Arena, ArenaConfig  # noqa: E402
 from cliffnpc.config import LTMConfig  # noqa: E402
@@ -49,43 +49,48 @@ def replay_outcomes(log, n_npcs, horizon_ticks=20):
 CONDITIONS = {"lambda=2": LTMConfig(loss_aversion=2.0),
               "lambda=1": LTMConfig(loss_aversion=1.0),
               "off": None}
+def one_run(job):
+    """One (condition, seed) arena run; returns its stats (and the arena kept for plots)."""
+    name, sd = job
+    ltm_cfg = CONDITIONS[name]
+    use = ltm_cfg is not None
+    ar = Arena(ArenaConfig(seed=sd, ltm=ltm_cfg))
+    log = ar.run(T)
+    n = ar.cfg.n_npcs
+    r = dict(
+        pain=float(log["pain"][:, :n].mean()),
+        engagements=len(ar.engagements),
+        solo=sum(e["n_max"] == 1 for e in ar.engagements),
+        npc_injury=float(sum(e["npc_taken"] for e in ar.engagements)),
+        immobile=float((~log["mobile"][:, :n]).mean()),
+    )
+    if use:
+        r["replay"] = float((log["replay"][:, :n] >= 0).mean())
+        ev = [e for a in ar.agents[:n] for e in a.ltm.events]
+        r["stored_app"] = sum(e["what"] == "stored" and e["kind"] == APPETITIVE for e in ev)
+        r["stored_av"] = sum(e["what"] == "stored" and e["kind"] == AVERSIVE for e in ev)
+        r["merged"] = sum(e["what"] == "merged" for e in ev)
+        r["recalls"] = sum(e["what"] == "recalled" for e in ev)
+        r["recall_app"] = sum(e["what"] == "recalled" and e["kind"] == APPETITIVE for e in ev)
+        r["recall_av"] = sum(e["what"] == "recalled" and e["kind"] == AVERSIVE for e in ev)
+        av = [e for e in ev if e["what"] == "recalled" and e["kind"] == AVERSIVE]
+        r["relief_pain"] = float(np.mean([e["pain_now"] for e in av])) if av else float("nan")
+        r["relief_painless"] = float(np.mean([e["pain_now"] < 0.05 for e in av])) if av else float("nan")
+        d_rep, d_rand = replay_outcomes(log, n)
+        r["dpain_replay"], r["dpain_random"] = float(d_rep.mean()), float(d_rand.mean())
+        sigs = []
+        for a in ar.agents:
+            sp = a.ltm.build_space()
+            sigs.append(sp.signature if sp else (0, 0))
+        r["signatures"] = sigs
+    return name, r, (ar if (sd == SEEDS[0] and name == "lambda=2") else None)
+
+
 rows = {name: [] for name in CONDITIONS}
 keep = None
-for name, ltm_cfg in CONDITIONS.items():
-    use = ltm_cfg is not None
-    for sd in SEEDS:
-        ar = Arena(ArenaConfig(seed=sd, ltm=ltm_cfg))
-        log = ar.run(T)
-        n = ar.cfg.n_npcs
-        r = dict(
-            pain=float(log["pain"][:, :n].mean()),
-            engagements=len(ar.engagements),
-            solo=sum(e["n_max"] == 1 for e in ar.engagements),
-            npc_injury=float(sum(e["npc_taken"] for e in ar.engagements)),
-            immobile=float((~log["mobile"][:, :n]).mean()),
-        )
-        if use:
-            r["replay"] = float((log["replay"][:, :n] >= 0).mean())
-            ev = [e for a in ar.agents[:n] for e in a.ltm.events]
-            r["stored_app"] = sum(e["what"] == "stored" and e["kind"] == APPETITIVE for e in ev)
-            r["stored_av"] = sum(e["what"] == "stored" and e["kind"] == AVERSIVE for e in ev)
-            r["merged"] = sum(e["what"] == "merged" for e in ev)
-            r["recalls"] = sum(e["what"] == "recalled" for e in ev)
-            r["recall_app"] = sum(e["what"] == "recalled" and e["kind"] == APPETITIVE for e in ev)
-            r["recall_av"] = sum(e["what"] == "recalled" and e["kind"] == AVERSIVE for e in ev)
-            av = [e for e in ev if e["what"] == "recalled" and e["kind"] == AVERSIVE]
-            r["relief_pain"] = float(np.mean([e["pain_now"] for e in av])) if av else float("nan")
-            r["relief_painless"] = float(np.mean([e["pain_now"] < 0.05 for e in av])) if av else float("nan")
-            d_rep, d_rand = replay_outcomes(log, n)
-            r["dpain_replay"], r["dpain_random"] = float(d_rep.mean()), float(d_rand.mean())
-            sigs = []
-            for a in ar.agents:
-                sp = a.ltm.build_space()
-                sigs.append(sp.signature if sp else (0, 0))
-            r["signatures"] = sigs
-            if sd == SEEDS[0] and name == "lambda=2":
-                keep = ar
-        rows[name].append(r)
+for name, r, ar in pmap(one_run, [(n, sd) for n in CONDITIONS for sd in SEEDS]):
+    rows[name].append(r)
+    keep = ar if ar is not None else keep
 
 # ---- memory Clifford space of one NPC -------------------------------------
 a0 = next(a for a in keep.agents if a.faction == NPC_FACTION and (a.ltm.slots["active"] == 1).sum() >= 4)

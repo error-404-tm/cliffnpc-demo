@@ -23,7 +23,7 @@ Three learning-law variants separate the sources of order dependence:
 
 import numpy as np
 
-from common import outdir, plt, save, write_summary
+from common import outdir, plt, pmap, save, write_summary
 
 from cliffnpc import algebra as ga
 from cliffnpc.config import Config
@@ -73,8 +73,17 @@ variants = {
     "... and no sensitivity/frustration scaling": dict(forget=False, felt=False, scales=False),
 }
 rows, logs = [], {}
+
+
+def _run(job):
+    order, kw = job
+    return run(order, **kw)
+
+
+jobs = [(order, kw) for kw in variants.values() for order in ("TF", "FT")]
+results = iter(pmap(_run, jobs))
 for name, kw in variants.items():
-    a, b = run("TF", **kw), run("FT", **kw)
+    a, b = next(results), next(results)
     logs[name] = (a, b)
     gA, gB = a["g"][-1], b["g"][-1]
     g0 = ga.ETA

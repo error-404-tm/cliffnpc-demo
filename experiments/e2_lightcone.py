@@ -154,7 +154,7 @@ lines += [
     "  Each threat approach pushes the state through the null cone a few seconds before contact, and",
     "  steering becomes threat-dominated.  This temperament fights (C⁴ > 0, approach): it was hungry and",
     "  home-leaning, and the e34 generator M(e4,e3) turns 'home' into 'fight' (the sign of C³ when the",
-    "  threat arrives picks fight or flight, see coupling.CHANNELS).  It stays reactive for ~15-25 s",
+    "  threat arrives picks fight or flight, see coupling.CHANNELS).  It stays reactive for ~10-20 s",
     "  because threat damping is the slowest (fear lingers).",
 ]
 for tc, dur, Cb, Ca in transits:

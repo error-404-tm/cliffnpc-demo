@@ -23,7 +23,7 @@ import time
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")  # tiny matrices: threads only add overhead
 import numpy as np  # noqa: E402
 
-from common import outdir, plt, save, write_summary
+from common import outdir, plt, pmap, save, write_summary
 
 from cliffnpc import algebra as ga
 from cliffnpc.config import Config
@@ -77,13 +77,21 @@ def demote_episodic(v):
     lod["demoted"] = (i, n_eps, folds_before, np.linalg.norm(a.g - g_before))
 
 
+def one_village(job):
+    """One (gossip, event) village run; returns the village, its log and the LOD records."""
+    gossip, event = job
+    v = build(gossip, event)
+    lod_events = {T_PROMOTE: promote_far, T_DEMOTE: demote_episodic} if (gossip and event) else {}
+    log = v.run(T, lod_events)
+    return job, v, log, dict(lod)
+
+
 t0 = time.time()
 runs = {}
-for gossip in (True, False):
-    for event in (True, False):
-        v = build(gossip, event)
-        lod_events = {T_PROMOTE: promote_far, T_DEMOTE: demote_episodic} if (gossip and event) else {}
-        runs[gossip, event] = (v, v.run(T, lod_events))
+for job, v_, log_, lod_ in pmap(one_village, [(g, e) for g in (True, False) for e in (True, False)]):
+    runs[job] = (v_, log_)
+    if job == (True, True):
+        lod.update(lod_)
 elapsed = time.time() - t0
 
 v, log = runs[True, True]
@@ -198,9 +206,10 @@ lines += [
     f"(plus {dfold} folded earlier on eviction); |delta g| from the consolidation = {ddg:.4f}.",
     "",
     "Reading:",
-    "  * With gossip the footprint travels outward along the social graph: the time to reach half its",
-    "    peak grows with every hop, and the size drops sharply after the first hop.  Reputation and",
-    "    fear spread as a change in how people feel, not as stored facts.",
+    "  * With gossip the footprint travels outward along the social graph: it reaches the first hops",
+    "    later and much smaller (see half-peak times and peaks above).  Beyond about two hops it is at",
+    "    the level of behavioural noise, so timing there is not meaningful.  Reputation and fear spread",
+    "    as a change in how people feel, not as stored facts.",
     "  * Gossip also comforts the victims: the directly hit villagers end up with a smaller footprint",
     "    than without gossip, because their neighbours' calmer metrics pull them back.",
     "  * Without gossip, footprints beyond distance 0 are not transmitted metric.  They come from",

@@ -42,9 +42,21 @@ tests/          67 tests
 ```bash
 cd /home/joe/projects/cliffnpc-demo
 .venv/bin/python -m pytest -q          # 67 tests, ~20 s
-experiments/run_all.sh                 # all experiments; e6 ~4 min, e8 ~15 min
+experiments/run_all.sh                 # all experiments in parallel, ~3 min on 12 cores
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
+
+Runs never draw anything, so they go as fast as the CPU allows: the single NPC
+runs ~100× real time, the 6-agent arena ~20×, the 30-agent village ~5×. The
+bottleneck is Python/NumPy overhead on many tiny 4×4 operations, not arithmetic.
+
+`run_all.sh` starts all experiments at once, and each experiment spreads its
+independent runs (seeds, conditions) over worker processes (`experiments/common.py:
+pmap`). Processes, not threads: this Python build has the GIL, and one simulation's
+agents are too few to split. Every run is seeded, so parallel results are identical
+to serial ones; checked for E3, E6 and E8. The full suite takes ~3 min instead of
+~25. Set `CLIFFNPC_WORKERS=1` to run serially. Each experiment's output goes to
+`experiments/out/<name>/run.log`.
 
 The venv was created with `python3 -m venv .venv && .venv/bin/pip install numpy
 scipy matplotlib pytest` (Python 3.14, NumPy 2.5, SciPy 1.18).
@@ -115,9 +127,8 @@ retreats after contact.
 
 ## Results (numbers from `experiments/out/*/summary.txt`)
 
-> E1–E6 were produced before the frame law (commit `3c69583`) changed how every
-> frame update is applied. They have not been re-run since, so treat their exact
-> numbers as from the earlier model. Re-run with `experiments/run_all.sh`.
+All numbers are from the current model (frame law included); E1–E6 were re-run
+after it.
 
 **Phase 1 tests.** All required tests pass: `Mᵀg + gM = 0` for random (3,1)
 metrics; rotor steps (clamped or not) preserve `s` to 1e-9; plane classification,
@@ -128,12 +139,12 @@ identity.
 **E1 Foraging.** Yes, a limit cycle emerges, but **only through the world loop**.
 Rotation + drift + damping is an affine linear ODE, so in drive space alone it
 can only spiral into a fixed point; the open-loop run shows exactly that. Closed
-loop: period 43.4 ± 1.7 s, hunger amplitude 1.72. A different initial state
-converges to the same cycle (44.4 s, 1.79).
+loop: period 44.0 ± 1.6 s, hunger amplitude 1.76. A different initial state
+converges to the same cycle (43.5 s, 1.73).
 
 **E2 Light-cone snap.** Every threat approach (4 of 4) carries the state from
 s > 0 to s < 0 a few seconds before contact. Steering becomes threat-dominated
-(this temperament fights) and stays reactive for 16–24 s. **Correction to §2.3:**
+(this temperament fights) and stays reactive for 10–22 s. **Correction to §2.3:**
 boosts are isometries and can never cross the cone on their own (`|Δs| = 1e-13`
 under a pure boost). The crossing needs a non-isometric partner, here per-drive
 damping with γ_explore > γ_threat ("fear lingers longer than curiosity"). That
@@ -143,9 +154,9 @@ still decaying and the state briefly snaps.
 
 **E3 Order dependence.** The final g depends on event order: ‖Δg‖ is 84% of the
 surviving change with forgetting on. That is mostly **recency**, though.
-Without forgetting the path dependence is 1.5–1.8%, and it comes from the
+Without forgetting the path dependence is 1.5–1.7%, and it comes from the
 state-dependent scales (|g^ii| sensitivities, frustration). With those off it
-drops to 3e-5. **Finding for §5.2:** a Lie-group update `L ← exp(εA)L` whose image
+drops to 4e-4 (the frame law's nonlinearity adds a little; before it, 3e-5). **Finding for §5.2:** a Lie-group update `L ← exp(εA)L` whose image
 in g doesn't depend on g induces an *additive* flow on g, so non-commutativity
 only appears at O(ε²). Real "trauma then comfort ≠ comfort then trauma" needs a
 generator that depends on the current geometry at first order, or large
@@ -160,7 +171,8 @@ several times more than the metric.
 (46.08°) whatever its shape, and an outside loop gives exactly 0. With dynamics
 on, damping undoes the imprint in the drive values within ~4 s. But the NPC
 is on the foraging limit cycle, whose phase is neutrally stable, so the haunted
-loops leave a **lasting ~2 s shift in meal times**. Memory of place persists in
+loops leave a **lasting shift in meal times** that never decays back to zero
+(between −3.8 and +2.4 s over the next 300 s). Memory of place persists in
 behaviour timing, not in the drives.
 
 **E5 Personality threshold.** e2∧e3 is elliptic for |g23| < 1, parabolic at ±1 and
@@ -173,14 +185,16 @@ safety cap).
 
 **E6 Village (Phase 3).** 30 villagers (3 episodic, 9 metric, 18 background) on a
 small-world graph. The attack is sensed by 3 villagers, and the event's footprint
-is measured against a no-event twin run. With gossip it moves outward hop by hop:
-the time to half of peak is 5, 17, 25, 43 and ~75 s at distances 0–5. The size
-falls sharply after one hop (peak 0.15 at distance 0, 0.014 at distance 1, ~0.004
-beyond, with only 1–5 individuals per distance). Beyond 2 hops the gossip signal is about the size of the behavioural
-noise (without gossip, the attack still perturbs everyone's trajectories a
-little). Gossip also *comforts* the victims: their footprint at t=170 s is 0.029
-with gossip vs 0.083 without. Promotion instantiates from the current collective
-metric (|g_new − g_col| = 0.03). Demotion consolidates 8 episodes chronologically.
+is measured against a no-event twin run. With gossip it moves outward: the time
+to half of peak is 5 s at distance 0, 18 s at distance 1 and 52 s at distance 2.
+The size falls sharply after one hop (peak 0.17 at distance 0, 0.016 at distance
+1, 0.003–0.008 beyond, with only 1–5 individuals per distance). Beyond 2 hops the
+gossip signal is about the size of the behavioural noise, so its timing there
+isn't meaningful (without gossip, the attack still perturbs everyone's
+trajectories a little). Gossip also *comforts* the victims: their footprint at
+t=170 s is 0.049 with gossip vs 0.085 without. Promotion instantiates from the
+current collective metric (|g_new − g_col| = 0.05). Demotion consolidates 8
+episodes chronologically.
 
 **Surprise-gated compute.** With the `"cv"` predictor and `surprise_gate=0.05`, 44%
 of cognitive ticks are skipped with identical meals and cone crossings over
@@ -343,7 +357,6 @@ yet.
 
 * Tuning is fragile. The foraging cycle and the snap both depend on the damping
   anisotropy and on eating, and all constants are in `config.py`.
-* E1–E6 predate the frame law and need a re-run.
 * The frame's orientation is recorded but doesn't yet feed back into the dynamics
   (see [Frame law](#frame-law-option-b)).
 * Pain-aversion learning finds the intended courage lesson only in some seeds;

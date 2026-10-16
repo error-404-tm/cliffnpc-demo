@@ -3,8 +3,8 @@ E1 Foraging cycle
 Open loop (cognition only): final state [ 0.406  0.1    0.033 -0.05 ]; |dC| over the last 50 s = 0.00e+00  -> fixed point, no cycle.
   Reason: rotation + constant drift + linear damping is an affine linear ODE; its only attractor
   is a fixed point (a stable spiral when damping > 0).  No limit cycle is possible in drive space alone.
-Closed loop B: 20 full cycles after t=300 s; period 43.4 ± 1.7 s; hunger amplitude 1.72 ± 0.14
-Closed loop C: 19 full cycles after t=300 s; period 44.4 ± 1.5 s; hunger amplitude 1.79 ± 0.13
+Closed loop B: 19 full cycles after t=300 s; period 44.0 ± 1.6 s; hunger amplitude 1.76 ± 0.13
+Closed loop C: 19 full cycles after t=300 s; period 43.5 ± 1.9 s; hunger amplitude 1.73 ± 0.15
   -> Yes, a limit cycle emerges, but only through the world loop: the nonlinearity is the
      position-dependent food kernel (eating and the e13 rotation happen only at the food) closed
      through steering.  Two different initial states converge to the same period and amplitude,
