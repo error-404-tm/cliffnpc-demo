@@ -1,0 +1,26 @@
+E8 Long-term sequence memory
+============================
+Arena, 5 NPCs + 1 rival, 4 seeds x 1500 s; memory on vs off (pain-aversion metric learning on in both).
+
+                                         memory ON            memory OFF
+NPC mean pain                       -0.368 ± 0.109        -0.171 ± 0.027
+engagements                         18.000 ± 7.106        10.750 ± 5.403
+solo engagements                    13.750 ± 3.631         9.750 ± 4.815
+total NPC injury                     7.815 ± 4.031         3.740 ± 1.764
+NPC immobile fraction                0.026 ± 0.010         0.014 ± 0.010
+
+Memory activity (NPCs, per seed):
+  seed 0: stored 125 appetitive / 60 aversive, merged 89, recalled 189x, replaying 32% of the time; pain change over 4 s after a replay starts +0.073 vs +0.045 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(6, 2), (7, 1), (4, 4), (4, 4), (3, 5), (5, 2)]
+  seed 1: stored 129 appetitive / 56 aversive, merged 68, recalled 139x, replaying 24% of the time; pain change over 4 s after a replay starts +0.043 vs +0.011 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(5, 3), (4, 4), (7, 1), (7, 1), (3, 5), (4, 4)]
+  seed 2: stored 84 appetitive / 74 aversive, merged 69, recalled 190x, replaying 32% of the time; pain change over 4 s after a replay starts +0.074 vs +0.051 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(3, 5), (5, 3), (4, 4), (2, 6), (5, 3), (0, 0)]
+  seed 3: stored 87 appetitive / 87 aversive, merged 78, recalled 242x, replaying 41% of the time; pain change over 4 s after a replay starts +0.013 vs +0.069 after random ticks
+          memory-space signatures (npc0..npc4, rival): [(2, 6), (5, 3), (4, 4), (3, 5), (6, 2), (0, 0)]
+
+Memory Clifford space of npc0 (seed 0): signature Cl(6, 2), eigenvalues [11.506, 4.897, 1.005, 0.818, -0.541, 0.409, 0.286, -0.259]
+  Basis = leading eigenvectors of the valence-weighted second moment of stored (key, sequence) vectors;
+  approach memories contribute +strength, escape memories -strength, so eigenvalue signs give the signature.
+  Planes between two approach (or two escape) modes are elliptic; mixed approach/escape planes are hyperbolic,
+  the same causal structure as the drive algebra.

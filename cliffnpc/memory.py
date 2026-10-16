@@ -22,7 +22,7 @@ from scipy.linalg import expm
 
 from . import algebra as ga
 from .cognition import (NPC, apply_frame_update, forget_frame, learn_frame,
-                        toward_metric_generator)
+                        saturate_frame, toward_metric_generator)
 from .config import CognitionConfig
 
 EPISODIC, METRIC, BACKGROUND = 1, 2, 3
@@ -146,13 +146,17 @@ class CollectiveMetric:
             return
         r = np.mean(residuals, axis=0)
         if np.linalg.norm(r) > self.cfg.surprise_threshold:
-            self.L = learn_frame(self.L, r, float(np.mean(frustrations)), self.cfg,
-                                 self.cfg.learn_rate * self.agg_rate)
-        self.L = forget_frame(self.L, self.L0, self.cfg)
+            self._commit(learn_frame(self.L, r, float(np.mean(frustrations)), self.cfg,
+                                     self.cfg.learn_rate * self.agg_rate))
+        self._commit(forget_frame(self.L, self.L0, self.cfg))
+
+    def _commit(self, L_raw: np.ndarray) -> None:
+        h = self.cfg.frame_horizon
+        self.L = saturate_frame(self.L, L_raw, h) if h else L_raw
 
     def absorb(self, g_i: np.ndarray, weight: float) -> None:
         """Fold an individual metric in with a small weight (on demotion)."""
-        self.L = apply_frame_update(self.L, toward_metric_generator(self.L, g_i), weight, 1.0)
+        self._commit(apply_frame_update(self.L, toward_metric_generator(self.L, g_i), weight, 1.0))
 
 
 # ---------------------------------------------------------------------------
@@ -202,18 +206,23 @@ class TieredNPC:
             if surprise > self.episode_threshold:
                 out = self.episodes.offer(Episode(t, npc.C.copy(), r.copy(), pos.copy(), fr, surprise))
                 if out:
-                    npc.L = fold_episodes(npc.L, out, npc.cfg)
-                    self.folds += len(out)
+                    self._fold(out)
             self.places.accumulate(pos, alpha, t)
             stored = self.places.recall(pos, t)
             if stored:
                 npc.holonomy_transport(self.place_recall * stored)
-            npc.L = forget_frame(npc.L, npc.L0, npc.cfg)
+            npc.commit_frame(forget_frame(npc.L, npc.L0, npc.cfg))
         elif self.tier == METRIC:
             if surprise > self.metric_threshold:
-                npc.L = learn_frame(npc.L, r, fr, npc.cfg)
-            npc.L = forget_frame(npc.L, npc.L0, npc.cfg)
+                npc.commit_frame(learn_frame(npc.L, r, fr, npc.cfg))
+            npc.commit_frame(forget_frame(npc.L, npc.L0, npc.cfg))
         return r
+
+    def _fold(self, episodes: list[Episode]) -> None:
+        """Consolidate episodes chronologically, each step through the frame law."""
+        for ep in sorted(episodes, key=lambda e: e.t):
+            self.npc.commit_frame(learn_frame(self.npc.L, ep.r, ep.frustration, self.npc.cfg))
+        self.folds += len(episodes)
 
     # --- LOD transitions --------------------------------------------------
     def promote(self, jitter: float = 0.005) -> None:
@@ -231,9 +240,7 @@ class TieredNPC:
 
     def demote(self, n_population: int) -> None:
         if self.tier == EPISODIC:
-            eps = self.episodes.drain()
-            self.npc.L = fold_episodes(self.npc.L, eps, self.npc.cfg)
-            self.folds += len(eps)
+            self._fold(self.episodes.drain())
             self.places = None
             self.tier = METRIC
         elif self.tier == METRIC:
@@ -272,11 +279,11 @@ def gossip_step(agents: list[TieredNPC], adjacency: np.ndarray, eps: float,
         A = sum(toward_metric_generator(a.npc.L, gs[j]) for j in nbrs) / deg[i]
         new_L[i] = apply_frame_update(a.npc.L, A, eps, 0.2)
     for i, L in new_L.items():
-        agents[i].npc.L = L
+        agents[i].npc.commit_frame(L)
     if bg_targets:
         # Average over all background agents' links; links between two
         # background agents carry no difference (same metric), so they only
         # dilute the pull of the individuals.
         bg_deg = sum(deg[i] for i, a in enumerate(agents) if a.tier == BACKGROUND)
         A = sum(toward_metric_generator(collective.L, g) for g in bg_targets) / bg_deg
-        collective.L = apply_frame_update(collective.L, A, eps, 0.2)
+        collective._commit(apply_frame_update(collective.L, A, eps, 0.2))

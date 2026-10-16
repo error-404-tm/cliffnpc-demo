@@ -66,6 +66,13 @@ def felt_covector(r: np.ndarray, g: np.ndarray) -> np.ndarray:
     return np.linalg.norm(r) * gr / n
 
 
+def metric_delta_generator(L: np.ndarray, dG: np.ndarray) -> np.ndarray:
+    """eta-self-adjoint generator realizing a symmetric metric change dG to first order:
+    A = eta L^{-T} dG L^{-1} / 2  gives  g <- g + dG  under  L <- exp(A) L."""
+    Linv = np.linalg.inv(L)
+    return 0.5 * ETA @ (Linv.T @ (0.5 * (dG + dG.T)) @ Linv)
+
+
 def toward_metric_generator(L: np.ndarray, g_target: np.ndarray) -> np.ndarray:
     """eta-self-adjoint generator moving g = L^T eta L toward g_target.
 
@@ -84,6 +91,34 @@ def apply_frame_update(L: np.ndarray, A: np.ndarray, eps: float, max_norm: float
     """L <- exp(eps A) L with ||eps A|| capped.  exp is always invertible, so
     det L never crosses zero and the signature (3,1) is preserved exactly."""
     return expm(_cap(eps * A, max_norm)) @ L
+
+
+def saturate_frame(L_old: np.ndarray, L_raw: np.ndarray, horizon: float) -> np.ndarray:
+    """The frame law: continuous boosts, diminishing returns, never singular.
+
+    Metric-changing generators (eta-self-adjoint, p) do not close: [p, p] lies in
+    so(3,1), so composed personality updates also turn the frame by a Lorentz
+    transformation, the holonomy of the path through personality space (the
+    analogue of the Thomas-Wigner rotation).  Under option B that holonomy is kept:
+    it records the order of experience.
+
+    What can become singular is the frame's *stretch*: its singular values.
+    So, as with rapidity and velocity in relativity, each singular direction
+    accumulates an unbounded experience rapidity phi = horizon * artanh(s / horizon),
+    an update adds its change of log-singular-value to phi, and the expressed
+    log-stretch is s = horizon * tanh(phi / horizon).  Small early shifts pass
+    almost unchanged; repeated pushes the same way saturate.  The rotations,
+    holonomy included, are compact and pass through unchanged.
+    Hence cond(L) <= exp(2 horizon) for any history.
+    """
+    U, S, Vt = np.linalg.svd(L_raw)
+    # Old stretch measured along each *new* singular direction (pairing by
+    # direction, not by sorted order, so crossings don't swap rapidities).
+    s_old = np.log(np.linalg.norm(L_old @ Vt.T, axis=0))
+    ratio = np.clip(s_old / horizon, -1 + 1e-12, 1 - 1e-12)
+    phi = horizon * np.arctanh(ratio) + (np.log(S) - s_old)
+    s_new = horizon * np.tanh(phi / horizon)
+    return (U * np.exp(s_new)) @ Vt
 
 
 def learn_frame(L: np.ndarray, r: np.ndarray, frustration: float, c: CognitionConfig,
@@ -142,6 +177,23 @@ class NPC:
     def g0(self) -> np.ndarray:
         return ga.metric_from_frame(self.L0)
 
+    def commit_frame(self, L_raw: np.ndarray, check=None) -> bool:
+        """Adopt a new frame through the frame law; transport the inner state.
+
+        check: optional predicate on the resulting metric; if it fails nothing
+        changes.  Returns whether the frame was updated.
+        """
+        h = self.cfg.frame_horizon
+        L_new = saturate_frame(self.L, L_raw, h) if h else L_raw
+        if check is not None and not check(ga.metric_from_frame(L_new)):
+            return False
+        if self.cfg.transport_state:
+            # C_o = L C is the agent's experiential state; it stays, its
+            # reading in the drive basis changes.  The interval is unchanged.
+            self.C = np.linalg.solve(L_new, self.L @ self.C)
+        self.L = L_new
+        return True
+
     def coefficients(self) -> np.ndarray:
         """C^i = C . e^i (reciprocal frame).  Drives *action*."""
         return self.C.copy()
@@ -166,7 +218,8 @@ class NPC:
         return ga.generator_from_bivector(beta, g)
 
     # --- one cognitive tick ---------------------------------------------
-    def dynamics_step(self, beta_ext: np.ndarray, h: float, eat: float = 0.0) -> None:
+    def dynamics_step(self, beta_ext: np.ndarray, h: float, eat: float = 0.0,
+                      company: float = 0.0) -> None:
         """Split rotor steps + damping + hunger drift + rapidity clamp (§3)."""
         c = self.cfg
         g = self.g
@@ -181,6 +234,7 @@ class NPC:
         # Non-rotor terms
         C = C - h * c.gamma * (C - c.C0)
         C[0] += h * (c.hunger_drift - c.eat_rate * eat * (C[0] - c.sated_level))
+        C[1] += h * (c.social_drift - c.company_rate * company * (C[1] - c.company_level))
         n = np.linalg.norm(C)
         if not np.isfinite(n):
             raise FloatingPointError("cognitive state became non-finite")
@@ -220,10 +274,10 @@ class NPC:
         c = self.cfg
         ran = False
         if learn and np.linalg.norm(r) > c.surprise_threshold:
-            self.L = learn_frame(self.L, r, self.last.get("frustration", 0.0), c)
+            self.commit_frame(learn_frame(self.L, r, self.last.get("frustration", 0.0), c))
             ran = True
         if forget:
-            self.L = forget_frame(self.L, self.L0, c)
+            self.commit_frame(forget_frame(self.L, self.L0, c))
         return ran
 
     def holonomy_transport(self, alpha: float) -> None:
