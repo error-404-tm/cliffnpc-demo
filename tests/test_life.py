@@ -299,3 +299,70 @@ def test_half_of_food_spawns_at_the_fixed_sites():
             rand += 1
     assert 0.4 < fixed / (fixed + rand) < 0.6
     assert all(any(np.allclose(p["pos"], s) for s in sites) for p in _tribes(1).patches)
+
+
+def test_fear_scales_with_being_outnumbered():
+    ar = _tribes(3)
+    A = [x for x in ar.agents if x.faction == TRIBE_A]
+    B = [x for x in ar.agents if x.faction == TRIBE_B]
+    a = A[0]
+    for k, x in enumerate(A[1:] + B):                  # everyone far away
+        x.pos = np.array([5.0 + 10 * k, 5.0])
+    a.pos = np.array([100.0, 100.0])
+    B[0].pos = a.pos + np.array([10.0, 0.0])
+    fear = lambda: ar._fear_level(a, ar.percept(a), np.zeros(4))  # noqa: E731
+    one_on_one = fear()
+    B[1].pos = a.pos + np.array([0.0, 10.0])
+    outnumbered = fear()
+    A[1].pos = a.pos + np.array([2.0, 0.0])
+    A[2].pos = a.pos + np.array([-2.0, 0.0])
+    with_mates = fear()
+    assert np.isclose(outnumbered, 2 * one_on_one)
+    assert np.isclose(with_mates, outnumbered / 3)
+
+
+def test_dread_memories_match_on_danger_cues_only():
+    from cliffnpc.arena import DANGER_MASK
+    from cliffnpc.ltm import SequenceMemory
+    m = SequenceMemory(LTMConfig())
+    key = np.array([0.9, 0.8, 0.0, 0.2, 0.1, 0.4, 0.5, 0.0], np.float32)   # the death scene
+    m.store(key, np.zeros((16, 4)), AVERSIVE, 3.0, np.array([0, 0, 0.5, 1.0]),
+            origin="imprinted", mask=DANGER_MASK)
+    elsewhere = key.copy()
+    elsewhere[[0, 2, 3, 6]] = [0.1, 0.9, 0.9, -0.5]  # different place, same danger
+    m.observe(elsewhere, np.zeros(4), 1.0, 0.0, affect=np.array([0, 0, 0, 1.0]))
+    assert m.recall() is not None
+
+
+def test_fear_is_capped_and_fades():
+    ar = _tribes(1)
+    a = ar.agents[0]
+    a.affect.sensitize(100.0)
+    assert a.affect.fear_learned == ar.cfg.npc_affect.fear_max == 12.0
+    a.affect.observe_injury(0.0, 0.0, 100.0)
+    assert a.affect.fear_learned < 12.0 * np.exp(-0.15)
+
+
+def test_bigger_world():
+    ar = _tribes(1)
+    assert ar.wcfg.size == 200.0
+    assert all(0 <= p["pos"][0] <= 200 and 0 <= p["pos"][1] <= 200 for p in ar.patches)
+
+
+def test_false_food_gives_no_satiety_until_discovered_then_is_ignored():
+    ar = _tribes(1, spawn_rate=0.0)
+    a = next(x for x in ar.agents if x.faction == TRIBE_A)
+    ar.patches.clear()
+    ar._spawn(np.array([60.0, 60.0]), 5.0, false=True)
+    p = ar.patches[0]
+    a.pos = p["pos"] + np.array([0.5, 0.0])
+    assert not ar._eating(a)                          # looks like food, feeds nothing
+    assert ar.percept(a).food_vec is not None         # still appears as food
+    for _ in range(int(ar.fd.discover_time / 0.1) + 2):
+        ar._food_step(0.1)
+    assert p["id"] in a.known_false
+    assert ar.percept(a).food_vec is None             # now ignored
+    assert p["stock"] == 5.0                          # never depletes
+    ar.t = p["born"] + ar.fd.false_lifetime + 1
+    ar._food_step(0.1)
+    assert not ar.patches                             # expires

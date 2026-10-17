@@ -155,6 +155,11 @@ class FoodConfig:
     margin: float = 10.0                # spawn away from the walls
     fixed_sites: tuple | None = None    # recurring spawn sites (None: the arena's food spots)
     fixed_fraction: float = 0.5         # share of spawns at a free fixed site; the rest random
+    # False food: looks like food, gives no satiety, never depletes, vanishes after
+    # a lifetime.  An agent learns a patch is false by trying to eat there.
+    false_fraction: float = 0.0
+    false_lifetime: float = 240.0
+    discover_time: float = 2.0          # seconds of eating with no satiety before it knows
 
 
 @dataclass

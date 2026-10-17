@@ -73,6 +73,7 @@ def memory_dtype(cfg: LTMConfig) -> np.dtype:
         ("kind", "<i4"),
         ("active", "<i4"),
         ("origin", "<i4"),                        # index into ORIGINS
+        ("mask", "<f4", (cfg.sense_dim,)),        # sense features the key is matched on
     ], align=True)
     return np.dtype({"names": base.names,
                      "formats": [base.fields[n][0] for n in base.names],
@@ -213,12 +214,15 @@ class SequenceMemory:
         return self.store(key, seq, kind, val, np.maximum(prof, 0))
 
     # --- imprinting (forced memory creation, e.g. witnessing a death) --------
-    def imprint(self, key: np.ndarray, valence: float, profile: np.ndarray) -> None:
+    def imprint(self, key: np.ndarray, valence: float, profile: np.ndarray,
+                mask: np.ndarray | None = None) -> None:
         """Schedule a forced escape memory keyed by `key` (what was sensed at the
         moment).  Its sequence is the agent's *reaction*: the next seq_len
-        behaviour samples.  Stored without waiting for relief."""
+        behaviour samples.  Stored without waiting for relief.  mask: the sense
+        features the key is matched on at recall (default: all)."""
         self.pending.append(dict(key=np.asarray(key, np.float32).copy(), valence=float(valence),
-                                 profile=np.asarray(profile, float), left=self.cfg.seq_len))
+                                 profile=np.asarray(profile, float), left=self.cfg.seq_len,
+                                 mask=None if mask is None else np.asarray(mask, np.float32)))
 
     def _advance_imprints(self) -> dict | None:
         done = None
@@ -227,7 +231,7 @@ class SequenceMemory:
             if p["left"] <= 0 and self.hist_n >= self.cfg.seq_len:
                 seq = self._chrono(self.beh, self.hist_n, self.cfg.seq_len)
                 done = self.store(p["key"], seq, AVERSIVE, p["valence"], p["profile"],
-                                  origin="imprinted")
+                                  origin="imprinted", mask=p["mask"])
                 self.pending.remove(p)
         return done
 
@@ -240,12 +244,13 @@ class SequenceMemory:
         for j in best:
             self.store(s["key"][j].copy(), s["seq"][j].astype(float), int(s["kind"][j]),
                        float(s["strength"][j]) * factor, s["profile"][j].astype(float),
-                       origin="inherited")
+                       origin="inherited", mask=s["mask"][j].copy())
         return len(best)
 
     # --- store ---------------------------------------------------------------
     def store(self, key: np.ndarray, seq: np.ndarray, kind: int, valence: float,
-              profile: np.ndarray | None = None, origin: str = "experience") -> dict:
+              profile: np.ndarray | None = None, origin: str = "experience",
+              mask: np.ndarray | None = None) -> dict:
         """valence: the *weighted* valence (loss aversion already applied); it
         becomes the memory's strength.  profile: affect axes it relieved/rewarded
         (normalized here; default: all axes equally)."""
@@ -285,6 +290,7 @@ class SequenceMemory:
         s["kind"][j] = kind
         s["profile"][j] = prof
         s["origin"][j] = ORIGINS.index(origin)
+        s["mask"][j] = 1.0 if mask is None else mask
         s["active"][j] = 1
         ev = dict(t=self.t, what="stored", slot=j, kind=kind, valence=valence,
                   evicted=not len(free), origin=origin)
@@ -334,14 +340,18 @@ class SequenceMemory:
         keys = s["key"][act]
         # loss aversion: escape memories tolerate loss_aversion x the squared mismatch
         tol = np.where(s["kind"][act] == AVERSIVE, c.loss_aversion, 1.0) * c.match_radius ** 2
-        d2 = ((stm[:, None, :] - keys[None, :, :]) ** 2).sum(-1) / tol
+        # match only on each memory's masked features, rescaled to the full width
+        masks = s["mask"][act]
+        width = c.sense_dim / np.maximum(masks.sum(1), 1.0)
+        d2 = (((stm[:, None, :] - keys[None, :, :]) ** 2 * masks[None]).sum(-1)
+              * width[None] / tol)
         gate = self.gates(act)                          # present pain / reward weighting
         support = np.exp(-d2.min(axis=0)) * gate        # how present each key is in STM
         cue = stm[np.unravel_index(np.argmin(d2), d2.shape)[0]].astype(float)
         logw = np.log(np.maximum(s["strength"][act] * gate, 1e-12))
         q = cue
         for _ in range(c.hopfield_iters):              # settle into a basin
-            e = -((keys - q) ** 2).sum(-1) / tol
+            e = -(((keys - q) ** 2 * masks).sum(-1) * width) / tol
             w = np.exp(c.hopfield_beta * e + logw - (c.hopfield_beta * e + logw).max())
             w /= w.sum()
             q = w @ keys

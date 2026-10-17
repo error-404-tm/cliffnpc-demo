@@ -11,9 +11,12 @@ Life is on: starvation and injury kill (speed falls with injury), witnessing a
 death shocks, sensitizes fear and imprints an escape memory, well-fed pairs
 reproduce and children inherit memories, personality frame and part of their
 fear.  Injury drives flight through the strongest reflex.  Satiety slows a little.
-Food is finite: patches run out as they are eaten; new ones spawn half at two
-fixed sites (equidistant from both homes) and half anywhere; agents only know
-patches they have seen.  Hunger builds fast, starvation begins at 0.8, and
+The world is 200 x 200.  Food is finite: patches run out as they are eaten; new
+ones spawn half at two fixed sites (equidistant from both homes) and half
+anywhere; 30% are false (look like food, give no satiety, found out only by
+trying to eat); agents only know patches they have seen.  Fear is scaled by how
+outnumbered the agent is, is capped at 12 and fades; dread memories match on
+danger cues only.  Hunger builds fast, starvation begins at 0.8, and
 hungry agents search with weight hunger + 2 hunger^2.  A cubic saturation law
 contains boost runaways under either signature.
 """
@@ -78,6 +81,8 @@ def one(job):
         pain=float(np.nanmean(np.where(alive, log["pain"], np.nan))),
         hunger=float(np.nanmean(np.where(alive, log["C"][:, :, 0], np.nan))),
         depleted=sum(e["what"] == "depleted" for e in ar.food_events),
+        false_found=sum(e["what"] == "discovered_false" for e in ar.food_events),
+        rival_exposure=len(ar.decisions) / max(float(alive.sum()), 1.0),
         fight_early=fight_stats(dec, 0, T / 3), fight_late=fight_stats(dec, 2 * T / 3, T),
     )
 
@@ -150,6 +155,8 @@ rows = [
     ("witness events", lambda r: sum(d[3] for d in r["deaths"])),
     ("imprinted memories", lambda r: r["imprinted"]),
     ("food patches depleted", lambda r: r["depleted"]),
+    ("false food discoveries", lambda r: r["false_found"]),
+    ("share of time with a rival in view", lambda r: r["rival_exposure"]),
     ("fights per agent-hour", lambda r: r["fights_per_agent_hour"]),
     ("fights with one side outnumbered 1:n", lambda r: r["outnumbered"] / max(r["engagements"], 1)),
     ("mean pain", lambda r: r["pain"]),
@@ -165,8 +172,9 @@ rows = [
 ]
 lines = ["E9 Life and signature: two tribes", "==================================",
          f"{len(SEEDS)} seeds x {T:.0f} s per signature; one signature per simulation, runs in parallel.",
-         "Two identical tribes (5 each at start), symmetric combat, finite food (half at two fixed",
-         "sites, half random), life on, sequence memory, pain-aversion learning, learned fear.",
+         "Two identical tribes (5 each at start), symmetric combat, 200x200 world, finite food (half at",
+         "two fixed sites, half random, 30% false), life on, sequence memory, pain-aversion learning,",
+         "learned fear scaled by being outnumbered (cap 12, fading), dread memories matched on danger cues.",
          "", f"{'':38s}" + "".join(f"{n:>20s}" for n in SIGNATURES)]
 for lab, f in rows:
     lines.append(f"{lab:38s}" + "".join(f"{m(n, f):>20s}" for n in SIGNATURES))

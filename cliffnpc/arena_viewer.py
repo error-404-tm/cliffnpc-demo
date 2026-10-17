@@ -79,8 +79,8 @@ class ArenaViewer(Viewer):
         A = self._anim
 
         ax = self.ax_world
-        ax.set_xlim(0, 100)
-        ax.set_ylim(0, 100)
+        self.false_sc = A(ax.scatter([], [], s=60, marker="x", color="k", linewidths=1.5,
+                                     label="false food (viewer only)"))
         ax.set_aspect("equal")
         ax.set_xticks([])
         ax.set_yticks([])
@@ -172,6 +172,10 @@ class ArenaViewer(Viewer):
 
     def _place_static(self) -> None:
         cfg = self.arena.cfg
+        size = self.arena.wcfg.size
+        self.ax_world.set_xlim(0, size)
+        self.ax_world.set_ylim(0, size)
+        self.sensor_art.set_radius(self.arena.wcfg.sensor_radius)
         self.home_art.set_data([cfg.home[0]], [cfg.home[1]])
         self.lair_art.set_data([cfg.lair[0]], [cfg.lair[1]])
         self.dirty = True
@@ -251,6 +255,7 @@ class ArenaViewer(Viewer):
         self.food_sc.set_offsets(np.array([p["pos"] for p in P]).reshape(-1, 2))
         self.food_sc.set_sizes([40 + 260 * min(p["stock"] / p["stock0"], 1.0) if np.isfinite(p["stock0"])
                                 else 200 for p in P])
+        self.false_sc.set_offsets(np.array([p["pos"] for p in P if p.get("false")]).reshape(-1, 2))
         self._scatter(self.npc_sc, npcs)
         self._scatter(self.rival_sc, rivals)
         recent_d = [d for d in ar.deaths if ar.t - d["t"] < MARK_SECONDS]

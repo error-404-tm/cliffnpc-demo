@@ -37,6 +37,9 @@ from .steering import steer
 
 NPC_FACTION, RIVAL_FACTION = "npc", "rival"     # legacy arena: NPC pack vs anti-social rival
 TRIBE_A, TRIBE_B = "A", "B"                       # tribes arena: two identical tribes
+# sense features (sense_vector): food dist, closing, peers, from home, rival dist, health,
+# pain, allies.  Dread memories are matched on the danger cues only.
+DANGER_MASK = np.array([0, 1, 0, 0, 1, 1, 0, 1], dtype=np.float32)
 
 
 def npc_cognition() -> CognitionConfig:
@@ -96,11 +99,14 @@ def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float 
     (death, birth, inheritance, witnessing, injury reflex), learned fear, the
     saturation law and finite moving food, with one drive signature for every agent."""
     cfg = ArenaConfig(seed=seed, ltm=LTMConfig(), life=LifeConfig(), signature=signature,
-                      tribes=True, home=(15.0, 50.0), lair=(85.0, 50.0),
-                      food=((50.0, 30.0), (50.0, 70.0)),       # fixed sites, equidistant
-                      food_dynamics=FoodConfig())
+                      tribes=True, home=(30.0, 100.0), lair=(170.0, 100.0),
+                      food=((100.0, 60.0), (100.0, 140.0)),    # fixed sites, equidistant
+                      food_dynamics=FoodConfig(max_patches=6, spawn_rate=1.0 / 30.0,
+                                               false_fraction=0.3))
+    cfg.base.world.size = 200.0        # a bigger world: room to explore and to miss each other
     for a in (cfg.npc_affect, cfg.rival_affect):
-        a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.0005
+        a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.002
+        a.fear_max = 12.0              # fear cannot saturate into a constant pain
     for c in (cfg.npc_cog, cfg.rival_cog):
         c.sat_gain = sat_gain
         c.hunger_drift = 0.08          # hunger builds faster ...
@@ -128,6 +134,8 @@ class Agent:
     replaying: int = -1         # memory slot being replayed (-1: none)
     slot: int = -1              # index in the capacity-wide logs
     known_food: dict = field(default_factory=dict)   # patch id -> position (seen, finite food)
+    known_false: set = field(default_factory=set)    # patch ids found to be false food
+    probe: dict = field(default_factory=dict)         # patch id -> seconds tried without satiety
     generation: int = 0
     born: float = 0.0
     last_birth: float = -1e9
@@ -235,10 +243,18 @@ class Arena:
         m = self.fd.margin
         return self.food_rng.uniform(m, self.wcfg.size - m, 2)
 
-    def _spawn(self, pos: np.ndarray, stock: float) -> None:
-        self.patches.append(dict(id=self._patch_id, pos=pos, stock=stock, stock0=stock))
-        self.food_events.append(dict(t=self.t, what="spawned", id=self._patch_id, pos=pos.copy()))
+    def _spawn(self, pos: np.ndarray, stock: float, false: bool = False) -> None:
+        self.patches.append(dict(id=self._patch_id, pos=pos, stock=stock, stock0=stock,
+                                 false=false, born=self.t))
+        self.food_events.append(dict(t=self.t, what="spawned", id=self._patch_id, pos=pos.copy(),
+                                     false=false))
         self._patch_id += 1
+
+    def _eating(self, a: Agent) -> bool:
+        """At a real patch with stock left (false food gives no satiety)."""
+        r = self.cfg.npc_cog.eat_radius
+        return a.mobile and any(not p["false"] and p["stock"] > 0
+                                and np.linalg.norm(a.pos - p["pos"]) < r for p in self.patches)
 
     def _food_step(self, dt: float) -> None:
         """Eaters deplete patches; empty patches vanish; new ones may spawn."""
@@ -246,13 +262,27 @@ class Arena:
             return
         r = self.cfg.npc_cog.eat_radius
         for p in list(self.patches):
-            eaters = sum(a.mobile and np.linalg.norm(a.pos - p["pos"]) < r for a in self.agents)
-            p["stock"] -= self.fd.take_rate * eaters * dt
+            at = [a for a in self.agents if a.mobile and np.linalg.norm(a.pos - p["pos"]) < r]
+            if p["false"]:
+                # trying to eat here yields nothing; after a while the agent knows
+                for a in at:
+                    a.probe[p["id"]] = a.probe.get(p["id"], 0.0) + dt
+                    if a.probe[p["id"]] >= self.fd.discover_time and p["id"] not in a.known_false:
+                        a.known_false.add(p["id"])
+                        a.known_food.pop(p["id"], None)
+                        self.food_events.append(dict(t=self.t, what="discovered_false",
+                                                     id=p["id"], by=a.name))
+                if self.t - p["born"] >= self.fd.false_lifetime:
+                    self.patches.remove(p)
+                    self.food_events.append(dict(t=self.t, what="expired", id=p["id"], pos=p["pos"]))
+                continue
+            p["stock"] -= self.fd.take_rate * len(at) * dt
             if p["stock"] <= 0:
                 self.patches.remove(p)
                 self.food_events.append(dict(t=self.t, what="depleted", id=p["id"], pos=p["pos"]))
         if len(self.patches) < self.fd.max_patches and self.food_rng.random() < self.fd.spawn_rate * dt:
-            self._spawn(self._spawn_spot(), self.fd.stock)
+            false = self.food_rng.random() < self.fd.false_fraction
+            self._spawn(self._spawn_spot(), self.fd.stock, false)
 
     # ---------------------------------------------------------------- perception
     def _rival_of(self, a: Agent) -> Agent | None:
@@ -284,7 +314,8 @@ class Arena:
 
     def percept(self, a: Agent) -> coupling.Percept:
         R = self.wcfg.sensor_radius
-        seen = [p for p in self.patches if np.linalg.norm(p["pos"] - a.pos) <= R]
+        seen = [p for p in self.patches if np.linalg.norm(p["pos"] - a.pos) <= R
+                and p["id"] not in a.known_false]          # known-false food is ignored
         foods = [p["pos"] - a.pos for p in seen]
         food_vec = min(foods, key=np.linalg.norm) if foods else None
         rival = self._rival_of(a)
@@ -350,10 +381,10 @@ class Arena:
         beta, _ = coupling.omega_ext(X, npc.cfg)
         if a.ltm is not None:
             beta = beta + self._replay_bivector(a)
-        eat = float(a.mobile and X[0] < npc.cfg.eat_radius)
+        eat = float(self._eating(a)) if self.fd is not None else float(a.mobile and X[0] < npc.cfg.eat_radius)
         a.affect.observe_injury(a.taken, a.dealt, h)
         a.taken = a.dealt = 0.0
-        a.affect.fear_now = self._fear_level(p, X)
+        a.affect.fear_now = self._fear_level(a, p, X)
         push = None
         if self.life is not None:     # injury reflex: the strongest repulsive drive
             push = np.array([0.0, 0.0, 0.0, -self.life.injury_reflex * a.affect.taken_rate])
@@ -372,12 +403,18 @@ class Arena:
             self.decisions.append((self.t, a.slot, self.allies_near(a), *map(float, npc.C),
                                    self.factions.index(a.faction)))
 
-    def _fear_level(self, p: coupling.Percept, X: np.ndarray) -> float:
-        """Perceived threat: rival proximity plus its closing speed (0 if none seen)."""
+    def _fear_level(self, a: Agent, p: coupling.Percept, X: np.ndarray) -> float:
+        """Perceived threat, scaled by how outnumbered the agent is:
+            (proximity + closing speed) * rivals in view / (1 + allies near)
+        Alone among enemies is frightening; inside one's group much less."""
         if p.threat_vec is None:
             return 0.0
         d = np.linalg.norm(p.threat_vec) / self.wcfg.sensor_radius
-        return float(max(0.0, 1.0 - d) + max(X[1], 0.0) / 5.0)
+        base = max(0.0, 1.0 - d) + max(X[1], 0.0) / 5.0
+        R = self.wcfg.sensor_radius
+        rivals = sum(b.faction != a.faction and b.mobile and np.linalg.norm(b.pos - a.pos) <= R
+                     for b in self.agents)
+        return float(base * rivals / (1.0 + self.allies_near(a)))
 
     def _replay_bivector(self, a: Agent) -> np.ndarray:
         """Recall: a generator in the plane C ^ C_target pulling the drives along
@@ -466,7 +503,8 @@ class Arena:
                 p = self.percept(w)
                 key = sense_vector(self, w, coupling.invariants(p, self.wcfg), p)
                 w.ltm.imprint(key, life.dread_valence * f * w.ltm.cfg.loss_aversion,
-                              np.array([0.0, 0.0, 0.5, 1.0]))   # about injury and fear
+                              np.array([0.0, 0.0, 0.5, 1.0]),   # about injury and fear
+                              mask=DANGER_MASK)                 # matched on danger cues only
             witnesses.append(w.name)
         self.deaths.append(dict(t=self.t, name=a.name, faction=a.faction, cause=cause,
                                 generation=a.generation, pos=a.pos.copy(),
