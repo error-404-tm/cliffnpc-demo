@@ -209,6 +209,7 @@ class CombatConfig:
 class SteeringConfig:
     max_speed: float = 5.0
     urgency: float = 2.0                # speed = max_speed * tanh(urgency |v_desired|)
+    search_gain: float = 0.0            # hungry, no food known: search weight hunger + gain * hunger^2
     reactive_boost: float = 3.0         # extra threat weight when s < 0
     reactive_scale: float = 0.1         # softness of the regime switch
     wander_turn: float = 0.6            # heading noise (rad/sqrt(s))

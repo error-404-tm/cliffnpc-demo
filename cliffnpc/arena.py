@@ -97,6 +97,9 @@ def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float 
         a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.0005
     for c in (cfg.npc_cog, cfg.rival_cog):
         c.sat_gain = sat_gain
+        c.hunger_drift = 0.08          # hunger builds faster ...
+    cfg.life.starve_level = 0.8        # ... and becomes dangerous sooner
+    cfg.base.steer.search_gain = 2.0   # hungry with no food known: search harder (hunger^2)
     return cfg
 
 

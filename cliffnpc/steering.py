@@ -45,8 +45,9 @@ def steer(coeffs: np.ndarray, s: float, p: Percept, heading: float,
         if target is not None:
             v += k[0] * hunger * _unit(target)
         else:
-            # hungry and no food known: search
-            v += k[0] * hunger * np.array([np.cos(heading), np.sin(heading)])
+            # hungry and no food known: search, harder the hungrier (hunger^2 term)
+            w = hunger + cfg.search_gain * hunger ** 2
+            v += k[0] * w * np.array([np.cos(heading), np.sin(heading)])
     if len(p.peer_vecs):
         centroid = p.peer_vecs.mean(axis=0)
         v += k[1] * social * _unit(centroid)  # social<0 pushes away

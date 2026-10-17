@@ -207,3 +207,14 @@ def test_agents_only_know_food_they_have_seen_and_forget_vanished_patches():
     a.pos = p["pos"] + np.array([10.0, 0.0])          # comes to look: gone
     ar.percept(a)
     assert p["id"] not in a.known_food
+
+
+def test_search_grows_with_hunger_squared_when_no_food_is_known():
+    from cliffnpc.config import SteeringConfig
+    from cliffnpc.coupling import Percept
+    from cliffnpc.steering import steer
+    cfg = SteeringConfig(search_gain=2.0, urgency=0.002)  # tiny urgency: tanh is linear
+    p = Percept(None, None, np.zeros(2), np.zeros((0, 2)), np.array([0.0, 0.0]), None)
+    speed = lambda h: np.linalg.norm(steer(np.array([h, 0.0, 0.0, 0.0]), 1.0, p, 0.0, cfg))  # noqa: E731
+    s1, s2 = speed(0.5), speed(1.5)
+    assert np.isclose(s2 / s1, (1.5 + 2 * 1.5 ** 2) / (0.5 + 2 * 0.5 ** 2), rtol=0.01)
