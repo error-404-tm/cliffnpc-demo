@@ -22,7 +22,7 @@ def _cap(A: np.ndarray, max_norm: float) -> np.ndarray:
     return A if n <= max_norm else A * (max_norm / n)
 
 
-def salience_generator(c: np.ndarray, L: np.ndarray) -> np.ndarray:
+def salience_generator(c: np.ndarray, L: np.ndarray, eta: np.ndarray | None = None) -> np.ndarray:
     """eta-self-adjoint frame generator that makes the surprised direction salient.
 
     The (sensitivity-weighted) residual is read as a *covector* c (lower
@@ -41,9 +41,10 @@ def salience_generator(c: np.ndarray, L: np.ndarray) -> np.ndarray:
     this form is additive in g, so with forgetting toward g0 the metric
     settles at g0 + (eps/lambda) E[sigma c c^T], a bounded running statistic.
     """
+    eta = ETA if eta is None else eta
     v = np.linalg.solve(L.T, c)
-    sigma = np.sign(float(v @ ETA @ v))  # = sign(c^T g^{-1} c)
-    return 0.5 * sigma * ETA @ np.outer(v, v)
+    sigma = np.sign(float(v @ eta @ v))  # = sign(c^T g^{-1} c)
+    return 0.5 * sigma * eta @ np.outer(v, v)
 
 
 def felt_covector(r: np.ndarray, g: np.ndarray) -> np.ndarray:
@@ -66,14 +67,16 @@ def felt_covector(r: np.ndarray, g: np.ndarray) -> np.ndarray:
     return np.linalg.norm(r) * gr / n
 
 
-def metric_delta_generator(L: np.ndarray, dG: np.ndarray) -> np.ndarray:
+def metric_delta_generator(L: np.ndarray, dG: np.ndarray, eta: np.ndarray | None = None) -> np.ndarray:
     """eta-self-adjoint generator realizing a symmetric metric change dG to first order:
     A = eta L^{-T} dG L^{-1} / 2  gives  g <- g + dG  under  L <- exp(A) L."""
+    eta = ETA if eta is None else eta
     Linv = np.linalg.inv(L)
-    return 0.5 * ETA @ (Linv.T @ (0.5 * (dG + dG.T)) @ Linv)
+    return 0.5 * eta @ (Linv.T @ (0.5 * (dG + dG.T)) @ Linv)
 
 
-def toward_metric_generator(L: np.ndarray, g_target: np.ndarray) -> np.ndarray:
+def toward_metric_generator(L: np.ndarray, g_target: np.ndarray,
+                            eta: np.ndarray | None = None) -> np.ndarray:
     """eta-self-adjoint generator moving g = L^T eta L toward g_target.
 
     H = L^{-T} g_target L^{-1} is the target metric seen in the current
@@ -82,14 +85,15 @@ def toward_metric_generator(L: np.ndarray, g_target: np.ndarray) -> np.ndarray:
     on g and g_target (not on the gauge of L).  Used for forgetting toward the
     temperament prior g0 and for gossip diffusion.
     """
+    eta = ETA if eta is None else eta
     Linv = np.linalg.inv(L)
     H = Linv.T @ g_target @ Linv
-    return 0.5 * ETA @ (H - ETA)
+    return 0.5 * eta @ (H - eta)
 
 
 def apply_frame_update(L: np.ndarray, A: np.ndarray, eps: float, max_norm: float) -> np.ndarray:
     """L <- exp(eps A) L with ||eps A|| capped.  exp is always invertible, so
-    det L never crosses zero and the signature (3,1) is preserved exactly."""
+    det L never crosses zero and the signature is preserved exactly."""
     return expm(_cap(eps * A, max_norm)) @ L
 
 
@@ -125,20 +129,22 @@ def learn_frame(L: np.ndarray, r: np.ndarray, frustration: float, c: CognitionCo
                 rate: float | None = None) -> np.ndarray:
     """One learning step from drive residual r (§5.2): sensitivity weighting
     |g^ii| (§3.4), felt covector, salience generator scaled by frustration."""
-    g = ga.metric_from_frame(L)
+    eta = ga.eta_of(c.signature)
+    g = ga.metric_from_frame(L, eta)
     cov = ga.sensitivities(g, c.sensitivity_cap) * r if c.use_sensitivity else r.copy()
     if c.felt_residual:
         cov = felt_covector(cov, g)
     scale = 1.0 + c.frustration_gain * frustration
     eps = (c.learn_rate if rate is None else rate) * scale
-    return apply_frame_update(L, salience_generator(cov, L), eps, c.max_frame_step)
+    return apply_frame_update(L, salience_generator(cov, L, eta), eps, c.max_frame_step)
 
 
 def forget_frame(L: np.ndarray, L0: np.ndarray, c: CognitionConfig) -> np.ndarray:
     """Decay toward the temperament prior g0 = L0^T eta L0 (not toward zero)."""
     if c.forget_rate <= 0:
         return L
-    A = toward_metric_generator(L, ga.metric_from_frame(L0))
+    eta = ga.eta_of(c.signature)
+    A = toward_metric_generator(L, ga.metric_from_frame(L0, eta), eta)
     return apply_frame_update(L, A, c.forget_rate, c.max_frame_step)
 
 
@@ -170,12 +176,16 @@ class NPC:
 
     # --- views ---------------------------------------------------------
     @property
+    def eta(self) -> np.ndarray:
+        return ga.eta_of(self.cfg.signature)
+
+    @property
     def g(self) -> np.ndarray:
-        return ga.metric_from_frame(self.L)
+        return ga.metric_from_frame(self.L, self.eta)
 
     @property
     def g0(self) -> np.ndarray:
-        return ga.metric_from_frame(self.L0)
+        return ga.metric_from_frame(self.L0, self.eta)
 
     def commit_frame(self, L_raw: np.ndarray, check=None) -> bool:
         """Adopt a new frame through the frame law; transport the inner state.
@@ -185,7 +195,7 @@ class NPC:
         """
         h = self.cfg.frame_horizon
         L_new = saturate_frame(self.L, L_raw, h) if h else L_raw
-        if check is not None and not check(ga.metric_from_frame(L_new)):
+        if check is not None and not check(ga.metric_from_frame(L_new, self.eta)):
             return False
         if self.cfg.transport_state:
             # C_o = L C is the agent's experiential state; it stays, its
@@ -219,22 +229,27 @@ class NPC:
 
     # --- one cognitive tick ---------------------------------------------
     def dynamics_step(self, beta_ext: np.ndarray, h: float, eat: float = 0.0,
-                      company: float = 0.0) -> None:
-        """Split rotor steps + damping + hunger drift + rapidity clamp (§3)."""
+                      company: float = 0.0, push: np.ndarray | None = None) -> None:
+        """Split rotor steps + damping + hunger drift + rapidity clamp (§3).
+
+        push: optional affine drive (per second), e.g. the injury reflex."""
         c = self.cfg
         g = self.g
+        eta = self.eta
         # Frustration is measured on the state the world is pushing (§3.3).
-        fr_norm, fr_sq = ga.trivector_norms(self.C, beta_ext, self.L)
+        fr_norm, fr_sq = ga.trivector_norms(self.C, beta_ext, self.L, eta)
 
         # Lie-Trotter: C <- exp(h O_ext) exp(h O_int) C
-        C, phi_int = ga.rotor_step(self.C, self.omega_int(g), h, self.L, c.max_rapidity)
+        C, phi_int = ga.rotor_step(self.C, self.omega_int(g), h, self.L, c.max_rapidity, eta)
         C, phi_ext = ga.rotor_step(C, ga.generator_from_bivector(beta_ext, g), h,
-                                   self.L, c.max_rapidity)
+                                   self.L, c.max_rapidity, eta)
         s_after_rotor = ga.interval(C, g)
         # Non-rotor terms
         C = C - h * c.gamma * (C - c.C0)
         C[0] += h * (c.hunger_drift - c.eat_rate * eat * (C[0] - c.sated_level))
         C[1] += h * (c.social_drift - c.company_rate * company * (C[1] - c.company_level))
+        if push is not None:
+            C = C + h * push
         n = np.linalg.norm(C)
         if not np.isfinite(n):
             raise FloatingPointError("cognitive state became non-finite")

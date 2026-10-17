@@ -38,6 +38,7 @@ import numpy as np
 from .config import LTMConfig
 
 APPETITIVE, AVERSIVE = 1, -1
+ORIGINS = ("experience", "imprinted", "inherited")
 ALIGN = 64
 
 
@@ -71,6 +72,7 @@ def memory_dtype(cfg: LTMConfig) -> np.dtype:
         ("profile", "<f4", (cfg.affect_dim,)),   # affect axes this memory relieved / rewarded
         ("kind", "<i4"),
         ("active", "<i4"),
+        ("origin", "<i4"),                        # index into ORIGINS
     ], align=True)
     return np.dtype({"names": base.names,
                      "formats": [base.fields[n][0] for n in base.names],
@@ -142,7 +144,8 @@ class SequenceMemory:
         self.replay_step = 0
         self.activation = 0.0
         self.t = 0.0
-        self.events: list[dict] = []      # stored / merged / recalled records
+        self.events: list[dict] = []      # stored / merged / recalled / imprinted / inherited
+        self.pending: list[dict] = []     # imprints waiting for their reaction sequence
         self.space: MemorySpace | None = None
 
     # --- ring helpers --------------------------------------------------------
@@ -160,8 +163,7 @@ class SequenceMemory:
         and store a sequence if it ended in relief or reward.
 
         affect: the present *weighted* affect per axis (+ pain, - reward), whose
-        sum is `pain`.  Without it, the pain is filed on the last
-        ("unattributed") axis.
+        sum is `pain`.  Without it, the pain is filed on the last axis.
         """
         c = self.cfg
         self.t = t
@@ -183,6 +185,9 @@ class SequenceMemory:
         self.hist_n += 1
         act = self.slots["active"] == 1
         self.slots["strength"][act] *= (1.0 - c.decay)
+        imprinted = self._advance_imprints()
+        if imprinted is not None:
+            return imprinted
         if self.cool:
             self.cool -= 1
             return None
@@ -207,9 +212,40 @@ class SequenceMemory:
         self.cool = c.cooldown
         return self.store(key, seq, kind, val, np.maximum(prof, 0))
 
+    # --- imprinting (forced memory creation, e.g. witnessing a death) --------
+    def imprint(self, key: np.ndarray, valence: float, profile: np.ndarray) -> None:
+        """Schedule a forced escape memory keyed by `key` (what was sensed at the
+        moment).  Its sequence is the agent's *reaction*: the next seq_len
+        behaviour samples.  Stored without waiting for relief."""
+        self.pending.append(dict(key=np.asarray(key, np.float32).copy(), valence=float(valence),
+                                 profile=np.asarray(profile, float), left=self.cfg.seq_len))
+
+    def _advance_imprints(self) -> dict | None:
+        done = None
+        for p in list(self.pending):
+            p["left"] -= 1
+            if p["left"] <= 0 and self.hist_n >= self.cfg.seq_len:
+                seq = self._chrono(self.beh, self.hist_n, self.cfg.seq_len)
+                done = self.store(p["key"], seq, AVERSIVE, p["valence"], p["profile"],
+                                  origin="imprinted")
+                self.pending.remove(p)
+        return done
+
+    # --- inheritance -------------------------------------------------------
+    def inherit_from(self, parent: "SequenceMemory", k: int, factor: float) -> int:
+        """Copy the parent's k strongest memories, strength scaled by `factor`."""
+        s = parent.slots
+        act = np.nonzero(s["active"] == 1)[0]
+        best = act[np.argsort(-s["strength"][act])][:k]
+        for j in best:
+            self.store(s["key"][j].copy(), s["seq"][j].astype(float), int(s["kind"][j]),
+                       float(s["strength"][j]) * factor, s["profile"][j].astype(float),
+                       origin="inherited")
+        return len(best)
+
     # --- store ---------------------------------------------------------------
     def store(self, key: np.ndarray, seq: np.ndarray, kind: int, valence: float,
-              profile: np.ndarray | None = None) -> dict:
+              profile: np.ndarray | None = None, origin: str = "experience") -> dict:
         """valence: the *weighted* valence (loss aversion already applied); it
         becomes the memory's strength.  profile: affect axes it relieved/rewarded
         (normalized here; default: all axes equally)."""
@@ -234,7 +270,8 @@ class SequenceMemory:
                 s["strength"][j] = w0 + w1
                 s["valence"][j] = max(float(s["valence"][j]), valence)
                 s["t"][j] = self.t
-                ev = dict(t=self.t, what="merged", slot=int(j), kind=kind, valence=valence)
+                ev = dict(t=self.t, what="merged", slot=int(j), kind=kind, valence=valence,
+                          origin=origin)
                 self.events.append(ev)
                 return ev
         free = np.nonzero(s["active"] == 0)[0]
@@ -247,9 +284,10 @@ class SequenceMemory:
         s["t"][j] = self.t
         s["kind"][j] = kind
         s["profile"][j] = prof
+        s["origin"][j] = ORIGINS.index(origin)
         s["active"][j] = 1
         ev = dict(t=self.t, what="stored", slot=j, kind=kind, valence=valence,
-                  evicted=not len(free))
+                  evicted=not len(free), origin=origin)
         self.events.append(ev)
         return ev
 
@@ -316,6 +354,7 @@ class SequenceMemory:
         s["uses"][j] += 1
         self.replay_slot, self.replay_step = j, 1
         self.events.append(dict(t=self.t, what="recalled", slot=j, kind=int(s["kind"][j]),
+                                origin=ORIGINS[int(s["origin"][j])],
                                 activation=self.activation, gate=self.gate,
                                 pain_now=float(np.maximum(self.aff_now, 0).sum())))
         return s["seq"][j][0].astype(float)

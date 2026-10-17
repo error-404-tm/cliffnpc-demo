@@ -9,7 +9,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 PY=${PY:-.venv/bin/python}
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1   # tiny matrices: BLAS threads only add contention
-EXPS=(e1_foraging e2_lightcone e3_order e4_holonomy e5_threshold e6_village e8_sequence_memory)
+EXPS=(e1_foraging e2_lightcone e3_order e4_holonomy e5_threshold e6_village e8_sequence_memory e9_life_signature)
 
 start=$(date +%s)
 declare -A PIDS

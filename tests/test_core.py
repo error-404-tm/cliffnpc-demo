@@ -292,3 +292,24 @@ def test_surprise_gating_skips_ticks_and_stays_finite():
     log = sim.run(200.0)
     assert sim.cog_ticks < 0.9 * sim.cog_slots
     assert np.all(np.isfinite(log["C"]))
+
+
+def test_signature_22_hunger_and_threat_timelike(rng):
+    """Cl(2,2): the core algebra works for any signature, not only (3,1)."""
+    eta = ga.eta_of((-1.0, 1.0, 1.0, -1.0))
+    for _ in range(20):
+        L = random_frame(rng)
+        g = ga.metric_from_frame(L, eta)
+        assert ga.signature(g)[:2] == (2, 2)
+        assert np.allclose(ga.metric_from_frame(ga.frame_from_metric(g, eta), eta), g, atol=1e-9)
+        beta = rng.normal(size=(4, 4))
+        beta = beta - beta.T
+        M = ga.generator_from_bivector(beta, g)
+        assert ga.is_in_so(M, g)
+        C = rng.normal(size=4)
+        C2, phi = ga.rotor_step(C, 20 * M, 0.1, L, max_rapidity=0.05, eta=eta)
+        assert phi > 0.05
+        assert np.isclose(ga.interval(C2, g), ga.interval(C, g), rtol=1e-9, atol=1e-10)
+    # hunger-threat plane is elliptic (bounded tradeoff), hunger-explore hyperbolic
+    assert ga.basis_plane_type(0, 3, eta) == "elliptic"
+    assert ga.basis_plane_type(0, 2, eta) == "hyperbolic"

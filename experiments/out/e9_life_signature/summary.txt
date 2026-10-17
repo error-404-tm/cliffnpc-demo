@@ -1,0 +1,31 @@
+E9 Life and signature
+=====================
+4 seeds x 2000 s per signature; one signature per simulation, runs in parallel.
+Life on (death, birth, inheritance, witnessing, injury reflex), sequence memory with loss
+aversion and present-affect gating, pain-aversion learning, fear learned from injury and deaths.
+
+                                           Cl(3,1)             Cl(2,2)
+births                               19.50 ±  5.02       22.00 ±  5.96
+max generation                        5.75 ±  0.83        5.00 ±  0.71
+NPC deaths: starvation                3.75 ±  2.86        5.00 ±  3.39
+NPC deaths: injury                    0.75 ±  0.83        1.25 ±  1.64
+rival deaths: starvation              1.00 ±  0.71        2.25 ±  2.17
+rival deaths: injury                  0.50 ±  0.50        0.75 ±  0.83
+rival extinct at end                  0.00 ±  0.00        0.25 ±  0.43
+witness events                       51.75 ± 37.82       26.00 ± 14.12
+imprinted memories                   38.00 ± 27.09       16.50 ±  9.07
+fights per NPC-hour                   3.22 ±  1.99        3.77 ±  2.36
+solo fight fraction                   0.71 ±  0.02        0.76 ±  0.10
+NPC mean pain                         0.12 ±  0.37       -2.11 ±  0.50
+final NPC fear sensitivity           16.39 ±  9.36        7.84 ±  4.40
+recalls: experience                990.50 ± 439.99    1087.50 ± 609.74
+recalls: imprinted                   12.00 ±  8.86        0.75 ±  0.43
+recalls: inherited                 304.25 ± 191.86     234.25 ± 107.38
+NPC fight alone, early                0.56 ±  0.15        0.39 ±  0.07
+NPC fight alone, late                 0.49 ±  0.25        0.32 ±  0.04
+NPC fight w/ allies, early            0.35 ±  0.15        0.33 ±  0.05
+NPC fight w/ allies, late             0.25 ±  0.10        0.17 ±  0.13
+rival fight alone, early              0.19 ±  0.17        0.27 ±  0.14
+rival fight alone, late               0.19 ±  0.06        0.25 ±  0.08
+rival fight vs crowd, early           0.87 ±  0.16        0.31 ±  0.26
+rival fight vs crowd, late            0.79 ±  0.15        0.55 ±  0.28

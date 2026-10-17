@@ -29,7 +29,16 @@ from itertools import combinations
 import numpy as np
 from scipy.linalg import expm
 
-ETA = np.diag([1.0, 1.0, 1.0, -1.0])
+ETA = np.diag([1.0, 1.0, 1.0, -1.0])     # default signature (3,1): threat timelike
+
+
+def eta_of(signature) -> np.ndarray:
+    """Base metric for a drive signature, e.g. (1, 1, 1, -1) or (-1, 1, 1, -1)."""
+    return np.diag(np.asarray(signature, dtype=float))
+
+
+def _eta(eta):
+    return ETA if eta is None else eta
 DRIVES = ("hunger", "social", "explore", "threat")
 N = 4
 PLANES = list(combinations(range(N), 2))  # (0,1),(0,2),...,(2,3)
@@ -40,9 +49,9 @@ TRIPLES = list(combinations(range(N), 3))
 # Metrics and frames
 # ---------------------------------------------------------------------------
 
-def metric_from_frame(L: np.ndarray) -> np.ndarray:
+def metric_from_frame(L: np.ndarray, eta: np.ndarray | None = None) -> np.ndarray:
     """g = L^T eta L."""
-    return L.T @ ETA @ L
+    return L.T @ _eta(eta) @ L
 
 
 def signature(g: np.ndarray, tol: float = 1e-10) -> tuple[int, int, int]:
@@ -51,19 +60,25 @@ def signature(g: np.ndarray, tol: float = 1e-10) -> tuple[int, int, int]:
     return int((w > tol).sum()), int((w < -tol).sum()), int((abs(w) <= tol).sum())
 
 
-def frame_from_metric(g: np.ndarray) -> np.ndarray:
-    """Some L with L^T eta L = g, for g of signature (3,1).
+def frame_from_metric(g: np.ndarray, eta: np.ndarray | None = None) -> np.ndarray:
+    """Some L with L^T eta L = g, for g with the signature of eta.
 
-    Built from the eigendecomposition g = Q diag(w) Q^T, with the single
-    negative eigenvalue placed in the timelike (last) slot.  The result is one
+    Built from the eigendecomposition g = Q diag(w) Q^T, with the negative
+    eigenvalues placed in eta's timelike slots.  The result is one
     representative of the gauge orbit {Lambda L : Lambda in O(eta)}.
     """
+    eta = _eta(eta)
     g = 0.5 * (g + g.T)
     w, Q = np.linalg.eigh(g)
-    neg = np.where(w < 0)[0]
-    if len(neg) != 1:
-        raise ValueError(f"metric must have signature (3,1); eigenvalues {w}")
-    order = [i for i in range(N) if i != neg[0]] + [neg[0]]
+    neg = [i for i in range(N) if w[i] < 0]
+    pos = [i for i in range(N) if w[i] >= 0]
+    t_slots = [i for i in range(N) if eta[i, i] < 0]
+    s_slots = [i for i in range(N) if eta[i, i] > 0]
+    if len(neg) != len(t_slots):
+        raise ValueError(f"metric signature does not match eta; eigenvalues {w}")
+    order = [0] * N
+    for slot, k in zip(s_slots + t_slots, pos + neg):
+        order[slot] = k
     w, Q = w[order], Q[:, order]
     return np.diag(np.sqrt(np.abs(w))) @ Q.T
 
@@ -159,37 +174,41 @@ def is_in_so(M: np.ndarray, g: np.ndarray, tol: float = 1e-10) -> bool:
     return bool(np.allclose(M.T @ g + g @ M, 0.0, atol=tol))
 
 
-def split_eta_generator(A: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def split_eta_generator(A: np.ndarray, eta: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
     """Split a frame generator into (so(eta) part, eta-self-adjoint part).
 
     A_gauge = (A - eta A^T eta)/2 satisfies A^T eta + eta A = 0 and leaves
     g = L^T eta L unchanged under L <- exp(A) L.  A_sym = (A + eta A^T eta)/2
     satisfies eta A_sym = (eta A_sym)^T and is the part that deforms g.
     """
-    swapped = ETA @ A.T @ ETA
+    eta = _eta(eta)
+    swapped = eta @ A.T @ eta
     return 0.5 * (A - swapped), 0.5 * (A + swapped)
 
 
-def clamp_boost(M_o: np.ndarray, max_rapidity: float) -> tuple[np.ndarray, float]:
+def clamp_boost(M_o: np.ndarray, max_rapidity: float,
+                eta: np.ndarray | None = None) -> tuple[np.ndarray, float]:
     """Cap the boost part of an so(eta) matrix (already scaled by the step h).
 
-    In the orthonormal frame an so(eta) matrix is [[R, b], [b^T, 0]] with R
-    antisymmetric; |b| is the rapidity of the boost part.  Returns the clamped
-    matrix and the rapidity before clamping.
+    In the orthonormal frame the boost part of an so(eta) matrix is the set of
+    entries that mix a spacelike with a timelike axis (symmetric there); the
+    rotation part mixes axes of the same type.  For (3,1) this is the familiar
+    [[R, b], [b^T, 0]].  phi = norm of the mixed entries (each pair once).
+    Returns the clamped matrix and the rapidity before clamping.
     """
-    b = M_o[:3, 3]
-    phi = float(np.linalg.norm(b))
+    s = np.diag(_eta(eta))
+    mixed = np.outer(s, s) < 0
+    phi = float(np.sqrt(0.5 * np.sum(M_o[mixed] ** 2)))
     if phi <= max_rapidity or phi == 0.0:
         return M_o, phi
-    scale = max_rapidity / phi
     out = M_o.copy()
-    out[:3, 3] *= scale
-    out[3, :3] *= scale
+    out[mixed] *= max_rapidity / phi
     return out, phi
 
 
 def rotor_step(C: np.ndarray, M: np.ndarray, h: float, L: np.ndarray,
-               max_rapidity: float = np.inf) -> tuple[np.ndarray, float]:
+               max_rapidity: float = np.inf,
+               eta: np.ndarray | None = None) -> tuple[np.ndarray, float]:
     """C <- exp(h M) C, with the boost rapidity of h M capped.
 
     The clamp is applied in the orthonormal frame (M_o = L M L^{-1} is in
@@ -197,7 +216,7 @@ def rotor_step(C: np.ndarray, M: np.ndarray, h: float, L: np.ndarray,
     """
     Linv = np.linalg.inv(L)
     M_o = L @ (h * M) @ Linv
-    M_o, phi = clamp_boost(M_o, max_rapidity)
+    M_o, phi = clamp_boost(M_o, max_rapidity, eta)
     return Linv @ expm(M_o) @ L @ C, phi
 
 
@@ -215,7 +234,8 @@ def vector_wedge_bivector(C: np.ndarray, beta: np.ndarray) -> np.ndarray:
                      for i, j, k in TRIPLES])
 
 
-def trivector_norms(C: np.ndarray, beta: np.ndarray, L: np.ndarray) -> tuple[float, float]:
+def trivector_norms(C: np.ndarray, beta: np.ndarray, L: np.ndarray,
+                    eta: np.ndarray | None = None) -> tuple[float, float]:
     """(Euclidean norm, signed square) of C^B, computed in the orthonormal frame.
 
     The Euclidean norm of the orthonormal-frame components is the stress meter
@@ -225,7 +245,8 @@ def trivector_norms(C: np.ndarray, beta: np.ndarray, L: np.ndarray) -> tuple[flo
     C_o = L @ C
     beta_o = L @ beta @ L.T
     T = vector_wedge_bivector(C_o, beta_o)
-    signs = np.array([ETA[i, i] * ETA[j, j] * ETA[k, k] for i, j, k in TRIPLES])
+    e = _eta(eta)
+    signs = np.array([e[i, i] * e[j, j] * e[k, k] for i, j, k in TRIPLES])
     return float(np.linalg.norm(T)), float((signs * T * T).sum())
 
 

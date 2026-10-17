@@ -9,6 +9,11 @@ import numpy as np
 
 @dataclass
 class CognitionConfig:
+    # Drive signature: +1 spacelike, -1 timelike, for (hunger, social, explore,
+    # threat).  Default (3,1): threat timelike.  (-1, 1, 1, -1) makes hunger
+    # timelike too, i.e. Cl(2,2).
+    signature: tuple = (1.0, 1.0, 1.0, -1.0)
+
     # --- dynamics (§3) ---
     # Intrinsic temperament bivector Omega_int, as {(i, j): coefficient of e_i^e_j}.
     omega_int: dict = field(default_factory=lambda: {(0, 2): 0.02})
@@ -71,9 +76,11 @@ class CognitionConfig:
 
 @dataclass
 class AffectConfig:
-    """Pain/reward space (affect.py).  Basis: hunger, social, injury; each axis is
-    bipolar, + pain / - reward."""
-    weights: np.ndarray = field(default_factory=lambda: np.array([0.5, 0.5, 3.0]))  # pain sensitivity
+    """Pain/reward space (affect.py).  Basis: hunger, social, injury, fear; each
+    axis is bipolar, + pain / - reward."""
+    # Pain sensitivity per axis.  The fear entry is the *innate* fear; learned
+    # fear sensitivity is added on top by experience (AffectState.fear_learned).
+    weights: np.ndarray = field(default_factory=lambda: np.array([0.5, 0.5, 3.0, 0.0]))
     social_sign: float = 1.0            # +1: loneliness hurts; -1 (anti-social): crowding hurts
     triumph_weight: float = 1.0         # reward per unit of injury dealt to a rival
     injury_tau: float = 2.0             # s, smoothing of injury taken/dealt rates
@@ -84,6 +91,12 @@ class AffectConfig:
     max_step: float = 0.05              # cap on ||A|| per update
     max_cond: float = 50.0              # reject updates that make cond(g) exceed this
     min_axis_norm: float = 0.2          # keep |e_i . e_i| >= this with the original sign
+    # Fear: anticipation of injury when a rival is perceived.  Its sensitivity
+    # develops from experience (all zero by default = no learned fear).
+    fear_from_injury: float = 0.0       # sensitivity gained per unit of injury taken
+    fear_from_death: float = 0.0        # sensitivity gained per witnessed death
+    fear_decay: float = 0.0             # per second, slow forgetting of learned fear
+    fear_max: float = 30.0
 
 
 @dataclass
@@ -109,7 +122,7 @@ class LTMConfig:
     # rewards it brought) as a profile over the affect axes; recall is weighted
     # by the agent's present affect along that profile.  Relief memories need
     # that pain to be present now; reward memories are boosted by present reward.
-    affect_dim: int = 4                 # hunger, social, injury, unattributed (power of two)
+    affect_dim: int = 4                 # hunger, social, injury, fear (power of two)
     gate_scale: float = 0.3             # pain/reward (weighted affect units) for gate ~ tanh(1)
     reward_floor: float = 0.5           # reward-memory gate with no reward present (0 = strict)
     relief_release: float = 0.25        # a relief replay stops when its pain gate drops below this
@@ -121,6 +134,40 @@ class LTMConfig:
     replay_gain: float = 1.5            # rad/s of the replay generator at full activation
     decay: float = 0.0005               # strength decay per sample
     cooldown: int = 8                   # samples between stored events
+
+
+@dataclass
+class LifeConfig:
+    """Death, birth, inheritance, witnessing, injury reflex (arena).  Sizes are powers of two."""
+    capacity: int = 32                  # agent slots (log arrays are capacity-wide)
+    npc_cap: int = 16
+    rival_cap: int = 4
+    # death
+    starve_level: float = 1.2           # hunger coefficient above which the body starves
+    starve_rate: float = 0.03           # health lost per second per unit of hunger above it
+    # birth
+    birth_health: float = 0.9
+    birth_sated: float = -0.3           # hunger coefficient at or below this
+    birth_cooldown: float = 150.0       # s between births per parent
+    maturity: float = 90.0              # s after birth before an agent can reproduce
+    partner_radius: float = 15.0        # NPCs need an eligible partner this close (rivals: alone)
+    birth_cost_health: float = 0.25
+    birth_cost_hunger: float = 0.8      # added to the parent's hunger
+    # inheritance
+    inherit_memories: int = 16          # strongest memories copied from each parent
+    inherit_strength: float = 0.5       # their strength is scaled by this
+    inherit_fear: float = 0.5           # child's learned fear = this * parents' mean
+    # witnessing a death (within sensor radius)
+    shock_flight: float = 2.0           # immediate push of the witness's threat drive to flight
+    vicarious_injury: float = 0.3       # felt as injury taken (pain, fear sensitization)
+    dread_valence: float = 3.0          # strength of the imprinted escape memory
+    foe_death_factor: float = 1.0       # effects scaled by this when the dead was another faction
+    # injury reflex: dC4 -= injury_reflex * (injury taken per second); the strongest push
+    injury_reflex: float = 20.0
+    # Injury is lethal and slows continuously: speed = max_speed * health.  The
+    # discrete "immobile until recovered, ignored by rivals" state of the
+    # life-less arena would make injury non-lethal, so it is off here.
+    immobility: bool = False
 
 
 @dataclass

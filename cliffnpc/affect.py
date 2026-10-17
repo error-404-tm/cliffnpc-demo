@@ -57,12 +57,13 @@ DRIVE_OF = (0, 1, 3)        # responsibility map R: affect axis -> drive axis
 
 
 def affect_vector(C: np.ndarray, injury_taken: float, injury_dealt: float,
-                  cfg: AffectConfig) -> np.ndarray:
-    """The morphism (drive state, body) -> affect space."""
+                  cfg: AffectConfig, fear: float = 0.0) -> np.ndarray:
+    """The morphism (drive state, body, perception) -> affect space."""
     return np.array([
         C[0],                                     # hungry hurts, sated pleases
         cfg.social_sign * C[1],                   # lonely hurts (or crowded, if anti-social)
         injury_taken - cfg.triumph_weight * injury_dealt,
+        fear,                                     # anticipated injury (rival perceived)
     ])
 
 
@@ -84,33 +85,36 @@ def axis_eligibilities(beta: np.ndarray, C: np.ndarray, scale: float) -> np.ndar
 
 
 def responsibility(cfg: AffectConfig) -> np.ndarray:
-    """R (3 x 4): affect axis -> drive axis, with the chain-rule signs of the morphism."""
-    R = np.zeros((3, 4))
+    """R (4 x 4): affect axis -> drive axis, with the chain-rule signs of the morphism.
+    Injury and fear are both blamed on the fight/flight axis: approaching is
+    what brings contact."""
+    R = np.zeros((4, 4))
     R[0, 0] = 1.0
     R[1, 1] = cfg.social_sign
     R[2, 3] = 1.0
+    R[3, 3] = 1.0
     return R
 
 
-def metric_ok(g: np.ndarray, cfg: AffectConfig) -> bool:
+def metric_ok(g: np.ndarray, cfg: AffectConfig, eta: np.ndarray | None = None) -> bool:
     """Semantic integrity of a learned metric.
 
     exp-updates never change the signature, but strong learning can still swap
     which *drive* is timelike (e.g. explore becomes timelike and threat
     spacelike), and the straight path back to g0 then crosses a degenerate
-    metric.  So: hunger/social/explore stay spacelike, threat stays timelike,
-    each by a margin, and g stays well conditioned (checked on g, which is
+    metric.  So every drive keeps the causal character its signature gives it
+    (eta), by a margin, and g stays well conditioned (checked on g, which is
     gauge-invariant; L is not).
     """
+    s = np.diag(ga.ETA if eta is None else eta)
     d = np.diag(g)
-    m = cfg.min_axis_norm
-    return bool(np.all(d[:3] >= m) and d[3] <= -m and np.linalg.cond(g) <= cfg.max_cond)
+    return bool(np.all(s * d >= cfg.min_axis_norm) and np.linalg.cond(g) <= cfg.max_cond)
 
 
 @dataclass
 class AffectState:
     cfg: AffectConfig
-    a: np.ndarray = field(default_factory=lambda: np.zeros(3))
+    a: np.ndarray = field(default_factory=lambda: np.zeros(4))
     a_hat: np.ndarray | None = None
     trace: np.ndarray = field(default_factory=lambda: np.zeros((4, 4, 4)))   # per drive axis
     taken_rate: float = 0.0       # smoothed injury taken per second
@@ -118,29 +122,45 @@ class AffectState:
     delta: float = 0.0            # < w, a - a_hat >
     blame: np.ndarray = field(default_factory=lambda: np.zeros(4))   # v = R^T (w * err)
     pain: float = 0.0             # < w, a >
+    fear_now: float = 0.0         # perceived threat level (set each tick)
+    fear_learned: float = 0.0     # learned fear sensitivity, added to the innate weight
+
+    @property
+    def weights(self) -> np.ndarray:
+        w = self.cfg.weights.copy()
+        w[3] += self.fear_learned
+        return w
 
     def observe_injury(self, taken: float, dealt: float, h: float) -> None:
-        """Feed the injury taken/dealt during the last h seconds."""
-        k = np.exp(-h / self.cfg.injury_tau)
+        """Feed the injury taken/dealt during the last h seconds.  Injury also
+        sensitizes fear; learned fear slowly fades."""
+        c = self.cfg
+        k = np.exp(-h / c.injury_tau)
         self.taken_rate = k * self.taken_rate + (1 - k) * taken / max(h, 1e-9)
         self.dealt_rate = k * self.dealt_rate + (1 - k) * dealt / max(h, 1e-9)
+        self.fear_learned *= np.exp(-c.fear_decay * h)
+        self.sensitize(c.fear_from_injury * taken)
+
+    def sensitize(self, amount: float) -> None:
+        self.fear_learned = min(self.fear_learned + amount, self.cfg.fear_max)
 
     def step(self, C: np.ndarray, beta_total: np.ndarray, h: float) -> float:
         """Update affect, prediction error and eligibility; return delta."""
         c = self.cfg
-        self.a = affect_vector(C, self.taken_rate, self.dealt_rate, c)
+        w = self.weights
+        self.a = affect_vector(C, self.taken_rate, self.dealt_rate, c, self.fear_now)
         if self.a_hat is None:
             self.a_hat = self.a.copy()
         err = self.a - self.a_hat
-        self.delta = float(c.weights @ err)
-        self.blame = responsibility(c).T @ (c.weights * err)
-        self.pain = float(c.weights @ self.a)
+        self.delta = float(w @ err)
+        self.blame = responsibility(c).T @ (w * err)
+        self.pain = float(w @ self.a)
         self.a_hat = self.a_hat + c.expect_rate * err
         self.trace = (np.exp(-h / c.trace_tau) * self.trace
                       + h * axis_eligibilities(beta_total, C, c.action_scale))
         return self.delta
 
-    def learn(self, L: np.ndarray) -> np.ndarray:
+    def learn(self, L: np.ndarray, eta: np.ndarray | None = None) -> np.ndarray:
         """Pain aversion: g <- g - rate * sum_k v_k T_k (via the frame).
 
         Returns the raw proposal; the caller commits it through the frame law
@@ -148,4 +168,4 @@ class AffectState:
         dG = -self.cfg.learn_rate * np.einsum("k,kij->ij", self.blame, self.trace)
         if not np.any(dG):
             return L
-        return apply_frame_update(L, metric_delta_generator(L, dG), 1.0, self.cfg.max_step)
+        return apply_frame_update(L, metric_delta_generator(L, dG, eta), 1.0, self.cfg.max_step)

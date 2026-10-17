@@ -12,10 +12,10 @@ from cliffnpc.config import AffectConfig
 
 def test_affect_morphism_signs():
     cfg = AffectConfig()
-    a = affect_vector(np.array([0.5, 0.4, 0.0, 0.0]), 0.2, 0.0, cfg)
-    assert np.all(a > 0)                                   # hungry, lonely, injured: all pain
+    a = affect_vector(np.array([0.5, 0.4, 0.0, 0.0]), 0.2, 0.0, cfg, fear=0.7)
+    assert np.all(a > 0)                                   # hungry, lonely, injured, afraid: all pain
     a = affect_vector(np.array([-0.5, -0.4, 0.0, 0.0]), 0.0, 0.3, cfg)
-    assert np.all(a < 0)                                   # sated, in company, triumphant
+    assert np.all(a[:3] < 0) and a[3] == 0                 # sated, in company, triumphant, unafraid
     anti = AffectConfig(social_sign=-1.0)
     assert affect_vector(np.array([0, -0.4, 0, 0.0]), 0, 0, anti)[1] > 0   # crowding hurts
 
