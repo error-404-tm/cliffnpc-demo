@@ -4,7 +4,7 @@
     python -m cliffnpc.arena_viewer --signature 22     # Cl(2,2): hunger timelike too
     python -m cliffnpc.arena_viewer --save arena.gif --seconds 120
 
-World: NPCs (circles) and rivals (triangles), faded by injury, edged by regime
+World: tribe A (blue circles) and tribe B (orange squares), faded by injury, edged by regime
 (blue deliberative, red reactive, grey null).  Recent deaths are black x's,
 recent births green +'s.  The selected agent has a ring, its sensor circle and
 its trail; the side panels show that agent's drives, light cone, learned metric
@@ -24,7 +24,8 @@ import numpy as np
 from .viewer import (BAR_LIM, CONE_LEVELS, DRIVES, METRIC_LEVELS, POLES, REGIME_COLORS, TRAIL,
                      Viewer, pick_level, run_interactive)
 
-FACTION_COLORS = {"npc": "#2e86c1", "rival": "#c0392b"}
+FACTION_COLORS = {"npc": "#2e86c1", "rival": "#c0392b", "A": "#2e86c1", "B": "#d35400"}
+FACTION_MARKERS = {"npc": "o", "rival": "^", "A": "o", "B": "s"}
 MARK_SECONDS = 60.0       # how long death/birth markers stay
 POP_SECONDS = 300.0       # population strip window
 SIGNATURES = {"31": (1.0, 1.0, 1.0, -1.0), "22": (-1.0, 1.0, 1.0, -1.0)}
@@ -86,15 +87,15 @@ class ArenaViewer(Viewer):
         ax.set_title("arena")
         self.food_sc = A(ax.scatter([], [], s=200, marker="o", color="#e67e22", alpha=0.85,
                                     label="food (size = stock)"))
-        self.home_art, = ax.plot([], [], "s", color="#2c3e50", ms=11, label="NPC home")
-        self.lair_art, = ax.plot([], [], "D", color="#7f8c8d", ms=10, label="rival lair")
+        self.home_art, = ax.plot([], [], "P", color=FACTION_COLORS["A"], ms=13, mec="k", label="home A")
+        self.lair_art, = ax.plot([], [], "P", color=FACTION_COLORS["B"], ms=13, mec="k", label="home B")
         self.sensor_art = A(self._Circle((0, 0), 30.0, fill=False, ls=":", color="#95a5a6"))
         ax.add_patch(self.sensor_art)
         self.trail_art = A(ax.plot([], [], "-", color="#bbb", lw=0.8)[0])
-        self.npc_sc = A(ax.scatter([], [], s=90, marker="o", linewidths=2, label="NPCs",
-                                   color=FACTION_COLORS["npc"]))
-        self.rival_sc = A(ax.scatter([], [], s=130, marker="^", linewidths=2, label="rivals",
-                                     color=FACTION_COLORS["rival"]))
+        self.npc_sc = A(ax.scatter([], [], s=90, marker=FACTION_MARKERS["A"], linewidths=2,
+                                   label="tribe A", color=FACTION_COLORS["A"]))
+        self.rival_sc = A(ax.scatter([], [], s=90, marker=FACTION_MARKERS["B"], linewidths=2,
+                                     label="tribe B", color=FACTION_COLORS["B"]))
         self.sel_art = A(ax.plot([], [], "o", ms=20, mfc="none", mec="#f1c40f", mew=2.5)[0])
         self.dead_sc = A(ax.scatter([], [], s=80, marker="x", color="k", label="deaths (60 s)"))
         self.born_sc = A(ax.scatter([], [], s=90, marker="+", color="#27ae60", label="births (60 s)"))
@@ -143,8 +144,8 @@ class ArenaViewer(Viewer):
                                        transform=ax.transAxes))
 
         ax = self.ax_strip
-        self.pop_npc = A(ax.plot([], [], color=FACTION_COLORS["npc"], label="NPCs")[0])
-        self.pop_rival = A(ax.plot([], [], color=FACTION_COLORS["rival"], label="rivals")[0])
+        self.pop_npc = A(ax.plot([], [], color=FACTION_COLORS["A"], label="tribe A")[0])
+        self.pop_rival = A(ax.plot([], [], color=FACTION_COLORS["B"], label="tribe B")[0])
         ax.set_xlim(-POP_SECONDS, 0)
         ax.set_ylim(0, 21)
         ax.set_ylabel("population")
@@ -226,7 +227,7 @@ class ArenaViewer(Viewer):
             if a is not None:
                 self.trail.append(a.pos.copy())
         del self.trail[:-TRAIL]
-        n_npc = sum(a.faction == "npc" for a in ar.agents)
+        n_npc = sum(a.faction == ar.factions[0] for a in ar.agents)
         self.pop_hist.append((ar.t, n_npc, len(ar.agents) - n_npc))
 
     def _scatter(self, sc, agents) -> None:
@@ -244,8 +245,8 @@ class ArenaViewer(Viewer):
     def update(self) -> None:
         from . import algebra as ga
         ar = self.arena
-        npcs = [a for a in ar.agents if a.faction == "npc"]
-        rivals = [a for a in ar.agents if a.faction == "rival"]
+        npcs = [a for a in ar.agents if a.faction == ar.factions[0]]
+        rivals = [a for a in ar.agents if a.faction == ar.factions[1]]
         P = ar.patches
         self.food_sc.set_offsets(np.array([p["pos"] for p in P]).reshape(-1, 2))
         self.food_sc.set_sizes([40 + 260 * min(p["stock"] / p["stock0"], 1.0) if np.isfinite(p["stock0"])
@@ -325,7 +326,7 @@ class ArenaViewer(Viewer):
         self.status.set_text(
             f"{self._sig_label()}   t = {ar.t:7.1f} s   x{self.steps_per_frame}"
             f"{'  PAUSED' if self.paused else ''}\n"
-            f"NPCs {len(npcs):2d}   rivals {len(rivals):2d}   births {len(ar.births)}\n"
+            f"{ar.factions[0]} {len(npcs):2d}   {ar.factions[1]} {len(rivals):2d}   births {len(ar.births)}\n"
             f"deaths: starvation {causes['starvation']}  injury {causes['injury']}\n"
             f"fights {len(ar.engagements)}   food patches {len(ar.patches)}")
 

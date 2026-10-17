@@ -218,3 +218,84 @@ def test_search_grows_with_hunger_squared_when_no_food_is_known():
     speed = lambda h: np.linalg.norm(steer(np.array([h, 0.0, 0.0, 0.0]), 1.0, p, 0.0, cfg))  # noqa: E731
     s1, s2 = speed(0.5), speed(1.5)
     assert np.isclose(s2 / s1, (1.5 + 2 * 1.5 ** 2) / (0.5 + 2 * 0.5 ** 2), rtol=0.01)
+
+
+# ---------------------------------------------------------------- tribes
+from cliffnpc.arena import TRIBE_A, TRIBE_B, life_config  # noqa: E402
+
+
+def _tribes(n=3, **food_kw):
+    cfg = life_config(seed=0)
+    cfg.n_npcs = n
+    for k, v in food_kw.items():
+        setattr(cfg.food_dynamics, k, v)
+    return Arena(cfg)
+
+
+def test_two_identical_tribes_with_equal_numbers():
+    ar = _tribes(4)
+    by = {f: [a for a in ar.agents if a.faction == f] for f in (TRIBE_A, TRIBE_B)}
+    assert len(by[TRIBE_A]) == len(by[TRIBE_B]) == 4
+    a, b = by[TRIBE_A][0], by[TRIBE_B][0]
+    assert a.npc.cfg.C0.tolist() == b.npc.cfg.C0.tolist()
+    assert a.npc.cfg.signature == b.npc.cfg.signature
+    assert a.affect.cfg.social_sign == b.affect.cfg.social_sign == 1.0
+
+
+def test_tribes_regard_only_their_own_as_peers_and_the_other_as_rival():
+    ar = _tribes(2)
+    a1, a2 = [x for x in ar.agents if x.faction == TRIBE_A]
+    b1, b2 = [x for x in ar.agents if x.faction == TRIBE_B]
+    for k, x in enumerate((a1, a2, b1, b2)):
+        x.pos = np.array([50.0 + 3.0 * k, 50.0])
+    assert set(ar._peers_of(a1)) == {a2}
+    assert ar._rival_of(a1) in (b1, b2)
+    assert ar.allies_near(a1) == 1
+
+
+def test_tribe_combat_is_symmetric_and_numbers_decide():
+    D = ArenaConfig().combat.damage_rate
+    for n_a, n_b in ((1, 1), (3, 1)):
+        ar = _tribes(3)
+        A = [x for x in ar.agents if x.faction == TRIBE_A]
+        B = [x for x in ar.agents if x.faction == TRIBE_B]
+        for x in A + B:
+            x.pos = np.array([5.0, 5.0]) + 20 * np.array([ar.agents.index(x), 0.0])
+            x.npc.C[3] = 1.0                          # all willing to fight
+        center = np.array([50.0, 50.0])
+        for k, x in enumerate(A[:n_a]):
+            x.pos = center + np.array([-0.5, 0.3 * k])
+        for k, x in enumerate(B[:n_b]):
+            x.pos = center + np.array([0.5, 0.3 * k])
+        ar._combat(1.0)
+        hit_a = sum(1.0 - x.health for x in A[:n_a])
+        hit_b = sum(1.0 - x.health for x in B[:n_b])
+        assert np.isclose(hit_a, D * n_b / (n_a + n_b))
+        assert np.isclose(hit_b, D * n_a / (n_a + n_b))
+
+
+def test_both_tribes_reproduce_in_pairs():
+    ar = _tribes(2)
+    ar.life.maturity = 0.0
+    ar.life.birth_cooldown = 0.0
+    for x in ar.agents:
+        x.npc.C[0] = -1.0
+        x.pos = ar.homes[x.faction].copy()
+    ar._births()
+    assert sorted(b["faction"] for b in ar.births) == [TRIBE_A, TRIBE_B]
+    assert all(len(b["parents"]) == 2 for b in ar.births)
+
+
+def test_half_of_food_spawns_at_the_fixed_sites():
+    ar = _tribes(1, spawn_rate=1e6, max_patches=3)
+    sites = ar._fixed_sites()
+    fixed = rand = 0
+    for _ in range(400):
+        ar.patches.clear()
+        pos = ar._spawn_spot()
+        if any(np.allclose(pos, s) for s in sites):
+            fixed += 1
+        else:
+            rand += 1
+    assert 0.4 < fixed / (fixed + rand) < 0.6
+    assert all(any(np.allclose(p["pos"], s) for s in sites) for p in _tribes(1).patches)

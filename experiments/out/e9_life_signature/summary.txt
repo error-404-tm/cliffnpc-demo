@@ -1,33 +1,31 @@
-E9 Life and signature
-=====================
+E9 Life and signature: two tribes
+==================================
 4 seeds x 2000 s per signature; one signature per simulation, runs in parallel.
-Life on (death, birth, inheritance, witnessing, injury reflex), sequence memory with loss
-aversion and present-affect gating, pain-aversion learning, fear learned from injury and deaths.
+Two identical tribes (5 each at start), symmetric combat, finite food (half at two fixed
+sites, half random), life on, sequence memory, pain-aversion learning, learned fear.
 
-                                           Cl(3,1)             Cl(2,2)
-births                               12.00 ±  5.24       20.00 ±  2.35
-max generation                        3.00 ±  0.71        3.75 ±  0.43
-NPC deaths: starvation                0.00 ±  0.00        1.00 ±  0.71
-NPC deaths: injury                    0.00 ±  0.00        0.50 ±  0.87
-rival deaths: starvation              0.00 ±  0.00        1.50 ±  1.12
-rival deaths: injury                  0.75 ±  0.83        3.00 ±  1.22
-rival extinct at end                  0.00 ±  0.00        0.00 ±  0.00
-witness events                        6.25 ±  6.72       48.25 ± 17.64
-imprinted memories                    6.25 ±  6.72       42.75 ± 15.55
-fights per NPC-hour                   7.28 ±  7.40       22.70 ±  2.82
-solo fight fraction                   0.58 ±  0.35        0.64 ±  0.03
-NPC mean pain                         0.58 ±  0.88        4.57 ±  1.69
-NPC mean hunger coefficient           0.34 ±  0.05       -0.01 ±  0.09
-food patches depleted                 9.00 ±  5.92       27.00 ±  1.00
-final NPC fear sensitivity            6.89 ±  6.73       24.14 ±  2.94
-recalls: experience                424.75 ± 300.78    1047.25 ± 159.10
-recalls: imprinted                    5.00 ±  8.66        3.25 ±  5.07
-recalls: inherited                 108.75 ± 100.69     292.75 ± 104.83
-NPC fight alone, early                0.68 ±  0.11        0.49 ±  0.11
-NPC fight alone, late                 0.68 ±  0.09        0.55 ±  0.12
-NPC fight w/ allies, early            0.47 ±  0.22        0.34 ±  0.07
-NPC fight w/ allies, late             0.40 ±  0.07        0.41 ±  0.04
-rival fight alone, early              0.31 ±  0.24        0.30 ±  0.11
-rival fight alone, late               0.33 ±  0.04        0.19 ±  0.05
-rival fight vs crowd, early           0.35 ±  0.09        0.35 ±  0.08
-rival fight vs crowd, late            0.27 ±  0.18        0.25 ±  0.08
+                                                   Cl(3,1)             Cl(2,2)
+births                                       26.75 ±  2.59       28.75 ±  7.46
+max generation                                4.25 ±  0.43        6.00 ±  1.87
+deaths: starvation                            0.50 ±  0.87        1.75 ±  0.83
+deaths: injury                                4.50 ±  1.80       11.25 ±  1.79
+deaths, tribe A                               2.00 ±  1.87        5.50 ±  4.15
+deaths, tribe B                               3.00 ±  1.00        7.50 ±  5.22
+final population, tribe A                    16.00 ±  0.00       13.25 ±  4.76
+final population, tribe B                    15.75 ±  0.43       12.50 ±  6.06
+a tribe extinct at end                        0.00 ±  0.00        0.00 ±  0.00
+witness events                               62.00 ± 40.11      104.00 ± 29.04
+imprinted memories                           56.25 ± 34.55       88.75 ± 23.66
+food patches depleted                        22.50 ±  4.97       29.75 ±  2.28
+fights per agent-hour                        21.96 ±  3.04       19.56 ±  3.22
+fights with one side outnumbered 1:n          0.35 ±  0.02        0.33 ±  0.02
+mean pain                                     7.30 ±  2.14        8.26 ±  2.69
+mean hunger coefficient                       0.37 ±  0.03        0.04 ±  0.03
+final fear sensitivity                       25.85 ±  2.26       26.51 ±  1.01
+recalls: experience                        900.25 ± 293.68    1509.00 ± 447.14
+recalls: imprinted                            0.75 ±  0.83        1.00 ±  1.00
+recalls: inherited                         256.50 ± 175.11     404.00 ± 153.75
+fight alone, early                            0.32 ±  0.06        0.39 ±  0.08
+fight alone, late                             0.42 ±  0.06        0.39 ±  0.04
+fight w/ tribe-mates, early                   0.28 ±  0.07        0.36 ±  0.01
+fight w/ tribe-mates, late                    0.36 ±  0.02        0.29 ±  0.04

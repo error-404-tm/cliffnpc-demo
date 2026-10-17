@@ -1,21 +1,21 @@
-"""E9 Life and signature: death, birth, inheritance, fear, under Cl(3,1) vs Cl(2,2).
+"""E9 Life and signature: two identical tribes competing for finite food, Cl(3,1) vs Cl(2,2).
 
 Every agent in a simulation shares one drive signature; the concurrent runs vary it:
   (3,1)  threat timelike (the default)
   (2,2)  hunger timelike too: starving becomes reactive, the hunger-threat plane
          turns elliptic (bounded tradeoff) and hunger-explore hyperbolic
-Life is on: starvation and injury kill (speed falls in proportion to injury),
-witnessing a death shocks, sensitizes fear and imprints an escape memory of
-the reaction, well-fed agents reproduce (NPCs with a partner, the anti-social
-rival alone), children inherit their parents' strongest memories, personality
-frame and part of their fear.  Injury drives flight through a reflex stronger
-than any other channel.  Satiety slightly slows agents (food competition).
-Food is finite and moves: patches run out as they are eaten and new ones appear
-elsewhere; agents only know patches they have seen.
-
-A cubic per-drive saturation law (sat_gain) is on: changing the signature turns
-some designed-bounded rotations into boosts (in Cl(2,2) the foraging channel
-in the hunger-explore plane), which otherwise run away to the safety cap.
+Two tribes, A and B, start equal in number and share the same dynamics; each
+regards only its own members as peers and the other tribe as rival.  Fights
+between them are symmetric: a side of n against m takes m/(n+m) of the damage.
+Life is on: starvation and injury kill (speed falls with injury), witnessing a
+death shocks, sensitizes fear and imprints an escape memory, well-fed pairs
+reproduce and children inherit memories, personality frame and part of their
+fear.  Injury drives flight through the strongest reflex.  Satiety slows a little.
+Food is finite: patches run out as they are eaten; new ones spawn half at two
+fixed sites (equidistant from both homes) and half anywhere; agents only know
+patches they have seen.  Hunger builds fast, starvation begins at 0.8, and
+hungry agents search with weight hunger + 2 hunger^2.  A cubic saturation law
+contains boost runaways under either signature.
 """
 
 import os
@@ -35,19 +35,20 @@ SEEDS = (0, 1, 2, 3)
 SIGNATURES = {"Cl(3,1)": (1.0, 1.0, 1.0, -1.0), "Cl(2,2)": (-1.0, 1.0, 1.0, -1.0)}
 DS = 25                      # log ticks per time-series sample (5 s)
 SAT_GAIN = 0.5               # cubic drive damping (CognitionConfig.sat_gain)
+TRIBES = ("A", "B")
 
 
 def make(sig, seed) -> ArenaConfig:
-    return life_config(sig, seed, sat_gain=SAT_GAIN)   # saturation law: contains boost runaways
+    return life_config(sig, seed, sat_gain=SAT_GAIN)
 
 
-def fight_stats(dec, t0, t1, faction):
-    """Fraction of decisions with C4 > 0 (fight) when a rival is perceived, alone vs with allies."""
+def fight_stats(dec, t0, t1):
+    """Fraction of decisions with C4 > 0 (fight) when a rival is perceived,
+    alone (no tribe-mates near) vs with >= 2 tribe-mates near; both tribes pooled."""
     if len(dec) == 0:
         return (np.nan, 0, np.nan, 0)
-    d = dec[(dec[:, 0] >= t0) & (dec[:, 0] < t1) & (dec[:, 7] == faction)]
-    alone = d[d[:, 2] == 0] if faction == 0 else d[d[:, 2] <= 1]
-    grp = d[d[:, 2] >= 2] if faction == 0 else d[d[:, 2] >= 3]
+    d = dec[(dec[:, 0] >= t0) & (dec[:, 0] < t1)]
+    alone, grp = d[d[:, 2] == 0], d[d[:, 2] >= 2]
     f = lambda x: float(np.mean(x[:, 6] > 0)) if len(x) else np.nan  # noqa: E731
     return (f(alone), len(alone), f(grp), len(grp))
 
@@ -57,30 +58,27 @@ def one(job):
     ar = Arena(make(SIGNATURES[name], seed))
     log = ar.run(T)
     alive, fac = log["alive"], log["faction"]
-    npc_alive = (fac == 0) & alive
-    fear = np.where(npc_alive, log["fear"], np.nan)
+    pops = {f: ((fac == k) & alive).sum(1)[::DS] for k, f in enumerate(ar.factions)}
     with np.errstate(all="ignore"):
-        fear_mean = np.nanmean(fear, axis=1)
+        fear = np.nanmean(np.where(alive, log["fear"], np.nan), axis=1)[::DS]
     ev = [e for a in ar.agents if a.ltm for e in a.ltm.events]
     rec = collections.Counter(e["origin"] for e in ev if e["what"] == "recalled")
     dec = np.array(ar.decisions)
-    npc_time = float(npc_alive.sum()) * ar.wcfg.dt * ar.wcfg.cog_every
+    agent_hours = float(alive.sum()) * ar.wcfg.dt * ar.wcfg.cog_every / 3600
+    sides = [e.get("sides", {}) for e in ar.engagements]
     return dict(
-        name=name, seed=seed,
-        t=log["t"][::DS], pop_npc=npc_alive.sum(1)[::DS], pop_rival=((fac == 1) & alive).sum(1)[::DS],
-        fear=fear_mean[::DS],
+        name=name, seed=seed, t=log["t"][::DS], pops=pops, fear=fear,
         births=[(b["t"], b["faction"], b["generation"]) for b in ar.births],
         deaths=[(d["t"], d["faction"], d["cause"], len(d["witnesses"])) for d in ar.deaths],
-        engagements=len(ar.engagements), solo=sum(e["n_max"] == 1 for e in ar.engagements),
-        npc_injury=float(sum(e["npc_taken"] for e in ar.engagements)),
-        fights_per_npc_hour=len(ar.engagements) / max(npc_time, 1e-9) * 3600,
+        engagements=len(ar.engagements),
+        outnumbered=sum(1 for s in sides if s and min(s.values()) == 1 and max(s.values()) > 1),
+        fights_per_agent_hour=len(ar.engagements) / max(agent_hours, 1e-9),
         recalls=dict(rec),
         imprinted=sum(e.get("origin") == "imprinted" and e["what"] in ("stored", "merged") for e in ev),
-        pain=float(np.nanmean(np.where(npc_alive, log["pain"], np.nan))),
-        hunger=float(np.nanmean(np.where(npc_alive, log["C"][:, :, 0], np.nan))),
+        pain=float(np.nanmean(np.where(alive, log["pain"], np.nan))),
+        hunger=float(np.nanmean(np.where(alive, log["C"][:, :, 0], np.nan))),
         depleted=sum(e["what"] == "depleted" for e in ar.food_events),
-        fight_early=fight_stats(dec, 0, T / 3, 0), fight_late=fight_stats(dec, 2 * T / 3, T, 0),
-        rival_fight_early=fight_stats(dec, 0, T / 3, 1), rival_fight_late=fight_stats(dec, 2 * T / 3, T, 1),
+        fight_early=fight_stats(dec, 0, T / 3), fight_late=fight_stats(dec, 2 * T / 3, T),
     )
 
 
@@ -92,40 +90,39 @@ fig, axes = plt.subplots(2, 2, figsize=(14, 9))
 ax = axes[0][0]
 for n, rs in by.items():
     for k, r in enumerate(rs):
-        ax.plot(r["t"], r["pop_npc"], color=COL[n], lw=1, alpha=0.6, label=f"{n} NPCs" if k == 0 else None)
-        ax.plot(r["t"], r["pop_rival"], color=COL[n], lw=1, ls=":", alpha=0.8, label=f"{n} rivals" if k == 0 else None)
+        ax.plot(r["t"], r["pops"]["A"], color=COL[n], lw=1, alpha=0.7, label=f"{n} tribe A" if k == 0 else None)
+        ax.plot(r["t"], r["pops"]["B"], color=COL[n], lw=1, ls=":", alpha=0.9, label=f"{n} tribe B" if k == 0 else None)
 ax.set_xlabel("t (s)")
 ax.set_ylabel("population")
-ax.set_title("population (each line one seed)")
+ax.set_title("tribe populations (each line one seed)")
 ax.legend(fontsize=8)
 ax = axes[0][1]
 for n, rs in by.items():
     for k, r in enumerate(rs):
         ax.plot(r["t"], r["fear"], color=COL[n], lw=1, alpha=0.7, label=n if k == 0 else None)
 ax.set_xlabel("t (s)")
-ax.set_ylabel("mean learned fear sensitivity (NPCs)")
+ax.set_ylabel("mean learned fear sensitivity")
 ax.set_title("fear develops from injury and witnessed deaths")
 ax.legend(fontsize=8)
 ax = axes[1][0]
-causes = ["starvation", "injury"]
 x = np.arange(len(SIGNATURES))
-for k, (fac, cause) in enumerate([(f, c) for f in ("npc", "rival") for c in causes]):
-    vals = [np.mean([sum(d[1] == fac and d[2] == cause for d in r["deaths"]) for r in by[n]]) for n in SIGNATURES]
-    ax.bar(x + (k - 1.5) * 0.2, vals, 0.2, label=f"{fac} {cause}")
+for k, cause in enumerate(("starvation", "injury")):
+    vals = [np.mean([sum(d[2] == cause for d in r["deaths"]) for r in by[n]]) for n in SIGNATURES]
+    ax.bar(x + (k - 0.5) * 0.3, vals, 0.3, label=f"deaths: {cause}")
 births = [np.mean([len(r["births"]) for r in by[n]]) for n in SIGNATURES]
 ax.plot(x, births, "k^", ms=10, label="births")
 ax.set_xticks(x, list(SIGNATURES))
-ax.set_ylabel("per run (mean of seeds)")
-ax.set_title("deaths by faction and cause, births")
-ax.legend(fontsize=7)
+ax.set_ylabel("per run (mean of seeds, both tribes)")
+ax.set_title("deaths by cause, births")
+ax.legend(fontsize=8)
 ax = axes[1][1]
 w = 0.18
 for k, (key, lab) in enumerate([("fight_early", "early"), ("fight_late", "late")]):
-    for j, (idx, ctx) in enumerate(((0, "alone"), (2, "with allies"))):
+    for j, (idx, ctx) in enumerate(((0, "alone"), (2, "with tribe-mates"))):
         vals = [np.nanmean([r[key][idx] for r in by[n]]) for n in SIGNATURES]
         ax.bar(x + (2 * k + j - 1.5) * w, vals, w, label=f"{lab}, {ctx}")
 ax.set_xticks(x, list(SIGNATURES))
-ax.set_ylabel("fraction fighting when the rival is near (NPCs)")
+ax.set_ylabel("fraction fighting when a rival is near")
 ax.set_title("fight tendency: first vs last third of the run")
 ax.legend(fontsize=7)
 save(fig, OUT, "life.png")
@@ -136,39 +133,41 @@ def m(n, f):
     return f"{np.nanmean(v):8.2f} ± {np.nanstd(v):5.2f}"
 
 
+def per_tribe(field, cause=None):
+    return [(f"{field} {t}", (lambda r, t=t: sum(d[1] == t and (cause is None or d[2] == cause)
+                                                for d in r["deaths"])))
+            for t in TRIBES]
+
+
 rows = [
     ("births", lambda r: len(r["births"])),
     ("max generation", lambda r: max([b[2] for b in r["births"]], default=0)),
-    ("NPC deaths: starvation", lambda r: sum(d[1] == "npc" and d[2] == "starvation" for d in r["deaths"])),
-    ("NPC deaths: injury", lambda r: sum(d[1] == "npc" and d[2] == "injury" for d in r["deaths"])),
-    ("rival deaths: starvation", lambda r: sum(d[1] == "rival" and d[2] == "starvation" for d in r["deaths"])),
-    ("rival deaths: injury", lambda r: sum(d[1] == "rival" and d[2] == "injury" for d in r["deaths"])),
-    ("rival extinct at end", lambda r: float(r["pop_rival"][-1] == 0)),
+    ("deaths: starvation", lambda r: sum(d[2] == "starvation" for d in r["deaths"])),
+    ("deaths: injury", lambda r: sum(d[2] == "injury" for d in r["deaths"])),
+    *[(f"deaths, tribe {t}", (lambda r, t=t: sum(d[1] == t for d in r["deaths"]))) for t in TRIBES],
+    *[(f"final population, tribe {t}", (lambda r, t=t: r["pops"][t][-1])) for t in TRIBES],
+    ("a tribe extinct at end", lambda r: float(min(r["pops"]["A"][-1], r["pops"]["B"][-1]) == 0)),
     ("witness events", lambda r: sum(d[3] for d in r["deaths"])),
     ("imprinted memories", lambda r: r["imprinted"]),
-    ("fights per NPC-hour", lambda r: r["fights_per_npc_hour"]),
-    ("solo fight fraction", lambda r: r["solo"] / max(r["engagements"], 1)),
-    ("NPC mean pain", lambda r: r["pain"]),
-    ("NPC mean hunger coefficient", lambda r: r["hunger"]),
     ("food patches depleted", lambda r: r["depleted"]),
-    ("final NPC fear sensitivity", lambda r: r["fear"][-1]),
+    ("fights per agent-hour", lambda r: r["fights_per_agent_hour"]),
+    ("fights with one side outnumbered 1:n", lambda r: r["outnumbered"] / max(r["engagements"], 1)),
+    ("mean pain", lambda r: r["pain"]),
+    ("mean hunger coefficient", lambda r: r["hunger"]),
+    ("final fear sensitivity", lambda r: r["fear"][-1]),
     ("recalls: experience", lambda r: r["recalls"].get("experience", 0)),
     ("recalls: imprinted", lambda r: r["recalls"].get("imprinted", 0)),
     ("recalls: inherited", lambda r: r["recalls"].get("inherited", 0)),
-    ("NPC fight alone, early", lambda r: r["fight_early"][0]),
-    ("NPC fight alone, late", lambda r: r["fight_late"][0]),
-    ("NPC fight w/ allies, early", lambda r: r["fight_early"][2]),
-    ("NPC fight w/ allies, late", lambda r: r["fight_late"][2]),
-    ("rival fight alone, early", lambda r: r["rival_fight_early"][0]),
-    ("rival fight alone, late", lambda r: r["rival_fight_late"][0]),
-    ("rival fight vs crowd, early", lambda r: r["rival_fight_early"][2]),
-    ("rival fight vs crowd, late", lambda r: r["rival_fight_late"][2]),
+    ("fight alone, early", lambda r: r["fight_early"][0]),
+    ("fight alone, late", lambda r: r["fight_late"][0]),
+    ("fight w/ tribe-mates, early", lambda r: r["fight_early"][2]),
+    ("fight w/ tribe-mates, late", lambda r: r["fight_late"][2]),
 ]
-lines = ["E9 Life and signature", "=====================",
+lines = ["E9 Life and signature: two tribes", "==================================",
          f"{len(SEEDS)} seeds x {T:.0f} s per signature; one signature per simulation, runs in parallel.",
-         "Life on (death, birth, inheritance, witnessing, injury reflex), sequence memory with loss",
-         "aversion and present-affect gating, pain-aversion learning, fear learned from injury and deaths.",
-         "", f"{'':30s}" + "".join(f"{n:>20s}" for n in SIGNATURES)]
+         "Two identical tribes (5 each at start), symmetric combat, finite food (half at two fixed",
+         "sites, half random), life on, sequence memory, pain-aversion learning, learned fear.",
+         "", f"{'':38s}" + "".join(f"{n:>20s}" for n in SIGNATURES)]
 for lab, f in rows:
-    lines.append(f"{lab:30s}" + "".join(f"{m(n, f):>20s}" for n in SIGNATURES))
+    lines.append(f"{lab:38s}" + "".join(f"{m(n, f):>20s}" for n in SIGNATURES))
 write_summary(OUT, lines)

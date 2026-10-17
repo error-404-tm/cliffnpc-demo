@@ -35,7 +35,8 @@ from .config import (AffectConfig, CognitionConfig, CombatConfig, Config, FoodCo
 from .ltm import SequenceMemory
 from .steering import steer
 
-NPC_FACTION, RIVAL_FACTION = "npc", "rival"
+NPC_FACTION, RIVAL_FACTION = "npc", "rival"     # legacy arena: NPC pack vs anti-social rival
+TRIBE_A, TRIBE_B = "A", "B"                       # tribes arena: two identical tribes
 
 
 def npc_cognition() -> CognitionConfig:
@@ -66,8 +67,11 @@ def rival_cognition() -> CognitionConfig:
 
 @dataclass
 class ArenaConfig:
-    n_npcs: int = 5
+    n_npcs: int = 5                    # tribes mode: members per tribe
     n_rivals: int = 1
+    # Two identical tribes (same dynamics, same rules, n_npcs each, homes at
+    # `home` and `lair`) instead of an NPC pack and an anti-social rival.
+    tribes: bool = False
     home: tuple = (20.0, 50.0)
     lair: tuple = (85.0, 50.0)
     food: tuple = ((55.0, 50.0),)
@@ -92,6 +96,8 @@ def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float 
     (death, birth, inheritance, witnessing, injury reflex), learned fear, the
     saturation law and finite moving food, with one drive signature for every agent."""
     cfg = ArenaConfig(seed=seed, ltm=LTMConfig(), life=LifeConfig(), signature=signature,
+                      tribes=True, home=(15.0, 50.0), lair=(85.0, 50.0),
+                      food=((50.0, 30.0), (50.0, 70.0)),       # fixed sites, equidistant
                       food_dynamics=FoodConfig())
     for a in (cfg.npc_affect, cfg.rival_affect):
         a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.0005
@@ -103,7 +109,7 @@ def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float 
     return cfg
 
 
-@dataclass
+@dataclass(eq=False)          # agents are individuals: identity, hashable
 class Agent:
     name: str
     faction: str
@@ -160,22 +166,28 @@ class Arena:
             for f in cfg.food:
                 self._spawn(np.array(f, float), np.inf)
         else:
-            self._spawn(np.array(cfg.food[0], float), self.fd.stock)
-            for _ in range(self.fd.initial_patches - 1):
-                self._spawn(self._random_spot(), self.fd.stock)
+            sites = self._fixed_sites()
+            for k in range(self.fd.initial_patches):
+                pos = sites[k] if k < len(sites) else self._random_spot()
+                self._spawn(pos.copy(), self.fd.stock)
         self.n_steps = 0
         if cfg.signature is not None:
             for c in (cfg.npc_cog, cfg.rival_cog):
                 c.signature = tuple(float(x) for x in cfg.signature)
         self.life = cfg.life
-        self.capacity = cfg.life.capacity if cfg.life else cfg.n_npcs + cfg.n_rivals
+        self.tribes = cfg.tribes
+        self.factions = (TRIBE_A, TRIBE_B) if cfg.tribes else (NPC_FACTION, RIVAL_FACTION)
+        n_second = cfg.n_npcs if cfg.tribes else cfg.n_rivals
+        self.capacity = cfg.life.capacity if cfg.life else cfg.n_npcs + n_second
         self._free = list(range(self.capacity))
-        self._count = {NPC_FACTION: 0, RIVAL_FACTION: 0}
+        self._count = {f: 0 for f in self.factions}
+        self.homes = {self.factions[0]: np.array(cfg.home, float),
+                      self.factions[1]: np.array(cfg.lair, float)}
         self.agents: list[Agent] = []
         for _ in range(cfg.n_npcs):
-            self.agents.append(self._make(NPC_FACTION, np.array(cfg.home, float)))
-        for _ in range(cfg.n_rivals):
-            self.agents.append(self._make(RIVAL_FACTION, np.array(cfg.lair, float)))
+            self.agents.append(self._make(self.factions[0], self.homes[self.factions[0]]))
+        for _ in range(n_second):
+            self.agents.append(self._make(self.factions[1], self.homes[self.factions[1]]))
         self.log: dict = {k: [] for k in ("t", "pos", "C", "health", "mobile", "g", "pain",
                                           "delta", "affect", "contact", "replay", "alive",
                                           "faction", "generation", "fear")}
@@ -187,8 +199,8 @@ class Arena:
 
     def _make(self, faction, home, pos=None) -> Agent:
         cfg = self.cfg
-        cog, aff = ((cfg.npc_cog, cfg.npc_affect) if faction == NPC_FACTION
-                    else (cfg.rival_cog, cfg.rival_affect))
+        cog, aff = ((cfg.npc_cog, cfg.npc_affect) if faction != RIVAL_FACTION
+                    else (cfg.rival_cog, cfg.rival_affect))   # tribes share one config
         name = f"{faction}{self._count[faction]}"
         self._count[faction] += 1
         cog = copy.deepcopy(cog)
@@ -205,6 +217,19 @@ class Arena:
     @property
     def food(self) -> list[np.ndarray]:
         return [p["pos"] for p in self.patches]
+
+    def _fixed_sites(self) -> list[np.ndarray]:
+        sites = self.fd.fixed_sites if self.fd.fixed_sites is not None else self.cfg.food
+        return [np.array(s, float) for s in sites]
+
+    def _spawn_spot(self) -> np.ndarray:
+        """Half the spawns (fixed_fraction) at a free fixed site, the rest anywhere."""
+        if self.food_rng.random() < self.fd.fixed_fraction:
+            free = [s for s in self._fixed_sites()
+                    if all(np.linalg.norm(p["pos"] - s) > 3.0 for p in self.patches)]
+            if free:
+                return free[int(self.food_rng.integers(len(free)))].copy()
+        return self._random_spot()
 
     def _random_spot(self) -> np.ndarray:
         m = self.fd.margin
@@ -227,7 +252,7 @@ class Arena:
                 self.patches.remove(p)
                 self.food_events.append(dict(t=self.t, what="depleted", id=p["id"], pos=p["pos"]))
         if len(self.patches) < self.fd.max_patches and self.food_rng.random() < self.fd.spawn_rate * dt:
-            self._spawn(self._random_spot(), self.fd.stock)
+            self._spawn(self._spawn_spot(), self.fd.stock)
 
     # ---------------------------------------------------------------- perception
     def _rival_of(self, a: Agent) -> Agent | None:
@@ -241,7 +266,7 @@ class Arena:
 
     def _peers_of(self, a: Agent) -> list[Agent]:
         R = self.wcfg.sensor_radius
-        if a.faction == RIVAL_FACTION:     # anti-social: every other agent is a crowd
+        if a.faction == RIVAL_FACTION:     # legacy anti-social rival: every other agent is a crowd
             pool = [b for b in self.agents if b is not a]
         else:
             pool = [b for b in self.agents if b is not a and b.faction == a.faction]
@@ -251,7 +276,7 @@ class Arena:
         """Mobile agents near `a` that would fight on its side (NPCs: other NPCs;
         a rival has none) -- or, for a rival, the number of mobile NPCs near it."""
         r = self.wcfg.peer_radius if radius is None else radius
-        if a.faction == RIVAL_FACTION:
+        if a.faction == RIVAL_FACTION:      # legacy rival: how many NPCs crowd it
             return sum(b.faction == NPC_FACTION and b.mobile
                        and np.linalg.norm(b.pos - a.pos) <= r for b in self.agents)
         return sum(b is not a and b.faction == a.faction and b.mobile
@@ -345,7 +370,7 @@ class Arena:
                           affect=a.affect.weights * a.affect.a)
         if a.mobile and p.threat_vec is not None:
             self.decisions.append((self.t, a.slot, self.allies_near(a), *map(float, npc.C),
-                                   0 if a.faction == NPC_FACTION else 1))
+                                   self.factions.index(a.faction)))
 
     def _fear_level(self, p: coupling.Percept, X: np.ndarray) -> float:
         """Perceived threat: rival proximity plus its closing speed (0 if none seen)."""
@@ -373,8 +398,8 @@ class Arena:
         cc = self.cfg.combat
         for a in self.agents:
             a.in_contact = False
-        contact_any = False
-        for r in self.agents:
+        contact_any = self._tribe_combat(dt) if self.tribes else False
+        for r in ([] if self.tribes else self.agents):
             if r.faction != RIVAL_FACTION or not r.mobile:
                 continue
             npcs = [b for b in self.agents if b.faction == NPC_FACTION and b.mobile]
@@ -455,7 +480,8 @@ class Arena:
 
     def _births(self) -> None:
         life = self.life
-        caps = {NPC_FACTION: life.npc_cap, RIVAL_FACTION: life.rival_cap}
+        caps = ({f: life.npc_cap for f in self.factions} if self.tribes
+                else {NPC_FACTION: life.npc_cap, RIVAL_FACTION: life.rival_cap})
         used = set()
         for a in list(self.agents):
             if a.name in used or not self._eligible(a) or not self._free:
@@ -463,7 +489,7 @@ class Arena:
             n_fac = sum(b.faction == a.faction for b in self.agents)
             if n_fac >= caps[a.faction]:
                 continue
-            if a.faction == NPC_FACTION:
+            if a.faction != RIVAL_FACTION:         # NPCs and both tribes need a partner
                 partners = [b for b in self.agents if b is not a and b.faction == a.faction
                             and b.name not in used and self._eligible(b)
                             and np.linalg.norm(b.pos - a.pos) <= life.partner_radius]
@@ -501,6 +527,75 @@ class Arena:
                                 memories=n_mem, fear=child.affect.fear_learned))
         return child
 
+    def _tribe_combat(self, dt: float) -> bool:
+        """Symmetric fights between two tribes.  Agents of different tribes in
+        contact form a fight (connected clusters); fighting members of either
+        side within join_radius of the other side join.  With n on one side and
+        m on the other, one contact second removes damage_rate in total: a side
+        takes (other side's size)/(n + m) of it, shared equally."""
+        cc = self.cfg.combat
+        A = [a for a in self.agents if a.faction == self.factions[0] and a.mobile]
+        B = [b for b in self.agents if b.faction == self.factions[1] and b.mobile]
+        pairs = [(i, j) for i, a in enumerate(A) for j, b in enumerate(B)
+                 if np.linalg.norm(a.pos - b.pos) < cc.contact_radius]
+        if not pairs:
+            if self._episode is not None:
+                self._close_episode()
+            return False
+        # connected components of the contact graph (union-find over A ∪ B)
+        parent = list(range(len(A) + len(B)))
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+        for i, j in pairs:
+            parent[find(i)] = find(len(A) + j)
+        comps: dict = {}
+        for i, j in pairs:
+            comps.setdefault(find(i), (set(), set()))
+            comps[find(i)][0].add(i)
+            comps[find(i)][1].add(j)
+        D = cc.damage_rate * dt
+        for ia, jb in comps.values():
+            side_a = {A[i] for i in ia}
+            side_b = {B[j] for j in jb}
+            side_a |= {a for a in A if a.npc.C[3] > 0
+                       and any(np.linalg.norm(a.pos - b.pos) < cc.join_radius for b in side_b)}
+            side_b |= {b for b in B if b.npc.C[3] > 0
+                       and any(np.linalg.norm(b.pos - a.pos) < cc.join_radius for a in side_a)}
+            n, m = len(side_a), len(side_b)
+            to_a, to_b = D * m / (n + m), D * n / (n + m)
+            for x in side_a:
+                x.health -= to_a / n
+                x.taken += to_a / n
+                x.dealt += to_b / n
+                x.in_contact = True
+            for x in side_b:
+                x.health -= to_b / m
+                x.taken += to_b / m
+                x.dealt += to_a / m
+                x.in_contact = True
+            self._track_tribe_episode(side_a, side_b, to_a, to_b)
+        return True
+
+    def _track_tribe_episode(self, side_a, side_b, to_a, to_b):
+        ep = self._episode
+        if ep is None:
+            ep = self._episode = dict(t0=self.t, n_max=0, sides={f: 0 for f in self.factions},
+                                      taken={f: 0.0 for f in self.factions}, members=set(),
+                                      rival_taken=0.0, npc_taken=0.0)
+        fa, fb = self.factions
+        ep["sides"][fa] = max(ep["sides"][fa], len(side_a))
+        ep["sides"][fb] = max(ep["sides"][fb], len(side_b))
+        ep["n_max"] = max(ep["n_max"], len(side_a), len(side_b))
+        ep["taken"][fa] += to_a
+        ep["taken"][fb] += to_b
+        ep["npc_taken"] += to_a                  # legacy keys: tribe A / tribe B
+        ep["rival_taken"] += to_b
+        ep["members"] |= {x.name for x in side_a | side_b}
+
     def _track_episode(self, r, group, to_rival, to_each):
         ep = self._episode
         if ep is None:
@@ -514,9 +609,9 @@ class Arena:
     def _close_episode(self):
         ep = self._episode
         ep["t1"] = self.t
-        ep["rival_down"] = any(not a.mobile for a in self.agents if a.faction == RIVAL_FACTION)
-        ep["npc_down"] = [a.name for a in self.agents if a.faction == NPC_FACTION and not a.mobile
-                          and a.name in ep["members"]]
+        ep["rival_down"] = any(not a.mobile for a in self.agents if a.faction == self.factions[1])
+        ep["npc_down"] = [a.name for a in self.agents if a.faction == self.factions[0]
+                          and not a.mobile and a.name in ep["members"]]
         ep["members"] = sorted(ep["members"])
         self.engagements.append(ep)
         self._episode = None
@@ -544,7 +639,7 @@ class Arena:
             rows["contact"][i] = a.in_contact
             rows["replay"][i] = a.replaying
             rows["alive"][i] = True
-            rows["faction"][i] = 0 if a.faction == NPC_FACTION else 1
+            rows["faction"][i] = self.factions.index(a.faction)
             rows["generation"][i] = a.generation
             rows["fear"][i] = a.affect.fear_learned
         L["t"].append(self.t)

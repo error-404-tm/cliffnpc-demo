@@ -153,6 +153,8 @@ class FoodConfig:
     take_rate: float = 0.1              # units per second per eating agent
     spawn_rate: float = 1.0 / 60.0      # per second, while below max_patches
     margin: float = 10.0                # spawn away from the walls
+    fixed_sites: tuple | None = None    # recurring spawn sites (None: the arena's food spots)
+    fixed_fraction: float = 0.5         # share of spawns at a free fixed site; the rest random
 
 
 @dataclass
