@@ -9,7 +9,11 @@ witnessing a death shocks, sensitizes fear and imprints an escape memory of
 the reaction, well-fed agents reproduce (NPCs with a partner, the anti-social
 rival alone), children inherit their parents' strongest memories, personality
 frame and part of their fear.  Injury drives flight through a reflex stronger
-than any other channel.
+than any other channel.  Satiety slightly slows agents (food competition).
+
+A cubic per-drive saturation law (sat_gain) is on: changing the signature turns
+some designed-bounded rotations into boosts (in Cl(2,2) the foraging channel
+in the hunger-explore plane), which otherwise run away to the safety cap.
 """
 
 import os
@@ -21,21 +25,18 @@ import numpy as np  # noqa: E402
 
 from common import outdir, plt, pmap, save, write_summary  # noqa: E402
 
-from cliffnpc.arena import Arena, ArenaConfig  # noqa: E402
-from cliffnpc.config import LifeConfig, LTMConfig  # noqa: E402
+from cliffnpc.arena import Arena, ArenaConfig, life_config  # noqa: E402
 
 OUT = outdir("e9_life_signature")
 T = 2000.0
 SEEDS = (0, 1, 2, 3)
 SIGNATURES = {"Cl(3,1)": (1.0, 1.0, 1.0, -1.0), "Cl(2,2)": (-1.0, 1.0, 1.0, -1.0)}
 DS = 25                      # log ticks per time-series sample (5 s)
+SAT_GAIN = 0.5               # cubic drive damping (CognitionConfig.sat_gain)
 
 
 def make(sig, seed) -> ArenaConfig:
-    cfg = ArenaConfig(seed=seed, ltm=LTMConfig(), life=LifeConfig(), signature=sig)
-    for a in (cfg.npc_affect, cfg.rival_affect):
-        a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.0005
-    return cfg
+    return life_config(sig, seed, sat_gain=SAT_GAIN)   # saturation law: contains boost runaways
 
 
 def fight_stats(dec, t0, t1, faction):
@@ -74,6 +75,7 @@ def one(job):
         recalls=dict(rec),
         imprinted=sum(e.get("origin") == "imprinted" and e["what"] in ("stored", "merged") for e in ev),
         pain=float(np.nanmean(np.where(npc_alive, log["pain"], np.nan))),
+        hunger=float(np.nanmean(np.where(npc_alive, log["C"][:, :, 0], np.nan))),
         fight_early=fight_stats(dec, 0, T / 3, 0), fight_late=fight_stats(dec, 2 * T / 3, T, 0),
         rival_fight_early=fight_stats(dec, 0, T / 3, 1), rival_fight_late=fight_stats(dec, 2 * T / 3, T, 1),
     )
@@ -144,6 +146,7 @@ rows = [
     ("fights per NPC-hour", lambda r: r["fights_per_npc_hour"]),
     ("solo fight fraction", lambda r: r["solo"] / max(r["engagements"], 1)),
     ("NPC mean pain", lambda r: r["pain"]),
+    ("NPC mean hunger coefficient", lambda r: r["hunger"]),
     ("final NPC fear sensitivity", lambda r: r["fear"][-1]),
     ("recalls: experience", lambda r: r["recalls"].get("experience", 0)),
     ("recalls: imprinted", lambda r: r["recalls"].get("imprinted", 0)),

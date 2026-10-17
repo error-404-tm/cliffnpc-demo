@@ -30,8 +30,8 @@ from . import algebra as ga
 from . import coupling
 from .affect import AffectState, metric_ok
 from .cognition import NPC, forget_frame
-from .config import (AffectConfig, CognitionConfig, CombatConfig, Config, LifeConfig, LTMConfig,
-                     SteeringConfig)
+from .config import (AffectConfig, CognitionConfig, CombatConfig, Config, FoodConfig, LifeConfig,
+                     LTMConfig, SteeringConfig)
 from .ltm import SequenceMemory
 from .steering import steer
 
@@ -74,6 +74,7 @@ class ArenaConfig:
     learning: bool = True
     ltm: LTMConfig | None = None       # long-term sequence memory (None = off)
     life: LifeConfig | None = None     # death, birth, inheritance, witnessing (None = off)
+    food_dynamics: FoodConfig | None = None   # finite, moving food (None = fixed infinite food)
     # One drive signature for every agent in the simulation (both factions);
     # None keeps the factions' own configs.  Vary it across concurrent runs.
     signature: tuple | None = None
@@ -84,6 +85,18 @@ class ArenaConfig:
     rival_affect: AffectConfig = field(default_factory=lambda: arena_affect(social_sign=-1.0))
     npc_cog: CognitionConfig = field(default_factory=npc_cognition)
     rival_cog: CognitionConfig = field(default_factory=rival_cognition)
+
+
+def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float = 0.5) -> ArenaConfig:
+    """The full-life arena used by E9 and the arena viewer: sequence memory, life
+    (death, birth, inheritance, witnessing, injury reflex), learned fear and the
+    saturation law, with one drive signature for every agent."""
+    cfg = ArenaConfig(seed=seed, ltm=LTMConfig(), life=LifeConfig(), signature=signature)
+    for a in (cfg.npc_affect, cfg.rival_affect):
+        a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.0005
+    for c in (cfg.npc_cog, cfg.rival_cog):
+        c.sat_gain = sat_gain
+    return cfg
 
 
 @dataclass
@@ -104,6 +117,7 @@ class Agent:
     ltm: SequenceMemory | None = None
     replaying: int = -1         # memory slot being replayed (-1: none)
     slot: int = -1              # index in the capacity-wide logs
+    known_food: dict = field(default_factory=dict)   # patch id -> position (seen, finite food)
     generation: int = 0
     born: float = 0.0
     last_birth: float = -1e9
@@ -132,8 +146,19 @@ class Arena:
         self.wcfg = cfg.base.world
         self.steer_cfg: SteeringConfig = cfg.base.steer
         self.rng = np.random.default_rng(cfg.seed)
-        self.food = [np.array(f, float) for f in cfg.food]
         self.t = 0.0
+        self.fd = cfg.food_dynamics
+        self.food_rng = np.random.default_rng(cfg.seed + 7919)   # own stream: agents' RNG unaffected
+        self.patches: list[dict] = []
+        self.food_events: list[dict] = []
+        self._patch_id = 0
+        if self.fd is None:
+            for f in cfg.food:
+                self._spawn(np.array(f, float), np.inf)
+        else:
+            self._spawn(np.array(cfg.food[0], float), self.fd.stock)
+            for _ in range(self.fd.initial_patches - 1):
+                self._spawn(self._random_spot(), self.fd.stock)
         self.n_steps = 0
         if cfg.signature is not None:
             for c in (cfg.npc_cog, cfg.rival_cog):
@@ -172,6 +197,34 @@ class Arena:
                      heading=self.rng.uniform(0, 2 * np.pi), ltm=ltm,
                      slot=self._free.pop(0), born=self.t)
 
+    # ---------------------------------------------------------------- food
+    @property
+    def food(self) -> list[np.ndarray]:
+        return [p["pos"] for p in self.patches]
+
+    def _random_spot(self) -> np.ndarray:
+        m = self.fd.margin
+        return self.food_rng.uniform(m, self.wcfg.size - m, 2)
+
+    def _spawn(self, pos: np.ndarray, stock: float) -> None:
+        self.patches.append(dict(id=self._patch_id, pos=pos, stock=stock, stock0=stock))
+        self.food_events.append(dict(t=self.t, what="spawned", id=self._patch_id, pos=pos.copy()))
+        self._patch_id += 1
+
+    def _food_step(self, dt: float) -> None:
+        """Eaters deplete patches; empty patches vanish; new ones may spawn."""
+        if self.fd is None:
+            return
+        r = self.cfg.npc_cog.eat_radius
+        for p in list(self.patches):
+            eaters = sum(a.mobile and np.linalg.norm(a.pos - p["pos"]) < r for a in self.agents)
+            p["stock"] -= self.fd.take_rate * eaters * dt
+            if p["stock"] <= 0:
+                self.patches.remove(p)
+                self.food_events.append(dict(t=self.t, what="depleted", id=p["id"], pos=p["pos"]))
+        if len(self.patches) < self.fd.max_patches and self.food_rng.random() < self.fd.spawn_rate * dt:
+            self._spawn(self._random_spot(), self.fd.stock)
+
     # ---------------------------------------------------------------- perception
     def _rival_of(self, a: Agent) -> Agent | None:
         best, bd = None, self.wcfg.sensor_radius
@@ -202,12 +255,23 @@ class Arena:
 
     def percept(self, a: Agent) -> coupling.Percept:
         R = self.wcfg.sensor_radius
-        foods = [f - a.pos for f in self.food if np.linalg.norm(f - a.pos) <= R]
+        seen = [p for p in self.patches if np.linalg.norm(p["pos"] - a.pos) <= R]
+        foods = [p["pos"] - a.pos for p in seen]
         food_vec = min(foods, key=np.linalg.norm) if foods else None
         rival = self._rival_of(a)
         peers = self._peers_of(a)
         peer_vecs = np.array([b.pos - a.pos for b in peers]).reshape(-1, 2)
-        known = [f - a.pos for f in self.food]
+        if self.fd is None:
+            known = [f - a.pos for f in self.food]          # fixed food: always known
+        else:
+            # remember what is seen; forget remembered spots seen to be empty
+            for p in seen:
+                a.known_food[p["id"]] = p["pos"]
+            ids = {p["id"] for p in self.patches}
+            for pid, pos in list(a.known_food.items()):
+                if pid not in ids and np.linalg.norm(pos - a.pos) <= R:
+                    del a.known_food[pid]
+            known = [pos - a.pos for pos in a.known_food.values()]
         return coupling.Percept(
             food_vec=food_vec,
             threat_vec=None if rival is None else rival.pos - a.pos,
@@ -233,6 +297,8 @@ class Arena:
                           a.npc.cfg.signature)
                 if self.life is not None and not self.life.immobility:
                     v = v * a.health                     # speed falls in proportion to injury
+                    sat = np.clip(-a.npc.C[0] / self.life.satiety_ref, 0.0, 1.0)
+                    v = v * (1.0 - self.life.satiety_slow * sat)   # satiety slows a little
                 else:
                     v = v * (0.5 + 0.5 * a.health)      # injured agents are slower
             else:
@@ -241,6 +307,7 @@ class Arena:
             a.vel = (new - a.pos) / dt
             a.pos = new
         self._combat(dt)
+        self._food_step(dt)
         self.t = (self.n_steps + 1) * dt
         self.n_steps += 1
         if cog_tick and self.life is not None:

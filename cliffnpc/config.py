@@ -35,6 +35,12 @@ class CognitionConfig:
     max_rapidity: float = 0.25          # boost rapidity cap per cognitive step
     null_tol: float = 0.05              # |s|/|C|^2 below this counts as "null"
     state_cap: float = 6.0              # hard safety cap on |C| (NaN guard)
+    # Saturation law: per-drive cubic damping  dC_i -= sat_gain (C_i / sat_scale)^2 C_i dt.
+    # Negligible for ordinary drive levels, strong for large ones, so a boost
+    # (a hyperbolic plane under any signature) settles at |C_i| ~ sat_scale *
+    # sqrt(rate / sat_gain) instead of running to the cap.  0 = off.
+    sat_gain: float = 0.0
+    sat_scale: float = 2.0
 
     # --- coupling channels (§4) ---
     food_gain: float = 0.6              # rotation rate in e13 at the food patch
@@ -137,6 +143,19 @@ class LTMConfig:
 
 
 @dataclass
+class FoodConfig:
+    """Finite, moving food (arena).  Each patch holds a stock; every agent eating
+    there takes take_rate per second; an empty patch disappears and new patches
+    spawn elsewhere at random.  Agents only know patches they have seen."""
+    initial_patches: int = 2            # the configured spot plus random ones
+    max_patches: int = 4
+    stock: float = 20.0                 # units per new patch
+    take_rate: float = 0.1              # units per second per eating agent
+    spawn_rate: float = 1.0 / 60.0      # per second, while below max_patches
+    margin: float = 10.0                # spawn away from the walls
+
+
+@dataclass
 class LifeConfig:
     """Death, birth, inheritance, witnessing, injury reflex (arena).  Sizes are powers of two."""
     capacity: int = 32                  # agent slots (log arrays are capacity-wide)
@@ -164,6 +183,10 @@ class LifeConfig:
     foe_death_factor: float = 1.0       # effects scaled by this when the dead was another faction
     # injury reflex: dC4 -= injury_reflex * (injury taken per second); the strongest push
     injury_reflex: float = 20.0
+    # Satiety slightly slows an agent (less effective at food competition):
+    # speed *= 1 - satiety_slow * clip(-hunger / satiety_ref, 0, 1)
+    satiety_slow: float = 0.2
+    satiety_ref: float = 2.0
     # Injury is lethal and slows continuously: speed = max_speed * health.  The
     # discrete "immobile until recovered, ignored by rivals" state of the
     # life-less arena would make injury non-lethal, so it is off here.

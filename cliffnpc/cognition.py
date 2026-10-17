@@ -248,6 +248,8 @@ class NPC:
         C = C - h * c.gamma * (C - c.C0)
         C[0] += h * (c.hunger_drift - c.eat_rate * eat * (C[0] - c.sated_level))
         C[1] += h * (c.social_drift - c.company_rate * company * (C[1] - c.company_level))
+        if c.sat_gain > 0:                       # saturation law (cubic damping)
+            C = C - h * c.sat_gain * (C / c.sat_scale) ** 2 * C
         if push is not None:
             C = C + h * push
         n = np.linalg.norm(C)

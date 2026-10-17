@@ -43,3 +43,18 @@ def test_pick_level_hysteresis():
     assert pick_level(CONE_LEVELS, 2.0, 1.5) == 3.0
     assert pick_level(CONE_LEVELS, 1.4, 3.0) == 3.0      # no shrink just below the lower level
     assert pick_level(CONE_LEVELS, 0.8, 3.0) == 1.5      # shrinks once well below
+
+
+def test_arena_viewer_runs_and_follows_agents():
+    from cliffnpc.arena_viewer import SIGNATURES, ArenaViewer
+    v = ArenaViewer(plt, SIGNATURES["22"], steps_per_frame=8)
+    for _ in range(20):
+        v.frame()
+        v.blit()
+    first = v.selected
+
+    class Ev:
+        key = "tab"
+    v._on_key(Ev())
+    assert v.selected != first or len(v.arena.agents) == 1
+    plt.close(v.fig)

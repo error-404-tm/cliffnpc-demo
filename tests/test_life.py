@@ -131,3 +131,34 @@ def test_life_off_keeps_the_old_arena():
     ar = Arena(ArenaConfig(n_npcs=2, seed=0))
     log = ar.run(30.0)
     assert log["alive"].all() and ar.capacity == 3
+
+
+def test_saturation_law_contains_a_boost_runaway():
+    from cliffnpc.cognition import NPC
+    from cliffnpc.config import CognitionConfig
+    beta = ga.bivector_from_planes({(0, 2): 1.0})        # e13 forcing: a boost in Cl(2,2)
+    peaks = {}
+    for gain in (0.0, 0.5):
+        c = CognitionConfig(signature=SIG22, sat_gain=gain, hunger_drift=0.0, omega_int={})
+        npc = NPC(c, C=np.array([-0.5, 0.0, 0.3, 0.0]))
+        for _ in range(500):
+            npc.dynamics_step(beta, 0.2)
+        peaks[gain] = np.abs(npc.C).max()
+    assert peaks[0.0] > 4.0                                # runs away (only damping and the cap resist)
+    assert peaks[0.5] < 0.5 * peaks[0.0]                   # settles far lower
+
+
+def test_satiety_slows_a_little():
+    speeds = []
+    for hunger in (0.0, -1.0, -4.0):
+        ar = _arena(n_npcs=1)
+        _park(ar)
+        npc = ar.agents[0]
+        npc.npc.C[:] = [hunger, 0.0, 0.5, 0.0]           # explore drives motion
+        npc.heading = 0.0
+        x0 = npc.pos.copy()
+        ar.rng = np.random.default_rng(1)
+        ar.step()
+        speeds.append(np.linalg.norm(npc.pos - x0))
+    assert speeds[0] > speeds[1] > speeds[2]
+    assert np.isclose(speeds[2] / speeds[0], 1.0 - ar.life.satiety_slow, rtol=0.05)
