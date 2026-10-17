@@ -162,3 +162,48 @@ def test_satiety_slows_a_little():
         speeds.append(np.linalg.norm(npc.pos - x0))
     assert speeds[0] > speeds[1] > speeds[2]
     assert np.isclose(speeds[2] / speeds[0], 1.0 - ar.life.satiety_slow, rtol=0.05)
+
+
+def _food_arena(n_npcs=2, **kw):
+    from cliffnpc.config import FoodConfig
+    cfg = ArenaConfig(n_npcs=n_npcs, seed=0, life=LifeConfig(), food_dynamics=FoodConfig(**kw))
+    return Arena(cfg)
+
+
+def test_food_is_depleted_faster_by_more_eaters_and_then_disappears():
+    for n in (1, 3):
+        ar = _food_arena(n_npcs=n, initial_patches=1, spawn_rate=0.0, stock=5.0)
+        p = ar.patches[0]
+        for a in ar.agents:
+            a.pos = p["pos"] + np.array([0.0, 2.0 if a.faction == RIVAL_FACTION else 0.5])
+        ar.agents = [a for a in ar.agents if a.faction == NPC_FACTION]
+        ar._food_step(1.0)
+        assert np.isclose(5.0 - p["stock"], ar.fd.take_rate * n)
+    ar._food_step(100.0)
+    assert not ar.patches and ar.food_events[-1]["what"] == "depleted"
+
+
+def test_new_patches_spawn_elsewhere_up_to_the_maximum():
+    ar = _food_arena(initial_patches=1, spawn_rate=1e6, max_patches=4)
+    first = ar.patches[0]["pos"].copy()
+    for _ in range(10):
+        ar._food_step(0.1)
+    assert len(ar.patches) == 4
+    assert all(not np.allclose(p["pos"], first) for p in ar.patches[1:])
+
+
+def test_agents_only_know_food_they_have_seen_and_forget_vanished_patches():
+    ar = _food_arena(n_npcs=1, initial_patches=1, spawn_rate=0.0)
+    a = next(x for x in ar.agents if x.faction == NPC_FACTION)
+    p = ar.patches[0]
+    a.pos = p["pos"] + np.array([45.0, 0.0])          # out of sight
+    assert ar.percept(a).food_memory is None
+    a.pos = p["pos"] + np.array([10.0, 0.0])          # sees it, remembers it
+    ar.percept(a)
+    a.pos = p["pos"] + np.array([45.0, 0.0])
+    assert ar.percept(a).food_memory is not None
+    ar.patches.clear()                                 # eaten up elsewhere
+    assert ar.percept(a).food_memory is not None       # still believes it is there
+    a.pos = p["pos"] + np.array([10.0, 0.0])          # comes to look: gone
+    ar.percept(a)
+    assert p["id"] not in a.known_food

@@ -84,7 +84,8 @@ class ArenaViewer(Viewer):
         ax.set_xticks([])
         ax.set_yticks([])
         ax.set_title("arena")
-        self.food_art, = ax.plot([], [], "o", color="#e67e22", ms=14, label="food")
+        self.food_sc = A(ax.scatter([], [], s=200, marker="o", color="#e67e22", alpha=0.85,
+                                    label="food (size = stock)"))
         self.home_art, = ax.plot([], [], "s", color="#2c3e50", ms=11, label="NPC home")
         self.lair_art, = ax.plot([], [], "D", color="#7f8c8d", ms=10, label="rival lair")
         self.sensor_art = A(self._Circle((0, 0), 30.0, fill=False, ls=":", color="#95a5a6"))
@@ -170,8 +171,6 @@ class ArenaViewer(Viewer):
 
     def _place_static(self) -> None:
         cfg = self.arena.cfg
-        f = np.array(cfg.food)
-        self.food_art.set_data(f[:, 0], f[:, 1])
         self.home_art.set_data([cfg.home[0]], [cfg.home[1]])
         self.lair_art.set_data([cfg.lair[0]], [cfg.lair[1]])
         self.dirty = True
@@ -247,6 +246,10 @@ class ArenaViewer(Viewer):
         ar = self.arena
         npcs = [a for a in ar.agents if a.faction == "npc"]
         rivals = [a for a in ar.agents if a.faction == "rival"]
+        P = ar.patches
+        self.food_sc.set_offsets(np.array([p["pos"] for p in P]).reshape(-1, 2))
+        self.food_sc.set_sizes([40 + 260 * min(p["stock"] / p["stock0"], 1.0) if np.isfinite(p["stock0"])
+                                else 200 for p in P])
         self._scatter(self.npc_sc, npcs)
         self._scatter(self.rival_sc, rivals)
         recent_d = [d for d in ar.deaths if ar.t - d["t"] < MARK_SECONDS]
@@ -324,7 +327,7 @@ class ArenaViewer(Viewer):
             f"{'  PAUSED' if self.paused else ''}\n"
             f"NPCs {len(npcs):2d}   rivals {len(rivals):2d}   births {len(ar.births)}\n"
             f"deaths: starvation {causes['starvation']}  injury {causes['injury']}\n"
-            f"fights {len(ar.engagements)}")
+            f"fights {len(ar.engagements)}   food patches {len(ar.patches)}")
 
 
 def main(argv=None) -> int:

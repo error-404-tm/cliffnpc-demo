@@ -148,8 +148,8 @@ class FoodConfig:
     there takes take_rate per second; an empty patch disappears and new patches
     spawn elsewhere at random.  Agents only know patches they have seen."""
     initial_patches: int = 2            # the configured spot plus random ones
-    max_patches: int = 4
-    stock: float = 20.0                 # units per new patch
+    max_patches: int = 3
+    stock: float = 5.0                  # units per new patch (~50 meal-seconds)
     take_rate: float = 0.1              # units per second per eating agent
     spawn_rate: float = 1.0 / 60.0      # per second, while below max_patches
     margin: float = 10.0                # spawn away from the walls

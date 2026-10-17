@@ -89,9 +89,10 @@ class ArenaConfig:
 
 def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float = 0.5) -> ArenaConfig:
     """The full-life arena used by E9 and the arena viewer: sequence memory, life
-    (death, birth, inheritance, witnessing, injury reflex), learned fear and the
-    saturation law, with one drive signature for every agent."""
-    cfg = ArenaConfig(seed=seed, ltm=LTMConfig(), life=LifeConfig(), signature=signature)
+    (death, birth, inheritance, witnessing, injury reflex), learned fear, the
+    saturation law and finite moving food, with one drive signature for every agent."""
+    cfg = ArenaConfig(seed=seed, ltm=LTMConfig(), life=LifeConfig(), signature=signature,
+                      food_dynamics=FoodConfig())
     for a in (cfg.npc_affect, cfg.rival_affect):
         a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.0005
     for c in (cfg.npc_cog, cfg.rival_cog):

@@ -10,6 +10,8 @@ the reaction, well-fed agents reproduce (NPCs with a partner, the anti-social
 rival alone), children inherit their parents' strongest memories, personality
 frame and part of their fear.  Injury drives flight through a reflex stronger
 than any other channel.  Satiety slightly slows agents (food competition).
+Food is finite and moves: patches run out as they are eaten and new ones appear
+elsewhere; agents only know patches they have seen.
 
 A cubic per-drive saturation law (sat_gain) is on: changing the signature turns
 some designed-bounded rotations into boosts (in Cl(2,2) the foraging channel
@@ -76,6 +78,7 @@ def one(job):
         imprinted=sum(e.get("origin") == "imprinted" and e["what"] in ("stored", "merged") for e in ev),
         pain=float(np.nanmean(np.where(npc_alive, log["pain"], np.nan))),
         hunger=float(np.nanmean(np.where(npc_alive, log["C"][:, :, 0], np.nan))),
+        depleted=sum(e["what"] == "depleted" for e in ar.food_events),
         fight_early=fight_stats(dec, 0, T / 3, 0), fight_late=fight_stats(dec, 2 * T / 3, T, 0),
         rival_fight_early=fight_stats(dec, 0, T / 3, 1), rival_fight_late=fight_stats(dec, 2 * T / 3, T, 1),
     )
@@ -147,6 +150,7 @@ rows = [
     ("solo fight fraction", lambda r: r["solo"] / max(r["engagements"], 1)),
     ("NPC mean pain", lambda r: r["pain"]),
     ("NPC mean hunger coefficient", lambda r: r["hunger"]),
+    ("food patches depleted", lambda r: r["depleted"]),
     ("final NPC fear sensitivity", lambda r: r["fear"][-1]),
     ("recalls: experience", lambda r: r["recalls"].get("experience", 0)),
     ("recalls: imprinted", lambda r: r["recalls"].get("imprinted", 0)),
