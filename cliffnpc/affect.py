@@ -169,3 +169,172 @@ class AffectState:
         if not np.any(dG):
             return L
         return apply_frame_update(L, metric_delta_generator(L, dG, eta), 1.0, self.cfg.max_step)
+
+
+# ===========================================================================
+# Affects as trivectors
+# ===========================================================================
+#
+# Drives are vectors (hunger, social, explore, fight/flight).  The grade-3 space
+# of the same algebra is 4-dimensional and dual to the vectors (T = V I), so it
+# has exactly one affect per drive:
+#
+#     e123  hunger^social^explore      dual to fight/flight   (no-threat affect)
+#     e124  hunger^social^fight        dual to explore        (fear, type 1)
+#     e134  hunger^explore^fight       dual to social         (fear, type 2)
+#     e234  social^explore^fight       dual to hunger         (fear, type 3)
+#
+# For a drive state C and a push B, CB = C.B + C^B: the vector part moves the
+# drives (behaviour), the trivector part is what the drives cannot absorb.  That
+# part is the affect.  Felt affect uses the metric g induces on trivectors (its
+# 3x3 minors), which by the cofactor identity is det(g) g^{-1} seen through the
+# duality: affect sensitivity is the drive personality, not a separate object.
+
+from .algebra import TRIPLES, bivector_from_planes, vector_wedge_bivector  # noqa: E402
+from .config import TrivectorConfig  # noqa: E402
+
+AFFECT_NAMES = ("e123", "e124 fear", "e134 fear", "e234 fear")
+INCIDENCE = np.array([[1.0 if i in t else 0.0 for i in range(4)] for t in TRIPLES])  # affect x drive
+
+THREAT_PLANES = bivector_from_planes({(0, 3): 1.0, (1, 3): 1.0, (2, 3): 1.0})
+FORAGE_PLANE = bivector_from_planes({(0, 2): 1.0})
+SOCIAL_PLANE = bivector_from_planes({(1, 2): 1.0})
+MOB_PLANE = bivector_from_planes({(3, 1): 1.0})       # e4 ^ e2: social-threat (option A)
+
+
+def induced_trivector_metric(g: np.ndarray) -> np.ndarray:
+    """G[a, b] = <e_a, e_b> for basis trivectors: the 3x3 minors of g (Gram determinants)."""
+    G = np.empty((4, 4))
+    for a, ta in enumerate(TRIPLES):
+        for b, tb in enumerate(TRIPLES):
+            G[a, b] = np.linalg.det(g[np.ix_(ta, tb)])
+    return G
+
+
+def felt_matrix(g: np.ndarray) -> np.ndarray:
+    """Induced metric with each row's sign normalized so its diagonal is positive,
+    divided by |det g|^(3/4) so it depends on the *shape* of the personality and
+    not its overall scale (the minors grow as scale^3, det as scale^4).  At
+    g = eta this is the identity (P is felt as is); a learned g adds entanglement
+    between affect types and rescales each by its cofactor."""
+    G = induced_trivector_metric(g)
+    s = np.sign(np.diag(G))
+    s[s == 0] = 1.0
+    return s[:, None] * G / max(abs(np.linalg.det(g)), 1e-12) ** 0.75
+
+
+def contract(C: np.ndarray, T: np.ndarray, g: np.ndarray) -> np.ndarray:
+    """Bivector array of C _| T for a vector C and trivector T (components over TRIPLES):
+    C _| (e_i^e_j^e_k) = (C.e_i) e_j^e_k - (C.e_j) e_i^e_k + (C.e_k) e_i^e_j."""
+    u = g @ C
+    beta = np.zeros((4, 4))
+
+    def add(p, q, v):
+        beta[p, q] += v
+        beta[q, p] -= v
+    for (i, j, k), t in zip(TRIPLES, T):
+        add(j, k, t * u[i])
+        add(i, k, -t * u[j])
+        add(i, j, t * u[k])
+    return beta
+
+
+@dataclass
+class TrivectorAffect:
+    """Affect state P (signed: + pain, - reward) on the four trivectors."""
+    tri: TrivectorConfig
+    cfg: AffectConfig                       # learning settings (pain aversion)
+    P: np.ndarray = field(default_factory=lambda: np.zeros(4))
+    F: np.ndarray = field(default_factory=lambda: np.zeros(4))      # felt affect
+    F_hat: np.ndarray | None = None
+    C_hat: np.ndarray | None = None
+    trace: np.ndarray = field(default_factory=lambda: np.zeros((4, 4, 4)))
+    taken_rate: float = 0.0
+    dealt_rate: float = 0.0
+    pending_death: float = 0.0
+    pending_false: float = 0.0
+    delta: float = 0.0
+    blame: np.ndarray = field(default_factory=lambda: np.zeros(4))
+    pain: float = 0.0
+    fear_now: float = 0.0                   # interface compatibility (unused)
+    fear_learned: float = 0.0               # interface compatibility: sensitivity comes from g
+
+    @property
+    def a(self) -> np.ndarray:
+        return self.F
+
+    @property
+    def weights(self) -> np.ndarray:
+        return np.ones(4)
+
+    def sensitize(self, amount: float) -> None:      # 1a: no separate learned sensitivity
+        pass
+
+    def observe_injury(self, taken: float, dealt: float, h: float) -> None:
+        k = np.exp(-h / self.cfg.injury_tau)
+        self.taken_rate = k * self.taken_rate + (1 - k) * taken / max(h, 1e-9)
+        self.dealt_rate = k * self.dealt_rate + (1 - k) * dealt / max(h, 1e-9)
+
+    def add_death(self, factor: float = 1.0) -> None:
+        self.pending_death += factor
+
+    def add_false_food(self) -> None:
+        self.pending_false += 1.0
+
+    def events(self, C: np.ndarray, beta_ext: np.ndarray, eat: float, density: float, h: float):
+        t = self.tri
+        ev = [
+            (+1.0, t.need_hunger * max(C[0], 0.0) * FORAGE_PLANE),
+            (-1.0, t.meal * eat * FORAGE_PLANE),
+            (+1.0, t.need_social * max(C[1], 0.0) * SOCIAL_PLANE),
+            (-1.0, t.company * density * SOCIAL_PLANE),
+            (+1.0, t.injury * self.taken_rate * THREAT_PLANES),
+            (-1.0, t.triumph * self.dealt_rate * THREAT_PLANES),
+            (+1.0, t.death * self.pending_death / h * THREAT_PLANES),
+            (+1.0, t.false_food * self.pending_false / h * FORAGE_PLANE),
+            (+1.0, t.frustration * beta_ext),
+        ]
+        self.pending_death = self.pending_false = 0.0
+        return ev
+
+    def step(self, C: np.ndarray, g: np.ndarray, beta_ext: np.ndarray, beta_total: np.ndarray,
+             h: float, eat: float = 0.0, density: float = 0.0) -> float:
+        t = self.tri
+        if self.C_hat is None:
+            self.C_hat = C.copy()
+        surprise_vec = C - self.C_hat
+        src = np.zeros(4)
+        for v, B in self.events(C, beta_ext, eat, density, h):
+            if not np.any(B):
+                continue
+            change = vector_wedge_bivector(C, B)               # felt now
+            surprise = vector_wedge_bivector(surprise_vec, B)  # departure from expectation
+            src += v * (np.abs(change) + t.surprise_gain * np.abs(surprise))
+        # leak + cubic saturation, semi-implicit (stable for any size of P)
+        self.P = (self.P + h * src) / (1.0 + h * (t.decay + t.sat_gain * (self.P / t.sat_scale) ** 2))
+        self.C_hat = self.C_hat + t.expect_rate * (C - self.C_hat)
+        self.F = felt_matrix(g) @ self.P
+        if self.F_hat is None:
+            self.F_hat = self.F.copy()
+        err = self.F - self.F_hat
+        self.delta = float(err.sum())
+        self.blame = INCIDENCE.T @ err                         # each affect -> its three drives
+        self.pain = float(self.F.sum())
+        self.F_hat = self.F_hat + t.baseline_rate * err
+        self.trace = (np.exp(-h / self.cfg.trace_tau) * self.trace
+                      + h * axis_eligibilities(beta_total, C, self.cfg.action_scale))
+        return self.delta
+
+    def behaviour_bivector(self, C: np.ndarray, g: np.ndarray) -> np.ndarray:
+        """Affect acts back on the drives: the contraction C _| F, as a generator
+        (strength capped so a single shock cannot spin the drives arbitrarily fast)."""
+        beta = self.tri.contraction_gain * contract(C, self.F, g)
+        n = np.linalg.norm(beta)
+        cap = self.tri.contraction_cap
+        return beta if n <= cap else beta * (cap / n)
+
+    def learn(self, L: np.ndarray, eta: np.ndarray | None = None) -> np.ndarray:
+        dG = -self.cfg.learn_rate * np.einsum("k,kij->ij", self.blame, self.trace)
+        if not np.any(dG):
+            return L
+        return apply_frame_update(L, metric_delta_generator(L, dG, eta), 1.0, self.cfg.max_step)

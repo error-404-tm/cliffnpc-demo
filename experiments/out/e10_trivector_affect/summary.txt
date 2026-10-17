@@ -1,0 +1,30 @@
+E10 Affects as trivectors
+=========================
+4 seeds x 4000 s per signature, runs in parallel; two-tribe full-life world.
+
+                                                 Cl(4,0)             Cl(3,1)             Cl(2,2)
+births                                     45.50 ±  5.55       37.50 ±  1.12       51.00 ±  6.04
+max generation                              6.00 ±  1.00        6.25 ±  1.30        9.25 ±  1.48
+deaths: injury                             23.50 ±  5.55       13.25 ±  2.86       28.00 ±  1.58
+deaths: starvation                          0.00 ±  0.00        2.25 ±  1.79        3.50 ±  1.66
+final population (both tribes)             31.75 ±  0.43       32.00 ±  0.00       29.50 ±  4.33
+fights per agent-hour                      11.64 ±  1.62        9.70 ±  1.32       19.77 ±  3.08
+fights with one side outnumbered            0.44 ±  0.04        0.25 ±  0.03        0.25 ±  0.01
+share of time with a rival in view          0.39 ±  0.05        0.25 ±  0.02        0.44 ±  0.08
+share of time reactive (timelike)           0.00 ±  0.00        0.39 ±  0.02        0.64 ±  0.02
+food patches depleted                      47.75 ±  1.79       41.75 ±  1.48       68.25 ±  7.08
+mean pain                                  -0.48 ±  1.55        0.44 ±  0.20        0.39 ±  0.17
+mean hunger coefficient                     0.22 ±  0.09        0.23 ±  0.01        0.18 ±  0.03
+felt |F| on e123                            1.78 ±  0.36        0.73 ±  0.06        0.58 ±  0.05
+felt |F| on e124 fear                       1.61 ±  0.42        0.77 ±  0.05        0.53 ±  0.02
+felt |F| on e134 fear                       1.35 ±  0.22        0.82 ±  0.05        0.59 ±  0.00
+felt |F| on e234 fear                       1.75 ±  0.44        0.73 ±  0.03        0.53 ±  0.00
+fight alone (whole run)                     0.24 ±  0.01        0.34 ±  0.02        0.37 ±  0.02
+fight w/ tribe-mates (whole run)            0.59 ±  0.00        0.36 ±  0.02        0.38 ±  0.03
+fight alone, first quarter                  0.22 ±  0.01        0.32 ±  0.03        0.35 ±  0.03
+fight alone, last quarter                   0.24 ±  0.02        0.33 ±  0.03        0.39 ±  0.03
+fight w/ mates, first quarter               0.59 ±  0.02        0.35 ±  0.08        0.37 ±  0.02
+fight w/ mates, last quarter                0.59 ±  0.01        0.38 ±  0.02        0.39 ±  0.04
+recalls: experience                     1436.25 ± 444.55     1302.75 ± 90.00      658.00 ± 71.13
+recalls: imprinted                        499.75 ± 95.43     432.00 ± 173.52      348.50 ± 89.42
+recalls: inherited                        360.50 ± 73.38     360.50 ± 145.40      370.50 ± 72.52

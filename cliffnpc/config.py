@@ -201,6 +201,37 @@ class LifeConfig:
 
 
 @dataclass
+class TrivectorConfig:
+    """Affects as trivectors (affect.TrivectorAffect).  Drives are vectors; the
+    dual grade-3 space carries affect: e123 (no fight/flight) and the three fears
+    e124, e134, e234.  Events are designed drive-space bivectors B with a valence;
+    each contributes its change C^B and its surprise (C - C_hat)^B.  Felt affect
+    uses the metric g induces on trivectors (its 3x3 minors = cofactors)."""
+    decay: float = 0.3                  # per second: affect relaxes toward zero
+    surprise_gain: float = 0.5          # weight of (C - C_hat)^B relative to C^B
+    expect_rate: float = 0.01           # per tick: expected drive state C_hat
+    baseline_rate: float = 0.002        # per tick: slow baseline of felt affect (critic)
+    # event gains (per second, before the geometry)
+    need_hunger: float = 0.5            # unmet hunger (pain), foraging plane
+    meal: float = 2.0                   # eating (reward), foraging plane
+    need_social: float = 0.3            # loneliness (pain), social-explore plane
+    company: float = 0.3                # company (reward), social-explore plane
+    injury: float = 15.0                # injury taken (pain), threat planes
+    triumph: float = 10.0               # injury dealt (reward), threat planes
+    death: float = 30.0                 # witnessed death (pain), threat planes, one-off
+    false_food: float = 1.0             # false food found (pain), foraging plane, one-off
+    frustration: float = 0.3            # the world's push (pain): C ^ B_ext
+    # saturation law on the affect state (as for drives): dP -= sat_gain (P / sat_scale)^2 P
+    sat_gain: float = 0.5
+    sat_scale: float = 3.0
+    # behaviour: contraction C _| F added to the drive generators
+    contraction_gain: float = 0.3
+    contraction_cap: float = 2.0        # max Frobenius norm of that bivector (rad/s scale)
+    # option A: rivals near drive a boost in the e4^e2 (social-threat) plane
+    mob_gain: float = 0.15
+
+
+@dataclass
 class CombatConfig:
     """World physics of fights (given, not learned)."""
     contact_radius: float = 1.5         # NPC-rival distance that counts as contact

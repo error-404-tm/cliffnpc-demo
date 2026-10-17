@@ -224,8 +224,8 @@ def test_search_grows_with_hunger_squared_when_no_food_is_known():
 from cliffnpc.arena import TRIBE_A, TRIBE_B, life_config  # noqa: E402
 
 
-def _tribes(n=3, **food_kw):
-    cfg = life_config(seed=0)
+def _tribes(n=3, affect_model="vector", **food_kw):
+    cfg = life_config(seed=0, affect_model=affect_model)
     cfg.n_npcs = n
     for k, v in food_kw.items():
         setattr(cfg.food_dynamics, k, v)

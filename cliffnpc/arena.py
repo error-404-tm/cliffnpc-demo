@@ -28,10 +28,10 @@ import numpy as np
 
 from . import algebra as ga
 from . import coupling
-from .affect import AffectState, metric_ok
+from .affect import MOB_PLANE, AffectState, TrivectorAffect, metric_ok
 from .cognition import NPC, forget_frame
 from .config import (AffectConfig, CognitionConfig, CombatConfig, Config, FoodConfig, LifeConfig,
-                     LTMConfig, SteeringConfig)
+                     LTMConfig, SteeringConfig, TrivectorConfig)
 from .ltm import SequenceMemory
 from .steering import steer
 
@@ -82,6 +82,10 @@ class ArenaConfig:
     ltm: LTMConfig | None = None       # long-term sequence memory (None = off)
     life: LifeConfig | None = None     # death, birth, inheritance, witnessing (None = off)
     food_dynamics: FoodConfig | None = None   # finite, moving food (None = fixed infinite food)
+    # "vector": the 4-axis affect space (affect.AffectState); "trivector": affects
+    # are the grade-3 dual of the drives (affect.TrivectorAffect)
+    affect_model: str = "vector"
+    tri: TrivectorConfig = field(default_factory=TrivectorConfig)
     # One drive signature for every agent in the simulation (both factions);
     # None keeps the factions' own configs.  Vary it across concurrent runs.
     signature: tuple | None = None
@@ -94,7 +98,8 @@ class ArenaConfig:
     rival_cog: CognitionConfig = field(default_factory=rival_cognition)
 
 
-def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float = 0.5) -> ArenaConfig:
+def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float = 0.5,
+                affect_model: str = "trivector") -> ArenaConfig:
     """The full-life arena used by E9 and the arena viewer: sequence memory, life
     (death, birth, inheritance, witnessing, injury reflex), learned fear, the
     saturation law and finite moving food, with one drive signature for every agent."""
@@ -104,6 +109,7 @@ def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float 
                       food_dynamics=FoodConfig(max_patches=6, spawn_rate=1.0 / 30.0,
                                                false_fraction=0.3))
     cfg.base.world.size = 200.0        # a bigger world: room to explore and to miss each other
+    cfg.affect_model = affect_model
     for a in (cfg.npc_affect, cfg.rival_affect):
         a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.002
         a.fear_max = 12.0              # fear cannot saturate into a constant pain
@@ -217,7 +223,9 @@ class Arena:
         npc = NPC(cog, C=C)
         pos = home + self.rng.normal(0, 3.0, 2) if pos is None else pos
         ltm = SequenceMemory(copy.deepcopy(cfg.ltm)) if cfg.ltm is not None else None
-        return Agent(name, faction, npc, AffectState(copy.deepcopy(aff)), home, pos,
+        affect = (TrivectorAffect(copy.deepcopy(cfg.tri), copy.deepcopy(aff))
+                  if cfg.affect_model == "trivector" else AffectState(copy.deepcopy(aff)))
+        return Agent(name, faction, npc, affect, home, pos,
                      heading=self.rng.uniform(0, 2 * np.pi), ltm=ltm,
                      slot=self._free.pop(0), born=self.t)
 
@@ -270,6 +278,8 @@ class Arena:
                     if a.probe[p["id"]] >= self.fd.discover_time and p["id"] not in a.known_false:
                         a.known_false.add(p["id"])
                         a.known_food.pop(p["id"], None)
+                        if isinstance(a.affect, TrivectorAffect):
+                            a.affect.add_false_food()       # disappointment
                         self.food_events.append(dict(t=self.t, what="discovered_false",
                                                      id=p["id"], by=a.name))
                 if self.t - p["born"] >= self.fd.false_lifetime:
@@ -381,6 +391,14 @@ class Arena:
         beta, _ = coupling.omega_ext(X, npc.cfg)
         if a.ltm is not None:
             beta = beta + self._replay_bivector(a)
+        beta_world = beta
+        trivector = isinstance(a.affect, TrivectorAffect)
+        if trivector:
+            # option A: rivals near drive a boost in the social-threat plane,
+            # aimed by the social drive (company -> fight, isolation -> flight)
+            beta_world = beta_world + a.affect.tri.mob_gain * self._rivals_near(a) * MOB_PLANE
+            # affect acts back on behaviour: the contraction C _| F as a generator
+            beta = beta_world + a.affect.behaviour_bivector(npc.C, npc.g)
         eat = float(self._eating(a)) if self.fd is not None else float(a.mobile and X[0] < npc.cfg.eat_radius)
         a.affect.observe_injury(a.taken, a.dealt, h)
         a.taken = a.dealt = 0.0
@@ -393,7 +411,10 @@ class Arena:
         ok = lambda g: metric_ok(g, a.affect.cfg, npc.eta)  # noqa: E731
         npc.commit_frame(forget_frame(npc.L, npc.L0, npc.cfg), ok)
         beta_total = beta + ga.bivector_from_planes(npc.cfg.omega_int)
-        a.affect.step(npc.C, beta_total, h)
+        if trivector:
+            a.affect.step(npc.C, npc.g, beta_world, beta_total, h, eat=eat, density=X[2])
+        else:
+            a.affect.step(npc.C, beta_total, h)
         if self.cfg.learning:
             npc.commit_frame(a.affect.learn(npc.L, npc.eta), ok)
         if a.ltm is not None:
@@ -402,6 +423,11 @@ class Arena:
         if a.mobile and p.threat_vec is not None:
             self.decisions.append((self.t, a.slot, self.allies_near(a), *map(float, npc.C),
                                    self.factions.index(a.faction)))
+
+    def _rivals_near(self, a: Agent) -> int:
+        R = self.wcfg.sensor_radius
+        return sum(b.faction != a.faction and b.mobile and np.linalg.norm(b.pos - a.pos) <= R
+                   for b in self.agents)
 
     def _fear_level(self, a: Agent, p: coupling.Percept, X: np.ndarray) -> float:
         """Perceived threat, scaled by how outnumbered the agent is:
@@ -497,6 +523,8 @@ class Arena:
                 continue
             f = 1.0 if w.faction == a.faction else life.foe_death_factor
             w.affect.sensitize(w.affect.cfg.fear_from_death * f)
+            if isinstance(w.affect, TrivectorAffect):
+                w.affect.add_death(f)                      # felt as a strong threat event
             w.npc.C[3] -= life.shock_flight * f          # recoil: flight
             w.taken += life.vicarious_injury * f          # felt like an injury
             if w.ltm is not None:

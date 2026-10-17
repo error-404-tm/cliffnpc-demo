@@ -42,7 +42,7 @@ TRIBES = ("A", "B")
 
 
 def make(sig, seed) -> ArenaConfig:
-    return life_config(sig, seed, sat_gain=SAT_GAIN)
+    return life_config(sig, seed, sat_gain=SAT_GAIN, affect_model="vector")   # E9: the 4-axis affect model
 
 
 def fight_stats(dec, t0, t1):
