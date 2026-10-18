@@ -30,8 +30,11 @@ from . import algebra as ga
 from . import coupling
 from .affect import MOB_PLANE, AffectState, TrivectorAffect, metric_ok
 from .cognition import NPC, forget_frame
-from .config import (AffectConfig, CognitionConfig, CombatConfig, Config, FoodConfig, LifeConfig,
-                     LTMConfig, SteeringConfig, TrivectorConfig)
+from .config import (AffectConfig, CognitionConfig, CombatConfig, Config, ConnectionConfig,
+                     EpisodicConfig, FoodConfig, LifeConfig, LTMConfig, SteeringConfig,
+                     TrivectorConfig)
+from .connection import LearnedConnection, context_vector
+from .episodic import EventMemory
 from .ltm import SequenceMemory
 from .steering import steer
 
@@ -86,6 +89,14 @@ class ArenaConfig:
     # are the grade-3 dual of the drives (affect.TrivectorAffect)
     affect_model: str = "vector"
     tri: TrivectorConfig = field(default_factory=TrivectorConfig)
+    # episodic event-chain memory (replaces the sequence memory's motor replay)
+    episodic: EpisodicConfig | None = None
+    # learned connection: situation -> drive bivector (learned tendencies)
+    connection: ConnectionConfig | None = None
+    # starting magnitudes of the drive basis vectors: L0 = diag(basis_scale), so
+    # g0 = eta * basis_scale^2.  (1, 1, 1, 1) = unit bases.
+    basis_scale: tuple = (1.0, 1.0, 1.0, 1.0)
+    snapshot_every: float = 0.0        # s between learning snapshots (0 = off)
     # One drive signature for every agent in the simulation (both factions);
     # None keeps the factions' own configs.  Vary it across concurrent runs.
     signature: tuple | None = None
@@ -99,7 +110,8 @@ class ArenaConfig:
 
 
 def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float = 0.5,
-                affect_model: str = "trivector") -> ArenaConfig:
+                affect_model: str = "trivector", memory_model: str = "sequence",
+                connection: bool = False) -> ArenaConfig:
     """The full-life arena used by E9 and the arena viewer: sequence memory, life
     (death, birth, inheritance, witnessing, injury reflex), learned fear, the
     saturation law and finite moving food, with one drive signature for every agent."""
@@ -110,6 +122,15 @@ def life_config(signature=(1.0, 1.0, 1.0, -1.0), seed: int = 0, sat_gain: float 
                                                false_fraction=0.3))
     cfg.base.world.size = 200.0        # a bigger world: room to explore and to miss each other
     cfg.affect_model = affect_model
+    if memory_model == "episodic":
+        cfg.ltm = None
+        cfg.episodic = EpisodicConfig()
+    if connection:
+        cfg.connection = ConnectionConfig()
+    if affect_model == "trivector":
+        for a in (cfg.npc_affect, cfg.rival_affect):
+            a.learn_rate = 0.01            # blame sums over three affects per drive: learn slower
+            a.max_step = 0.02
     for a in (cfg.npc_affect, cfg.rival_affect):
         a.fear_from_injury, a.fear_from_death, a.fear_decay = 10.0, 10.0, 0.002
         a.fear_max = 12.0              # fear cannot saturate into a constant pain
@@ -138,6 +159,11 @@ class Agent:
     in_contact: bool = False
     ltm: SequenceMemory | None = None
     replaying: int = -1         # memory slot being replayed (-1: none)
+    episodic: EventMemory | None = None
+    conn: LearnedConnection | None = None
+    ctx: np.ndarray | None = None                    # last situation (context) vector
+    prev: dict = field(default_factory=dict)          # last tick's event flags
+    ledger: dict = field(default_factory=lambda: dict(dg_diag=0.0, dg_off=0.0, metric_steps=0))
     slot: int = -1              # index in the capacity-wide logs
     known_food: dict = field(default_factory=dict)   # patch id -> position (seen, finite food)
     known_false: set = field(default_factory=set)    # patch ids found to be false food
@@ -209,6 +235,8 @@ class Arena:
         self.decisions: list[tuple] = []      # (t, slot, n_allies, C1..C4, faction 0/1) when a rival is near
         self.deaths: list[dict] = []
         self.births: list[dict] = []
+        self.snapshots: list[dict] = []          # learning snapshots (interrogate.population_snapshot)
+        self._next_snapshot = 0.0
         self._episode: dict | None = None
 
     def _make(self, faction, home, pos=None) -> Agent:
@@ -225,9 +253,14 @@ class Arena:
         ltm = SequenceMemory(copy.deepcopy(cfg.ltm)) if cfg.ltm is not None else None
         affect = (TrivectorAffect(copy.deepcopy(cfg.tri), copy.deepcopy(aff))
                   if cfg.affect_model == "trivector" else AffectState(copy.deepcopy(aff)))
+        if tuple(cfg.basis_scale) != (1.0, 1.0, 1.0, 1.0):
+            npc.L = np.diag(np.asarray(cfg.basis_scale, float))
+            npc.L0 = npc.L.copy()
+        ep = EventMemory(copy.deepcopy(cfg.episodic)) if cfg.episodic is not None else None
+        conn = LearnedConnection(copy.deepcopy(cfg.connection)) if cfg.connection is not None else None
         return Agent(name, faction, npc, affect, home, pos,
                      heading=self.rng.uniform(0, 2 * np.pi), ltm=ltm,
-                     slot=self._free.pop(0), born=self.t)
+                     slot=self._free.pop(0), born=self.t, episodic=ep, conn=conn)
 
     # ---------------------------------------------------------------- food
     @property
@@ -280,6 +313,8 @@ class Arena:
                         a.known_food.pop(p["id"], None)
                         if isinstance(a.affect, TrivectorAffect):
                             a.affect.add_false_food()       # disappointment
+                        if a.episodic is not None and a.ctx is not None:
+                            a.episodic.observe_event("false_food", 1.0, a.ctx, self.t)
                         self.food_events.append(dict(t=self.t, what="discovered_false",
                                                      id=p["id"], by=a.name))
                 if self.t - p["born"] >= self.fd.false_lifetime:
@@ -384,6 +419,11 @@ class Arena:
             self._births()
         if cog_tick:
             self._log()
+            se = self.cfg.snapshot_every
+            if se > 0 and self.t >= self._next_snapshot:
+                from .interrogate import population_snapshot
+                self.snapshots.append(population_snapshot(self))
+                self._next_snapshot += se
 
     def _think(self, i: int, a: Agent, p: coupling.Percept, h: float) -> None:
         npc = a.npc
@@ -400,6 +440,14 @@ class Arena:
             # affect acts back on behaviour: the contraction C _| F as a generator
             beta = beta_world + a.affect.behaviour_bivector(npc.C, npc.g)
         eat = float(self._eating(a)) if self.fd is not None else float(a.mobile and X[0] < npc.cfg.eat_radius)
+        # situation vector (context for the connection and for episodic events)
+        rivals_n, allies_n = self._rivals_near(a), self.allies_near(a)
+        a.ctx = context_vector(X[0], None if p.threat_vec is None else float(np.linalg.norm(p.threat_vec)),
+                               X[1], allies_n, rivals_n, a.health, self.wcfg.sensor_radius)
+        if a.conn is not None:                       # learned tendencies
+            beta = beta + a.conn.beta(a.ctx)
+        if a.episodic is not None:
+            self._detect_events(a, p, X, eat, allies_n)
         a.affect.observe_injury(a.taken, a.dealt, h)
         a.taken = a.dealt = 0.0
         a.affect.fear_now = self._fear_level(a, p, X)
@@ -412,17 +460,61 @@ class Arena:
         npc.commit_frame(forget_frame(npc.L, npc.L0, npc.cfg), ok)
         beta_total = beta + ga.bivector_from_planes(npc.cfg.omega_int)
         if trivector:
-            a.affect.step(npc.C, npc.g, beta_world, beta_total, h, eat=eat, density=X[2])
+            primed = a.episodic.step(self.t) if a.episodic is not None else None
+            a.affect.step(npc.C, npc.g, beta_world, beta_total, h, eat=eat, density=X[2],
+                          primed=primed)
+            if a.episodic is not None:
+                a.episodic.observe_pain(a.affect.pain, self.t)
         else:
             a.affect.step(npc.C, beta_total, h)
+        if a.conn is not None:
+            a.conn.accumulate(a.ctx, npc.C, npc.g, h, a.affect.cfg.action_scale,
+                              a.affect.cfg.trace_tau)
         if self.cfg.learning:
-            npc.commit_frame(a.affect.learn(npc.L, npc.eta), ok)
+            g_before = npc.g
+            if npc.commit_frame(a.affect.learn(npc.L, npc.eta), ok):
+                d = npc.g - g_before
+                a.ledger["dg_diag"] += float(np.abs(np.diag(d)).sum())
+                a.ledger["dg_off"] += float(np.abs(d - np.diag(np.diag(d))).sum())
+                a.ledger["metric_steps"] += 1
+            if a.conn is not None:
+                a.conn.learn(a.affect.blame)
         if a.ltm is not None:
             a.ltm.observe(sense_vector(self, a, X, p), npc.C, a.affect.pain, self.t,
                           affect=a.affect.weights * a.affect.a)
         if a.mobile and p.threat_vec is not None:
             self.decisions.append((self.t, a.slot, self.allies_near(a), *map(float, npc.C),
                                    self.factions.index(a.faction)))
+
+    def _detect_events(self, a: Agent, p: coupling.Percept, X: np.ndarray, eat: float,
+                       allies_n: int) -> None:
+        """Turn this tick's changes into discrete events for the episodic memory."""
+        ep, pv, t, x = a.episodic, a.prev, self.t, a.ctx
+        gap = ep.cfg.event_refractory
+
+        def emit(name, mag):                       # debounced: one event per type per `gap` s
+            if t - pv.get(name + "_t", -1e9) >= gap:
+                ep.observe_event(name, mag, x, t)
+                pv[name + "_t"] = t
+        rival = p.threat_vec is not None
+        food = p.food_vec is not None
+        if rival and not pv.get("rival"):
+            emit("rival_seen", 1.0 + max(X[1], 0.0) / 5.0)
+        if a.in_contact and not pv.get("contact"):
+            emit("contact", 1.0)
+        if a.taken > 1e-3:
+            emit("injury", 10.0 * a.taken)
+        if a.dealt > 1e-3:
+            emit("triumph", 10.0 * a.dealt)
+        if food and not pv.get("food"):
+            emit("food_seen", 1.0)
+        if eat and not pv.get("eat"):
+            emit("meal", 1.0)
+        if allies_n > 0 and pv.get("allies", 0) == 0:
+            emit("company", float(allies_n))
+        if allies_n == 0 and pv.get("allies", 0) > 0:
+            emit("alone", 1.0)
+        pv.update(rival=rival, contact=a.in_contact, food=food, eat=bool(eat), allies=allies_n)
 
     def _rivals_near(self, a: Agent) -> int:
         R = self.wcfg.sensor_radius
@@ -525,6 +617,10 @@ class Arena:
             w.affect.sensitize(w.affect.cfg.fear_from_death * f)
             if isinstance(w.affect, TrivectorAffect):
                 w.affect.add_death(f)                      # felt as a strong threat event
+            if w.episodic is not None:
+                ctx = w.ctx if w.ctx is not None else np.zeros(8)
+                w.episodic.observe_event("death_seen", f, ctx, self.t)
+                w.episodic.imprint(life.dread_valence * f * w.episodic.cfg.loss_aversion, self.t)
             w.npc.C[3] -= life.shock_flight * f          # recoil: flight
             w.taken += life.vicarious_injury * f          # felt like an injury
             if w.ltm is not None:
@@ -580,6 +676,12 @@ class Arena:
         child.affect.fear_learned = life.inherit_fear * float(np.mean([p.affect.fear_learned
                                                                        for p in parents]))
         n_mem = 0
+        if child.episodic is not None:
+            for p in parents:
+                n_mem += child.episodic.inherit_from(p.episodic, child.episodic.cfg.inherit_memories,
+                                                     child.episodic.cfg.inherit_strength)
+        if child.conn is not None:                 # habits are inherited too
+            child.conn.inherit([p.conn for p in parents], child.conn.cfg.inherit)
         if child.ltm is not None:
             for p in parents:
                 n_mem += child.ltm.inherit_from(p.ltm, life.inherit_memories, life.inherit_strength)

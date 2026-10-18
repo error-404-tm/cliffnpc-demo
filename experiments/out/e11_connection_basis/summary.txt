@@ -1,0 +1,47 @@
+E11 Learned connection and basis magnitudes, Cl(2,2)
+====================================================
+2 seeds x 3000 s per condition, all runs in parallel.  Columns: condition;
+rows: mean ± std over seeds.  h = starting |hunger|, f = starting |fight/flight|.
+
+fights per agent-hour
+   h0.7_f0.7: 18.358   h0.7_f1.0: 22.434   h0.7_f1.4: 22.040   h1.0_f0.7: 19.945   h1.0_f1.0: 22.036   h1.0_f1.4: 17.480   h1.4_f0.7: 21.875   h1.4_f1.0: 14.687   h1.4_f1.4: 19.984   control (no connection): 13.691
+deaths: injury
+   h0.7_f0.7: 15.500   h0.7_f1.0: 22.500   h0.7_f1.4: 17.000   h1.0_f0.7: 18.500   h1.0_f1.0: 14.500   h1.0_f1.4: 11.000   h1.4_f0.7: 15.500   h1.4_f1.0: 8.000   h1.4_f1.4: 14.500   control (no connection): 16.500
+deaths: starvation
+   h0.7_f0.7: 2.000   h0.7_f1.0: 2.500   h0.7_f1.4: 1.000   h1.0_f0.7: 1.500   h1.0_f1.0: 2.500   h1.0_f1.4: 2.500   h1.4_f0.7: 1.000   h1.4_f1.0: 3.500   h1.4_f1.4: 1.500   control (no connection): 2.000
+births
+   h0.7_f0.7: 39.500   h0.7_f1.0: 47.000   h0.7_f1.4: 39.500   h1.0_f0.7: 42.000   h1.0_f1.0: 39.000   h1.0_f1.4: 35.500   h1.4_f0.7: 38.500   h1.4_f1.0: 26.000   h1.4_f1.4: 38.000   control (no connection): 31.500
+max generation
+   h0.7_f0.7: 7.000   h0.7_f1.0: 6.500   h0.7_f1.4: 6.000   h1.0_f0.7: 6.000   h1.0_f1.0: 7.500   h1.0_f1.4: 6.500   h1.4_f0.7: 5.500   h1.4_f1.0: 5.000   h1.4_f1.4: 6.000   control (no connection): 5.000
+final population
+   h0.7_f0.7: 32.000   h0.7_f1.0: 32.000   h0.7_f1.4: 31.500   h1.0_f0.7: 32.000   h1.0_f1.0: 32.000   h1.0_f1.4: 32.000   h1.4_f0.7: 32.000   h1.4_f1.0: 24.500   h1.4_f1.4: 32.000   control (no connection): 23.000
+mean pain
+   h0.7_f0.7: 0.377   h0.7_f1.0: 0.454   h0.7_f1.4: 0.448   h1.0_f0.7: 0.304   h1.0_f1.0: 0.373   h1.0_f1.4: 0.327   h1.4_f0.7: 0.257   h1.4_f1.0: 0.265   h1.4_f1.4: 0.450   control (no connection): 0.722
+fight alone, first quarter
+   h0.7_f0.7: 0.407   h0.7_f1.0: 0.353   h0.7_f1.4: 0.376   h1.0_f0.7: 0.401   h1.0_f1.0: 0.350   h1.0_f1.4: 0.388   h1.4_f0.7: 0.406   h1.4_f1.0: 0.380   h1.4_f1.4: 0.361   control (no connection): 0.246
+fight alone, last quarter
+   h0.7_f0.7: 0.402   h0.7_f1.0: 0.411   h0.7_f1.4: 0.416   h1.0_f0.7: 0.404   h1.0_f1.0: 0.393   h1.0_f1.4: 0.414   h1.4_f0.7: 0.396   h1.4_f1.0: 0.383   h1.4_f1.4: 0.395   control (no connection): 0.292
+fight w/ mates, first quarter
+   h0.7_f0.7: 0.451   h0.7_f1.0: 0.390   h0.7_f1.4: 0.411   h1.0_f0.7: 0.399   h1.0_f1.0: 0.443   h1.0_f1.4: 0.426   h1.4_f0.7: 0.451   h1.4_f1.0: 0.404   h1.4_f1.4: 0.436   control (no connection): 0.376
+fight w/ mates, last quarter
+   h0.7_f0.7: 0.442   h0.7_f1.0: 0.424   h0.7_f1.4: 0.443   h1.0_f0.7: 0.456   h1.0_f1.0: 0.439   h1.0_f1.4: 0.427   h1.4_f0.7: 0.416   h1.4_f1.0: 0.437   h1.4_f1.4: 0.427   control (no connection): 0.360
+courage index (final)
+   h0.7_f0.7: -0.015   h0.7_f1.0: -0.011   h0.7_f1.4: -0.028   h1.0_f0.7: -0.004   h1.0_f1.0: -0.021   h1.0_f1.4: -0.004   h1.4_f0.7: 0.014   h1.4_f1.0: -0.005   h1.4_f1.4: -0.025   control (no connection): nan
+numbers index (final)
+   h0.7_f0.7: -0.052   h0.7_f1.0: 0.024   h0.7_f1.4: -0.003   h1.0_f0.7: 0.030   h1.0_f1.0: -0.034   h1.0_f1.4: 0.007   h1.4_f0.7: 0.026   h1.4_f1.0: 0.005   h1.4_f1.4: -0.029   control (no connection): nan
+learned |hunger|
+   h0.7_f0.7: 1.336   h0.7_f1.0: 1.192   h0.7_f1.4: 1.229   h1.0_f0.7: 1.327   h1.0_f1.0: 1.315   h1.0_f1.4: 1.277   h1.4_f0.7: 1.449   h1.4_f1.0: 1.263   h1.4_f1.4: 1.291   control (no connection): 1.190
+learned |fight|
+   h0.7_f0.7: 1.228   h0.7_f1.0: 1.415   h0.7_f1.4: 1.502   h1.0_f0.7: 1.349   h1.0_f1.0: 1.232   h1.0_f1.4: 1.421   h1.4_f0.7: 1.173   h1.4_f1.0: 1.394   h1.4_f1.4: 1.438   control (no connection): 1.012
+mean |cross term|
+   h0.7_f0.7: 1.432   h0.7_f1.0: 1.605   h0.7_f1.4: 1.528   h1.0_f0.7: 1.553   h1.0_f1.0: 1.545   h1.0_f1.4: 1.564   h1.4_f0.7: 1.514   h1.4_f1.0: 1.306   h1.4_f1.4: 1.673   control (no connection): 0.876
+metric change: diagonal
+   h0.7_f0.7: 3.696   h0.7_f1.0: 3.905   h0.7_f1.4: 3.748   h1.0_f0.7: 4.103   h1.0_f1.0: 3.614   h1.0_f1.4: 3.810   h1.4_f0.7: 3.457   h1.4_f1.0: 3.873   h1.4_f1.4: 3.707   control (no connection): 2.706
+metric change: cross terms
+   h0.7_f0.7: 6.222   h0.7_f1.0: 6.825   h0.7_f1.4: 6.319   h1.0_f0.7: 6.707   h1.0_f1.0: 6.525   h1.0_f1.4: 6.180   h1.4_f0.7: 6.350   h1.4_f1.0: 6.027   h1.4_f1.4: 6.841   control (no connection): 4.194
+affect from memory replay
+   h0.7_f0.7: 0.054   h0.7_f1.0: 0.078   h0.7_f1.4: 0.057   h1.0_f0.7: 0.058   h1.0_f1.0: 0.058   h1.0_f1.4: 0.056   h1.4_f0.7: 0.053   h1.4_f1.0: 0.058   h1.4_f1.4: 0.063   control (no connection): 0.049
+memory activations (population)
+   h0.7_f0.7: 5211.500   h0.7_f1.0: 4917.500   h0.7_f1.4: 5098.000   h1.0_f0.7: 5074.500   h1.0_f1.0: 4995.000   h1.0_f1.4: 5489.500   h1.4_f0.7: 5262.000   h1.4_f1.0: 4565.500   h1.4_f1.4: 5733.500   control (no connection): 3947.500
+
+Interrogation reports: agent_reports.txt; learning snapshots: snapshots.json.

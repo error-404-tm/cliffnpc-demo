@@ -232,6 +232,39 @@ class TrivectorConfig:
 
 
 @dataclass
+class ConnectionConfig:
+    """Learned connection (connection.py): situation -> drive bivector."""
+    gain: float = 1.0                   # scales the learned bivector into the dynamics
+    learn_rate: float = 0.01
+    decay: float = 0.0002               # per learning step: habits slowly fade
+    max_norm: float = 0.6               # cap on each feature's bivector (Frobenius)
+    inherit: float = 0.8                # child's W = inherit * mean of the parents' W
+
+
+@dataclass
+class EpisodicConfig:
+    """Event-chain memory (episodic.py).  Sizes are powers of two."""
+    n_slots: int = 64
+    chain_len: int = 16                 # events per stored chain
+    buffer_len: int = 32                # recent-event ring (short-term event memory)
+    window: float = 30.0                # s of events before an outcome that form the chain
+    event_refractory: float = 5.0       # s before the same event type is recorded again
+    min_match: int = 2                  # recent events that must match a chain segment
+    match_threshold: float = 0.6        # mean per-event similarity to trigger
+    context_scale: float = 0.5          # context distance scale in event similarity
+    replay_strength: float = 0.2        # replayed events are this fraction of the real thing
+    replay_speed: float = 8.0           # replay runs this many times faster than real time
+    refractory: float = 20.0            # s before the same memory can fire again
+    relief_threshold: float = 0.3       # pain drop (weighted) that forms a memory
+    reward_threshold: float = 0.3
+    loss_aversion: float = 2.0
+    decay: float = 0.0005               # strength decay per stored-chain check
+    merge_threshold: float = 0.85       # chains this similar (same event types) merge
+    inherit_memories: int = 16
+    inherit_strength: float = 0.5
+
+
+@dataclass
 class CombatConfig:
     """World physics of fights (given, not learned)."""
     contact_radius: float = 1.5         # NPC-rival distance that counts as contact

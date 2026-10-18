@@ -1,0 +1,848 @@
+
+######## h0.7_f0.7
+
+--- seed 0
+== B26 (tribe B, gen 7, health 1.00)
+basis magnitudes hunger 1.32 (start 1.30)  social 0.76 (start 0.76)  explore 0.91 (start 1.04)  fight 0.46 (start 0.70)
+cross terms      hunger.social +1.91  hunger.explore +1.21  hunger.fight -0.84  social.explore +0.45  social.fight -1.45  explore.fight +2.55
+metric change    diagonal 0.617, cross terms 1.995, cond 1.5
+connection       rival, alone: -0.007  rival, with 2 allies: +0.017  outnumbered 3:1: -0.000  group 3 vs 1: +0.026  courage_index: +0.024  numbers_index: +0.027
+          injured -> hunger^social    -0.321  (hyperbolic)
+       rival_near -> hunger^social    -0.319  (hyperbolic)
+           allies -> hunger^social    -0.313  (hyperbolic)
+           rivals -> hunger^social    -0.298  (hyperbolic)
+    rival_closing -> hunger^social    -0.291  (hyperbolic)
+        food_near -> hunger^social    -0.290  (hyperbolic)
+habit holonomy   ||H - I|| = 385.061 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +1.05  e124 fear -0.80  e134 fear -0.82  e234 fear +1.14   (from memory 9%)
+memories         {'memories': 64, 'by_origin': {'experience': 47, 'imprinted': 1, 'inherited': 16}, 'activations': 43, 'activations_by_origin': {'experience': 23, 'imprinted': 0, 'inherited': 20}, 'mean_chain': 9.671875}
+   [36] relief/dread, experience, strength 131.74, used 0x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> relief(68.02)
+   [49] relief/dread, experience, strength 88.57, used 2x: meal(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> rival_seen(1.96) -> company(1.00) -> relief(67.07)
+   [38] relief/dread, experience, strength 77.96, used 0x: meal(1.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(61.79)
+   [39] relief/dread, experience, strength 44.74, used 2x: death_seen(1.00) -> injury(3.00) -> alone(1.00) -> rival_seen(1.96) -> company(1.00) -> alone(1.00) -> relief(67.25)
+   [54] relief/dread, experience, strength 44.70, used 2x: injury(3.00) -> alone(1.00) -> rival_seen(1.96) -> company(1.00) -> alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> relief(66.86)
+ledger           {'dg_diag': 6.650807468352945, 'dg_off': 22.017119687131487, 'metric_steps': 744, 'conn_updates': 1497, 'conn_pain_updates': 706, 'conn_reward_updates': 790, 'conn_dW_by_feature': {'food_near': 28.164657834347867, 'rival_near': 39.81415680071971, 'rival_closing': 29.298783357764748, 'allies': 28.226514647922603, 'rivals': 40.19210038605558, 'outnumbered': 45.004388587156186, 'injured': 1.4085208415092665, 'backed': 28.272990898411393}}
+
+== B18 (tribe B, gen 6, health 1.00)
+basis magnitudes hunger 2.09 (start 2.39)  social 0.45 (start 0.75)  explore 1.32 (start 1.47)  fight 1.48 (start 1.34)
+cross terms      hunger.social -0.89  hunger.explore +0.73  hunger.fight +0.39  social.explore -0.74  social.fight -2.85  explore.fight +2.28
+metric change    diagonal 2.529, cross terms 4.490, cond 15.8
+connection       rival, alone: +0.112  rival, with 2 allies: -0.070  outnumbered 3:1: +0.091  group 3 vs 1: -0.132  courage_index: -0.183  numbers_index: -0.223
+           allies -> social^explore   -0.380  (elliptic)
+           rivals -> social^explore   -0.378  (elliptic)
+       rival_near -> hunger^explore   +0.373  (hyperbolic)
+           backed -> social^explore   -0.370  (elliptic)
+      outnumbered -> social^explore   -0.365  (elliptic)
+    rival_closing -> social^explore   -0.296  (elliptic)
+habit holonomy   ||H - I|| = 38.014 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.33  e124 fear -0.71  e134 fear +0.79  e234 fear -0.09   (from memory 6%)
+memories         {'memories': 64, 'by_origin': {'experience': 63, 'imprinted': 1, 'inherited': 0}, 'activations': 115, 'activations_by_origin': {'experience': 93, 'imprinted': 2, 'inherited': 20}, 'mean_chain': 8.265625}
+   [13] relief/dread, experience, strength 15.19, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> injury(0.15) -> triumph(0.15) -> relief(10.49)
+   [2] relief/dread, experience, strength 13.61, used 1x: false_food(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> relief(6.98)
+   [24] relief/dread, experience, strength 12.05, used 2x: company(1.00) -> rival_seen(2.52) -> food_seen(1.00) -> alone(1.00) -> rival_seen(1.00) -> company(1.00) -> rival_seen(1.76) -> food_seen(1.00) -> relief(5.34)
+   [3] relief/dread, experience, strength 10.93, used 0x: rival_seen(2.07) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> injury(0.15) -> triumph(0.15) -> relief(7.81)
+   [12] relief/dread, experience, strength 10.05, used 3x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> company(1.00) -> rival_seen(1.10) -> alone(1.00) -> rival_seen(1.67) -> relief(7.82)
+ledger           {'dg_diag': 55.66224426706425, 'dg_off': 143.44005621470504, 'metric_steps': 4234, 'conn_updates': 5657, 'conn_pain_updates': 2169, 'conn_reward_updates': 3487, 'conn_dW_by_feature': {'food_near': 140.44247859239803, 'rival_near': 160.43780121512725, 'rival_closing': 98.45680755168628, 'allies': 179.5784874123, 'rivals': 156.52998851717766, 'outnumbered': 141.26955108994792, 'injured': 14.985087092548108, 'backed': 148.52607991451652}}
+
+--- seed 1
+== A24 (tribe A, gen 7, health 0.99)
+basis magnitudes hunger 0.45 (start 0.53)  social 1.24 (start 1.32)  explore 1.28 (start 0.94)  fight 0.93 (start 0.46)
+cross terms      hunger.social +1.40  hunger.explore +1.32  hunger.fight +0.86  social.explore -2.43  social.fight +1.12  explore.fight +0.97
+metric change    diagonal 1.689, cross terms 4.453, cond 2.8
+connection       rival, alone: -0.530  rival, with 2 allies: -0.776  outnumbered 3:1: -0.965  group 3 vs 1: -0.987  courage_index: -0.246  numbers_index: -0.022
+        food_near -> explore^fight    -0.348  (hyperbolic)
+          injured -> explore^fight    -0.313  (hyperbolic)
+           allies -> explore^fight    -0.285  (hyperbolic)
+       rival_near -> explore^fight    -0.280  (hyperbolic)
+    rival_closing -> hunger^social    +0.276  (hyperbolic)
+      outnumbered -> explore^fight    -0.268  (hyperbolic)
+habit holonomy   ||H - I|| = 91.566 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.10  e124 fear +0.04  e134 fear +0.02  e234 fear -0.09   (from memory 1%)
+memories         {'memories': 48, 'by_origin': {'experience': 16, 'imprinted': 0, 'inherited': 32}, 'activations': 2, 'activations_by_origin': {'experience': 0, 'imprinted': 0, 'inherited': 2}, 'mean_chain': 8.958333333333334}
+   [37] relief/dread, experience, strength 99.40, used 0x: alone(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> company(1.00) -> alone(1.00) -> contact(1.00) -> injury(0.10) -> triumph(0.05) -> company(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> relief(14.36)
+   [16] relief/dread, inherited, strength 58.97, used 0x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> relief(32.96)
+   [17] relief/dread, inherited, strength 39.25, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> food_seen(1.00) -> alone(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> company(1.00) -> relief(36.73)
+   [0] relief/dread, inherited, strength 26.42, used 0x: company(1.00) -> alone(1.00) -> relief(6.09)
+   [18] relief/dread, inherited, strength 26.21, used 0x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> food_seen(1.00) -> relief(37.82)
+ledger           {'dg_diag': 3.7901705933096883, 'dg_off': 10.166655387129994, 'metric_steps': 134, 'conn_updates': 390, 'conn_pain_updates': 115, 'conn_reward_updates': 274, 'conn_dW_by_feature': {'food_near': 18.397907184328826, 'rival_near': 20.224800067585754, 'rival_closing': 4.240750685513519, 'allies': 5.965367426533584, 'rivals': 22.633712629424156, 'outnumbered': 22.45961638359335, 'injured': 5.475240627332479, 'backed': 15.996520138659745}}
+
+== B21 (tribe B, gen 6, health 0.79)
+basis magnitudes hunger 2.30 (start 2.08)  social 1.58 (start 1.38)  explore 2.55 (start 2.28)  fight 2.19 (start 2.36)
+cross terms      hunger.social +1.33  hunger.explore -0.22  hunger.fight +1.24  social.explore +0.65  social.fight -0.09  explore.fight +2.40
+metric change    diagonal 3.626, cross terms 5.666, cond 2.7
+connection       rival, alone: -0.078  rival, with 2 allies: +0.039  outnumbered 3:1: -0.210  group 3 vs 1: +0.079  courage_index: +0.117  numbers_index: +0.289
+    rival_closing -> hunger^explore   -0.353  (hyperbolic)
+           allies -> social^fight     +0.341  (hyperbolic)
+        food_near -> explore^fight    +0.292  (hyperbolic)
+      outnumbered -> hunger^explore   +0.291  (hyperbolic)
+          injured -> social^fight     +0.281  (hyperbolic)
+       rival_near -> hunger^explore   +0.275  (hyperbolic)
+habit holonomy   ||H - I|| = 41958.247 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.38  e124 fear +0.27  e134 fear +0.21  e234 fear +0.06   (from memory 5%)
+memories         {'memories': 64, 'by_origin': {'experience': 47, 'imprinted': 1, 'inherited': 16}, 'activations': 59, 'activations_by_origin': {'experience': 42, 'imprinted': 1, 'inherited': 16}, 'mean_chain': 10.09375}
+   [17] relief/dread, experience, strength 743.32, used 0x: food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(273.60)
+   [18] relief/dread, experience, strength 581.68, used 0x: death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(276.29)
+   [25] relief/dread, experience, strength 437.92, used 0x: injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> relief(100.46)
+   [50] relief/dread, experience, strength 383.74, used 0x: death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> relief(278.22)
+   [43] relief/dread, experience, strength 201.87, used 1x: injury(3.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> company(1.00) -> alone(1.00) -> food_seen(1.00) -> rival_seen(1.99) -> meal(1.00) -> relief(279.14)
+ledger           {'dg_diag': 78.3771670016919, 'dg_off': 220.06773268127068, 'metric_steps': 4011, 'conn_updates': 4151, 'conn_pain_updates': 2284, 'conn_reward_updates': 1866, 'conn_dW_by_feature': {'food_near': 361.0886805237456, 'rival_near': 202.82159586116984, 'rival_closing': 101.54185649067134, 'allies': 298.36048722086537, 'rivals': 189.2123527643305, 'outnumbered': 166.03834278977294, 'injured': 66.08048651798349, 'backed': 214.25670431857463}}
+
+######## h0.7_f1.0
+
+--- seed 0
+== B29 (tribe B, gen 7, health 0.99)
+basis magnitudes hunger 0.58 (start 1.97)  social 0.95 (start 1.48)  explore 1.39 (start 1.26)  fight 2.10 (start 1.29)
+cross terms      hunger.social -1.71  hunger.explore +3.26  hunger.fight -0.15  social.explore +0.07  social.fight +2.48  explore.fight +3.74
+metric change    diagonal 7.914, cross terms 6.556, cond 2.5
+connection       rival, alone: -0.100  rival, with 2 allies: -0.076  outnumbered 3:1: -0.175  group 3 vs 1: -0.081  courage_index: +0.024  numbers_index: +0.095
+           backed -> social^fight     -0.407  (hyperbolic)
+           allies -> social^fight     -0.396  (hyperbolic)
+        food_near -> social^fight     -0.366  (hyperbolic)
+           rivals -> social^fight     -0.306  (hyperbolic)
+    rival_closing -> social^fight     -0.299  (hyperbolic)
+    rival_closing -> hunger^fight     +0.276  (elliptic)
+habit holonomy   ||H - I|| = 230.276 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.30  e124 fear +0.23  e134 fear +1.29  e234 fear -1.03   (from memory 8%)
+memories         {'memories': 64, 'by_origin': {'experience': 31, 'imprinted': 1, 'inherited': 32}, 'activations': 21, 'activations_by_origin': {'experience': 10, 'imprinted': 1, 'inherited': 10}, 'mean_chain': 9.515625}
+   [39] relief/dread, experience, strength 447.66, used 2x: meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> rival_seen(1.75) -> meal(1.00) -> rival_seen(1.71) -> rival_seen(1.00) -> relief(259.72)
+   [38] relief/dread, experience, strength 441.00, used 1x: company(5.00) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> rival_seen(1.75) -> meal(1.00) -> rival_seen(1.71) -> relief(259.72)
+   [37] relief/dread, experience, strength 433.75, used 1x: food_seen(1.00) -> company(5.00) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> rival_seen(1.75) -> meal(1.00) -> relief(259.31)
+   [45] relief/dread, experience, strength 153.94, used 2x: rival_seen(1.75) -> meal(1.00) -> rival_seen(1.71) -> rival_seen(1.00) -> rival_seen(2.30) -> alone(1.00) -> food_seen(1.00) -> relief(258.70)
+   [44] relief/dread, experience, strength 153.07, used 1x: contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> rival_seen(1.75) -> meal(1.00) -> rival_seen(1.71) -> rival_seen(1.00) -> rival_seen(2.30) -> alone(1.00) -> food_seen(1.00) -> relief(258.54)
+ledger           {'dg_diag': 27.498236681638506, 'dg_off': 59.0978744052045, 'metric_steps': 1192, 'conn_updates': 1259, 'conn_pain_updates': 691, 'conn_reward_updates': 567, 'conn_dW_by_feature': {'food_near': 121.29774662239144, 'rival_near': 85.32792261578035, 'rival_closing': 60.40274949478359, 'allies': 138.27537661107442, 'rivals': 75.38169190427631, 'outnumbered': 50.292412023329895, 'injured': 10.88177675442184, 'backed': 110.06359493073093}}
+
+== A28 (tribe A, gen 7, health 0.96)
+basis magnitudes hunger 0.72 (start 0.88)  social 1.03 (start 0.77)  explore 1.32 (start 0.72)  fight 1.48 (start 1.37)
+cross terms      hunger.social -3.14  hunger.explore -0.88  hunger.fight +2.89  social.explore +0.28  social.fight -0.35  explore.fight +1.59
+metric change    diagonal 2.267, cross terms 2.355, cond 4.3
+connection       rival, alone: -0.409  rival, with 2 allies: -0.651  outnumbered 3:1: -0.728  group 3 vs 1: -0.854  courage_index: -0.242  numbers_index: -0.125
+      outnumbered -> hunger^social    +0.324  (hyperbolic)
+           rivals -> hunger^social    +0.316  (hyperbolic)
+    rival_closing -> explore^fight    -0.314  (hyperbolic)
+           backed -> hunger^social    +0.299  (hyperbolic)
+       rival_near -> hunger^social    +0.254  (hyperbolic)
+       rival_near -> explore^fight    -0.242  (hyperbolic)
+habit holonomy   ||H - I|| = 140.447 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.09  e124 fear +0.32  e134 fear +0.01  e234 fear -0.12   (from memory 7%)
+memories         {'memories': 64, 'by_origin': {'experience': 35, 'imprinted': 1, 'inherited': 28}, 'activations': 30, 'activations_by_origin': {'experience': 3, 'imprinted': 0, 'inherited': 27}, 'mean_chain': 8.796875}
+   [33] relief/dread, experience, strength 610.85, used 1x: rival_seen(1.00) -> company(1.00) -> alone(1.00) -> rival_seen(1.66) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> rival_seen(1.00) -> rival_seen(1.00) -> food_seen(1.00) -> relief(235.87)
+   [63] relief/dread, experience, strength 599.53, used 0x: rival_seen(1.81) -> rival_seen(1.00) -> company(1.00) -> alone(1.00) -> rival_seen(1.66) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> rival_seen(1.00) -> relief(235.00)
+   [58] relief/dread, experience, strength 412.51, used 0x: company(1.00) -> alone(1.00) -> rival_seen(1.66) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> rival_seen(1.00) -> rival_seen(1.00) -> food_seen(1.00) -> rival_seen(1.00) -> relief(235.96)
+   [62] relief/dread, experience, strength 385.61, used 0x: rival_seen(2.83) -> rival_seen(1.81) -> rival_seen(1.00) -> company(1.00) -> alone(1.00) -> rival_seen(1.66) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> relief(229.60)
+   [47] relief/dread, experience, strength 211.30, used 0x: death_seen(1.00) -> injury(3.00) -> company(1.00) -> rival_seen(1.00) -> rival_seen(1.00) -> food_seen(1.00) -> rival_seen(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(236.34)
+ledger           {'dg_diag': 12.524665551000965, 'dg_off': 31.258210612170924, 'metric_steps': 1069, 'conn_updates': 1176, 'conn_pain_updates': 569, 'conn_reward_updates': 606, 'conn_dW_by_feature': {'food_near': 15.55292937388228, 'rival_near': 7.572730620188654, 'rival_closing': 16.330684511982696, 'allies': 15.26294245738813, 'rivals': 20.100934109386234, 'outnumbered': 26.891845883703425, 'injured': 0.6132589904700849, 'backed': 14.88514703415269}}
+
+--- seed 1
+== A25 (tribe A, gen 6, health 0.99)
+basis magnitudes hunger 1.27 (start 1.59)  social 1.64 (start 1.82)  explore 0.88 (start 1.69)  fight 2.01 (start 2.13)
+cross terms      hunger.social -0.73  hunger.explore +3.69  hunger.fight +3.05  social.explore -0.29  social.fight +2.12  explore.fight +2.90
+metric change    diagonal 4.085, cross terms 3.778, cond 2.1
+connection       rival, alone: +0.191  rival, with 2 allies: +0.318  outnumbered 3:1: +0.448  group 3 vs 1: +0.399  courage_index: +0.127  numbers_index: -0.049
+    rival_closing -> social^fight     -0.360  (hyperbolic)
+          injured -> social^fight     -0.343  (hyperbolic)
+           allies -> social^fight     -0.320  (hyperbolic)
+      outnumbered -> social^fight     -0.317  (hyperbolic)
+           rivals -> social^fight     -0.314  (hyperbolic)
+       rival_near -> social^fight     -0.307  (hyperbolic)
+habit holonomy   ||H - I|| = 3784.495 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.01  e124 fear -0.21  e134 fear -0.02  e234 fear -0.38   (from memory 9%)
+memories         {'memories': 64, 'by_origin': {'experience': 32, 'imprinted': 0, 'inherited': 32}, 'activations': 14, 'activations_by_origin': {'experience': 2, 'imprinted': 0, 'inherited': 12}, 'mean_chain': 9.5625}
+   [0] relief/dread, inherited, strength 1253.12, used 1x: death_seen(1.00) -> injury(3.00) -> rival_seen(1.57) -> rival_seen(1.00) -> relief(506.69)
+   [1] relief/dread, inherited, strength 261.67, used 0x: meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(496.86)
+   [16] relief/dread, inherited, strength 230.99, used 2x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> death_seen(1.00) -> rival_seen(1.86) -> relief(529.86)
+   [2] relief/dread, inherited, strength 142.76, used 1x: injury(3.00) -> rival_seen(1.57) -> rival_seen(1.00) -> alone(1.00) -> relief(506.73)
+   [3] relief/dread, inherited, strength 135.50, used 0x: meal(1.00) -> death_seen(1.00) -> injury(3.00) -> rival_seen(1.57) -> relief(505.61)
+ledger           {'dg_diag': 11.968762105117651, 'dg_off': 22.737045679850397, 'metric_steps': 651, 'conn_updates': 651, 'conn_pain_updates': 301, 'conn_reward_updates': 349, 'conn_dW_by_feature': {'food_near': 13.806929985694776, 'rival_near': 10.947470722269093, 'rival_closing': 9.157384025631833, 'allies': 18.160502540235, 'rivals': 15.65603680780043, 'outnumbered': 12.104109335447545, 'injured': 1.759034542134572, 'backed': 21.51222332994667}}
+
+== A24 (tribe A, gen 5, health 1.00)
+basis magnitudes hunger 0.64 (start 0.89)  social 1.63 (start 2.03)  explore 1.35 (start 1.09)  fight 2.17 (start 2.17)
+cross terms      hunger.social -1.04  hunger.explore +4.31  hunger.fight +0.05  social.explore +2.41  social.fight -0.41  explore.fight -1.30
+metric change    diagonal 2.525, cross terms 4.547, cond 2.1
+connection       rival, alone: +0.095  rival, with 2 allies: +0.196  outnumbered 3:1: +0.177  group 3 vs 1: +0.260  courage_index: +0.102  numbers_index: +0.083
+        food_near -> hunger^explore   +0.391  (hyperbolic)
+    rival_closing -> hunger^explore   +0.386  (hyperbolic)
+       rival_near -> hunger^explore   +0.341  (hyperbolic)
+           allies -> hunger^explore   +0.335  (hyperbolic)
+      outnumbered -> hunger^explore   +0.325  (hyperbolic)
+           rivals -> hunger^explore   +0.304  (hyperbolic)
+habit holonomy   ||H - I|| = 66129.911 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.02  e124 fear +0.11  e134 fear +0.15  e234 fear +0.05   (from memory 7%)
+memories         {'memories': 64, 'by_origin': {'experience': 32, 'imprinted': 0, 'inherited': 32}, 'activations': 47, 'activations_by_origin': {'experience': 20, 'imprinted': 0, 'inherited': 27}, 'mean_chain': 7.0}
+   [0] relief/dread, inherited, strength 461.98, used 0x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> death_seen(1.00) -> rival_seen(1.86) -> relief(529.86)
+   [1] relief/dread, inherited, strength 188.73, used 0x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> death_seen(1.00) -> relief(517.99)
+   [2] relief/dread, inherited, strength 144.37, used 0x: injury(0.03) -> triumph(0.05) -> meal(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> death_seen(1.00) -> injury(3.00) -> meal(1.00) -> rival_seen(2.15) -> meal(1.00) -> relief(794.75)
+   [3] relief/dread, inherited, strength 140.80, used 0x: rival_seen(2.77) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> death_seen(1.00) -> injury(3.00) -> meal(1.00) -> relief(794.75)
+   [4] relief/dread, inherited, strength 120.51, used 1x: meal(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> death_seen(1.00) -> relief(496.36)
+ledger           {'dg_diag': 23.26756416512118, 'dg_off': 53.722254057800626, 'metric_steps': 2341, 'conn_updates': 2448, 'conn_pain_updates': 1356, 'conn_reward_updates': 1091, 'conn_dW_by_feature': {'food_near': 65.55430499536665, 'rival_near': 46.37522346634455, 'rival_closing': 37.8722391929478, 'allies': 54.96566646763372, 'rivals': 40.30614103247742, 'outnumbered': 33.49602113751687, 'injured': 1.1581886724147101, 'backed': 52.22942692001904}}
+
+######## h0.7_f1.4
+
+--- seed 0
+== B21 (tribe B, gen 6, health 1.00)
+basis magnitudes hunger 0.82 (start 0.87)  social 0.80 (start 0.86)  explore 0.93 (start 0.99)  fight 2.34 (start 2.35)
+cross terms      hunger.social -1.85  hunger.explore -1.75  hunger.fight -1.21  social.explore -0.12  social.fight -0.24  explore.fight +3.18
+metric change    diagonal 0.357, cross terms 0.427, cond 5.0
+connection       rival, alone: -0.031  rival, with 2 allies: -0.048  outnumbered 3:1: -0.064  group 3 vs 1: -0.064  courage_index: -0.017  numbers_index: +0.001
+           allies -> explore^fight    -0.295  (hyperbolic)
+           allies -> hunger^explore   -0.256  (hyperbolic)
+    rival_closing -> hunger^social    -0.139  (hyperbolic)
+           backed -> hunger^social    -0.133  (hyperbolic)
+        food_near -> hunger^social    -0.129  (hyperbolic)
+        food_near -> explore^fight    +0.127  (hyperbolic)
+habit holonomy   ||H - I|| = 17.035 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.01  e124 fear +0.09  e134 fear +0.02  e234 fear -0.03   (from memory 3%)
+memories         {'memories': 33, 'by_origin': {'experience': 1, 'imprinted': 0, 'inherited': 32}, 'activations': 6, 'activations_by_origin': {'experience': 0, 'imprinted': 0, 'inherited': 6}, 'mean_chain': 10.575757575757576}
+   [0] relief/dread, inherited, strength 43.45, used 0x: death_seen(1.00) -> injury(3.00) -> meal(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> relief(118.57)
+   [1] relief/dread, inherited, strength 40.67, used 0x: food_seen(1.00) -> rival_seen(2.42) -> company(2.00) -> alone(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> meal(1.00) -> relief(117.86)
+   [2] relief/dread, inherited, strength 27.71, used 0x: company(2.00) -> alone(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> meal(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(117.76)
+   [3] relief/dread, inherited, strength 16.22, used 0x: alone(1.00) -> company(1.00) -> death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> relief(222.16)
+   [4] relief/dread, inherited, strength 15.83, used 0x: rival_seen(2.14) -> company(1.00) -> alone(1.00) -> rival_seen(2.43) -> company(1.00) -> alone(1.00) -> alone(1.00) -> food_seen(1.00) -> rival_seen(2.18) -> relief(12.94)
+ledger           {'dg_diag': 0.5824941830863979, 'dg_off': 1.6667429746244706, 'metric_steps': 441, 'conn_updates': 441, 'conn_pain_updates': 297, 'conn_reward_updates': 143, 'conn_dW_by_feature': {'food_near': 0.0, 'rival_near': 0.07585398883410271, 'rival_closing': 0.001921115157656283, 'allies': 4.039618955392813, 'rivals': 0.10079574029076853, 'outnumbered': 0.07269181772762733, 'injured': 0.0, 'backed': 0.18516622294473464}}
+
+== B17 (tribe B, gen 5, health 1.00)
+basis magnitudes hunger 0.50 (start 0.61)  social 0.45 (start 0.63)  explore 1.06 (start 1.12)  fight 1.55 (start 1.72)
+cross terms      hunger.social -2.20  hunger.explore -2.16  hunger.fight +0.94  social.explore -1.04  social.fight -1.54  explore.fight -0.51
+metric change    diagonal 1.008, cross terms 2.474, cond 2.0
+connection       rival, alone: -0.561  rival, with 2 allies: -0.450  outnumbered 3:1: -0.969  group 3 vs 1: -0.493  courage_index: +0.112  numbers_index: +0.476
+    rival_closing -> hunger^explore   -0.330  (hyperbolic)
+           allies -> hunger^social    +0.254  (hyperbolic)
+       rival_near -> explore^fight    +0.248  (hyperbolic)
+      outnumbered -> hunger^explore   -0.245  (hyperbolic)
+        food_near -> hunger^explore   -0.237  (hyperbolic)
+           backed -> hunger^explore   -0.235  (hyperbolic)
+habit holonomy   ||H - I|| = 130.986 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.47  e124 fear +0.08  e134 fear +0.04  e234 fear +0.10   (from memory 7%)
+memories         {'memories': 64, 'by_origin': {'experience': 64, 'imprinted': 0, 'inherited': 0}, 'activations': 255, 'activations_by_origin': {'experience': 232, 'imprinted': 1, 'inherited': 22}, 'mean_chain': 8.4375}
+   [63] relief/dread, experience, strength 13.30, used 5x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> rival_seen(1.47) -> company(1.00) -> alone(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> death_seen(1.00) -> meal(1.00) -> relief(332.37)
+   [37] relief/dread, experience, strength 10.23, used 5x: company(1.00) -> alone(1.00) -> rival_seen(1.41) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> company(1.00) -> relief(5.61)
+   [36] relief/dread, experience, strength 9.37, used 21x: injury(0.15) -> triumph(0.15) -> death_seen(1.00) -> meal(1.00) -> rival_seen(1.06) -> alone(1.00) -> company(1.00) -> alone(1.00) -> rival_seen(1.00) -> company(1.00) -> relief(331.49)
+   [44] relief/dread, experience, strength 9.16, used 3x: alone(1.00) -> food_seen(1.00) -> company(2.00) -> alone(1.00) -> company(1.00) -> relief(3.55)
+   [57] relief/dread, experience, strength 9.08, used 4x: company(1.00) -> alone(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> death_seen(1.00) -> meal(1.00) -> rival_seen(1.06) -> alone(1.00) -> company(1.00) -> relief(327.68)
+ledger           {'dg_diag': 64.53697843183465, 'dg_off': 158.13506601015604, 'metric_steps': 6183, 'conn_updates': 9422, 'conn_pain_updates': 4756, 'conn_reward_updates': 4665, 'conn_dW_by_feature': {'food_near': 298.8087594705622, 'rival_near': 94.3948527524605, 'rival_closing': 82.09674570273856, 'allies': 288.2404144987291, 'rivals': 83.80716195941142, 'outnumbered': 111.66067361809947, 'injured': 11.211671816683953, 'backed': 60.73527659571317}}
+
+--- seed 1
+== B22 (tribe B, gen 6, health 1.00)
+basis magnitudes hunger 0.70 (start 1.67)  social 1.05 (start 1.44)  explore 1.69 (start 1.72)  fight 1.62 (start 1.14)
+cross terms      hunger.social +0.80  hunger.explore +0.98  hunger.fight -0.98  social.explore -1.50  social.fight -2.83  explore.fight +1.39
+metric change    diagonal 4.693, cross terms 6.852, cond 3.4
+connection       rival, alone: +0.366  rival, with 2 allies: +0.530  outnumbered 3:1: +0.619  group 3 vs 1: +0.675  courage_index: +0.164  numbers_index: +0.055
+           rivals -> social^fight     -0.406  (hyperbolic)
+      outnumbered -> social^fight     -0.392  (hyperbolic)
+       rival_near -> social^fight     -0.325  (hyperbolic)
+    rival_closing -> social^fight     -0.317  (hyperbolic)
+           backed -> hunger^fight     -0.301  (elliptic)
+           allies -> explore^fight    +0.209  (hyperbolic)
+habit holonomy   ||H - I|| = 64.332 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.36  e124 fear +0.12  e134 fear -0.60  e234 fear -0.06   (from memory 5%)
+memories         {'memories': 64, 'by_origin': {'experience': 40, 'imprinted': 1, 'inherited': 23}, 'activations': 63, 'activations_by_origin': {'experience': 40, 'imprinted': 1, 'inherited': 22}, 'mean_chain': 9.0}
+   [58] relief/dread, experience, strength 523.00, used 0x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> meal(1.00) -> relief(421.88)
+   [63] relief/dread, experience, strength 366.44, used 0x: death_seen(1.00) -> meal(1.00) -> rival_seen(1.70) -> alone(1.00) -> relief(420.71)
+   [56] relief/dread, experience, strength 361.54, used 0x: contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> meal(1.00) -> rival_seen(1.70) -> relief(421.36)
+   [35] relief/dread, experience, strength 355.02, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> meal(1.00) -> relief(422.12)
+   [44] relief/dread, imprinted, strength 333.11, used 1x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> relief(402.26)
+ledger           {'dg_diag': 46.544603725936966, 'dg_off': 110.90164408806578, 'metric_steps': 3147, 'conn_updates': 3235, 'conn_pain_updates': 1533, 'conn_reward_updates': 1701, 'conn_dW_by_feature': {'food_near': 118.13650877571912, 'rival_near': 84.18038178616267, 'rival_closing': 43.41842435027912, 'allies': 126.90575556317816, 'rivals': 28.620103567075827, 'outnumbered': 26.480516920953097, 'injured': 11.098599195193202, 'backed': 63.63260638758132}}
+
+== B26 (tribe B, gen 6, health 1.00)
+basis magnitudes hunger 0.60 (start 0.97)  social 0.51 (start 0.45)  explore 2.03 (start 1.94)  fight 2.02 (start 1.84)
+cross terms      hunger.social +0.56  hunger.explore -0.70  hunger.fight +3.03  social.explore -0.97  social.fight +1.87  explore.fight -0.36
+metric change    diagonal 1.672, cross terms 1.344, cond 12.4
+connection       rival, alone: +0.181  rival, with 2 allies: +0.419  outnumbered 3:1: +0.347  group 3 vs 1: +0.563  courage_index: +0.238  numbers_index: +0.216
+          injured -> explore^fight    +0.359  (hyperbolic)
+      outnumbered -> explore^fight    +0.309  (hyperbolic)
+           backed -> hunger^fight     +0.301  (elliptic)
+           rivals -> explore^fight    +0.299  (hyperbolic)
+        food_near -> hunger^social    -0.280  (hyperbolic)
+           allies -> hunger^fight     +0.253  (elliptic)
+habit holonomy   ||H - I|| = 179.441 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.05  e124 fear +0.01  e134 fear +0.74  e234 fear +0.95   (from memory 22%)
+memories         {'memories': 51, 'by_origin': {'experience': 19, 'imprinted': 0, 'inherited': 32}, 'activations': 7, 'activations_by_origin': {'experience': 0, 'imprinted': 0, 'inherited': 7}, 'mean_chain': 8.588235294117647}
+   [16] relief/dread, inherited, strength 437.59, used 1x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> company(1.00) -> death_seen(1.00) -> alone(1.00) -> food_seen(1.00) -> company(1.00) -> relief(208.75)
+   [17] relief/dread, inherited, strength 423.19, used 0x: death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> alone(1.00) -> rival_seen(1.84) -> company(1.00) -> food_seen(1.00) -> relief(276.78)
+   [18] relief/dread, inherited, strength 398.10, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> injury(3.00) -> relief(272.38)
+   [19] relief/dread, inherited, strength 205.67, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> alone(1.00) -> relief(275.85)
+   [38] relief/dread, experience, strength 195.04, used 0x: alone(1.00) -> company(1.00) -> rival_seen(1.43) -> alone(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> relief(32.89)
+ledger           {'dg_diag': 4.006886459959895, 'dg_off': 8.148767549083884, 'metric_steps': 346, 'conn_updates': 511, 'conn_pain_updates': 348, 'conn_reward_updates': 162, 'conn_dW_by_feature': {'food_near': 7.990215491573063, 'rival_near': 31.426823480879186, 'rival_closing': 16.867151717064854, 'allies': 5.5045442885186455, 'rivals': 34.2702008773208, 'outnumbered': 41.74122517543707, 'injured': 1.0340394610755783, 'backed': 5.350333272222175}}
+
+######## h1.0_f0.7
+
+--- seed 0
+== A13 (tribe A, gen 5, health 1.00)
+basis magnitudes hunger 1.93 (start 0.46)  social 1.50 (start 0.56)  explore 1.54 (start 0.87)  fight 1.51 (start 0.96)
+cross terms      hunger.social -0.22  hunger.explore +3.20  hunger.fight +0.75  social.explore +0.61  social.fight +0.31  explore.fight +4.83
+metric change    diagonal 8.454, cross terms 11.106, cond 3.0
+connection       rival, alone: +0.898  rival, with 2 allies: +1.226  outnumbered 3:1: +1.517  group 3 vs 1: +1.552  courage_index: +0.327  numbers_index: +0.035
+          injured -> explore^fight    +0.396  (hyperbolic)
+       rival_near -> hunger^explore   -0.267  (hyperbolic)
+           backed -> hunger^social    -0.247  (hyperbolic)
+           allies -> social^explore   -0.240  (elliptic)
+           rivals -> hunger^social    -0.230  (hyperbolic)
+           backed -> social^explore   -0.230  (elliptic)
+habit holonomy   ||H - I|| = 166800.830 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.22  e124 fear -0.04  e134 fear +0.07  e234 fear -0.42   (from memory 6%)
+memories         {'memories': 64, 'by_origin': {'experience': 62, 'imprinted': 2, 'inherited': 0}, 'activations': 215, 'activations_by_origin': {'experience': 196, 'imprinted': 5, 'inherited': 14}, 'mean_chain': 10.890625}
+   [53] relief/dread, experience, strength 616.51, used 0x: contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> death_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(193.01)
+   [27] relief/dread, experience, strength 506.45, used 0x: contact(1.00) -> injury(0.01) -> triumph(0.04) -> death_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(193.78)
+   [34] relief/dread, imprinted, strength 349.89, used 2x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> death_seen(1.00) -> relief(184.34)
+   [26] relief/dread, experience, strength 137.60, used 0x: alone(1.00) -> company(1.00) -> rival_seen(2.04) -> relief(181.21)
+   [11] relief/dread, experience, strength 120.34, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> death_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(191.22)
+ledger           {'dg_diag': 135.55272652691266, 'dg_off': 333.30054820444366, 'metric_steps': 8720, 'conn_updates': 11119, 'conn_pain_updates': 4534, 'conn_reward_updates': 6584, 'conn_dW_by_feature': {'food_near': 269.14107052487145, 'rival_near': 195.41710507715726, 'rival_closing': 175.33256712137617, 'allies': 277.736508147671, 'rivals': 199.06064138699946, 'outnumbered': 236.14958959871575, 'injured': 43.38039570179277, 'backed': 161.68488251548382}}
+
+== B23 (tribe B, gen 5, health 1.00)
+basis magnitudes hunger 1.87 (start 1.52)  social 0.91 (start 0.91)  explore 1.14 (start 0.82)  fight 0.46 (start 1.21)
+cross terms      hunger.social -0.35  hunger.explore +1.74  hunger.fight -2.13  social.explore -0.61  social.fight -4.71  explore.fight -1.16
+metric change    diagonal 3.094, cross terms 2.190, cond 2.7
+connection       rival, alone: +0.061  rival, with 2 allies: +0.728  outnumbered 3:1: +0.222  group 3 vs 1: +1.055  courage_index: +0.667  numbers_index: +0.833
+           allies -> hunger^fight     -0.298  (elliptic)
+           backed -> hunger^fight     -0.277  (elliptic)
+    rival_closing -> social^explore   +0.258  (elliptic)
+           rivals -> hunger^fight     -0.253  (elliptic)
+        food_near -> hunger^explore   +0.251  (hyperbolic)
+       rival_near -> social^fight     +0.242  (hyperbolic)
+habit holonomy   ||H - I|| = 673.980 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.05  e124 fear -1.01  e134 fear +0.42  e234 fear -0.68   (from memory 2%)
+memories         {'memories': 64, 'by_origin': {'experience': 32, 'imprinted': 0, 'inherited': 32}, 'activations': 9, 'activations_by_origin': {'experience': 4, 'imprinted': 0, 'inherited': 5}, 'mean_chain': 9.40625}
+   [16] relief/dread, inherited, strength 126.58, used 0x: alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> meal(1.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> death_seen(1.00) -> alone(1.00) -> relief(354.02)
+   [0] relief/dread, inherited, strength 120.27, used 0x: contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> food_seen(1.00) -> false_food(1.00) -> relief(159.23)
+   [1] relief/dread, inherited, strength 117.88, used 0x: contact(1.00) -> injury(0.05) -> triumph(0.10) -> death_seen(1.00) -> food_seen(1.00) -> relief(159.23)
+   [17] relief/dread, inherited, strength 89.04, used 1x: death_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(353.95)
+   [18] relief/dread, inherited, strength 86.78, used 0x: meal(1.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> death_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(355.94)
+ledger           {'dg_diag': 11.354079610357301, 'dg_off': 20.21038872436905, 'metric_steps': 791, 'conn_updates': 915, 'conn_pain_updates': 476, 'conn_reward_updates': 438, 'conn_dW_by_feature': {'food_near': 21.515961736637667, 'rival_near': 14.461136425968906, 'rival_closing': 11.02909191173653, 'allies': 31.59934795912679, 'rivals': 17.129645813836426, 'outnumbered': 18.854893418439787, 'injured': 0.11462843023252385, 'backed': 18.615109327156357}}
+
+--- seed 1
+== A30 (tribe A, gen 7, health 0.63)
+basis magnitudes hunger 2.07 (start 1.44)  social 0.45 (start 0.53)  explore 1.98 (start 1.89)  fight 2.31 (start 2.40)
+cross terms      hunger.social -2.19  hunger.explore -0.32  hunger.fight -1.34  social.explore -0.16  social.fight +1.71  explore.fight -0.26
+metric change    diagonal 3.094, cross terms 2.461, cond 3.7
+connection       rival, alone: +0.227  rival, with 2 allies: +0.175  outnumbered 3:1: +0.344  group 3 vs 1: +0.200  courage_index: -0.051  numbers_index: -0.144
+      outnumbered -> hunger^social    -0.419  (hyperbolic)
+           rivals -> hunger^social    -0.418  (hyperbolic)
+          injured -> hunger^social    -0.410  (hyperbolic)
+       rival_near -> hunger^social    -0.409  (hyperbolic)
+           backed -> hunger^social    -0.382  (hyperbolic)
+           allies -> hunger^social    -0.344  (hyperbolic)
+habit holonomy   ||H - I|| = 539.360 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.36  e124 fear +0.29  e134 fear +1.32  e234 fear -0.31   (from memory 1%)
+memories         {'memories': 64, 'by_origin': {'experience': 31, 'imprinted': 1, 'inherited': 32}, 'activations': 11, 'activations_by_origin': {'experience': 5, 'imprinted': 1, 'inherited': 5}, 'mean_chain': 9.734375}
+   [35] relief/dread, imprinted, strength 526.26, used 1x: rival_seen(1.36) -> food_seen(1.00) -> meal(1.00) -> company(3.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> death_seen(1.00) -> relief(149.83)
+   [16] relief/dread, inherited, strength 256.91, used 0x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> death_seen(1.00) -> injury(3.00) -> rival_seen(1.80) -> relief(507.53)
+   [17] relief/dread, inherited, strength 245.03, used 0x: meal(1.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> meal(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(501.32)
+   [40] relief/dread, experience, strength 183.86, used 0x: injury(0.15) -> triumph(0.15) -> death_seen(1.00) -> rival_seen(1.59) -> alone(1.00) -> company(1.00) -> alone(1.00) -> relief(151.28)
+   [38] relief/dread, experience, strength 180.96, used 0x: contact(1.00) -> injury(0.05) -> triumph(0.10) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> death_seen(1.00) -> rival_seen(1.59) -> alone(1.00) -> company(1.00) -> relief(151.15)
+ledger           {'dg_diag': 10.616293050809839, 'dg_off': 26.09036580826281, 'metric_steps': 666, 'conn_updates': 1186, 'conn_pain_updates': 633, 'conn_reward_updates': 552, 'conn_dW_by_feature': {'food_near': 73.8293404742257, 'rival_near': 70.85690125995842, 'rival_closing': 16.44101225882482, 'allies': 84.22309863594091, 'rivals': 34.69831050446619, 'outnumbered': 24.89894205204502, 'injured': 20.792206200786374, 'backed': 73.54912334534193}}
+
+== A19 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 1.76 (start 1.03)  social 0.57 (start 0.80)  explore 1.69 (start 0.97)  fight 1.96 (start 1.29)
+cross terms      hunger.social -4.80  hunger.explore -0.17  hunger.fight -2.32  social.explore +2.08  social.fight +1.18  explore.fight -0.85
+metric change    diagonal 6.439, cross terms 11.051, cond 3.1
+connection       rival, alone: -0.139  rival, with 2 allies: -0.157  outnumbered 3:1: -0.139  group 3 vs 1: -0.198  courage_index: -0.018  numbers_index: -0.059
+           backed -> explore^fight    -0.324  (hyperbolic)
+        food_near -> hunger^fight     +0.298  (elliptic)
+           rivals -> explore^fight    -0.275  (hyperbolic)
+      outnumbered -> hunger^social    -0.271  (hyperbolic)
+           allies -> explore^fight    -0.262  (hyperbolic)
+       rival_near -> explore^fight    -0.247  (hyperbolic)
+habit holonomy   ||H - I|| = 7.624 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.03  e124 fear +0.23  e134 fear +0.26  e234 fear +0.18   (from memory 4%)
+memories         {'memories': 64, 'by_origin': {'experience': 63, 'imprinted': 1, 'inherited': 0}, 'activations': 118, 'activations_by_origin': {'experience': 90, 'imprinted': 0, 'inherited': 28}, 'mean_chain': 9.3125}
+   [59] relief/dread, experience, strength 31.45, used 0x: company(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> relief(120.31)
+   [48] relief/dread, experience, strength 19.15, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> contact(1.00) -> injury(0.04) -> triumph(0.09) -> alone(1.00) -> company(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(5.51)
+   [1] relief/dread, experience, strength 16.28, used 0x: death_seen(1.00) -> injury(3.00) -> alone(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> relief(122.68)
+   [13] relief/dread, experience, strength 16.05, used 0x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> injury(0.08) -> triumph(0.08) -> relief(3.19)
+   [12] relief/dread, experience, strength 15.20, used 2x: contact(1.00) -> injury(0.03) -> triumph(0.05) -> alone(1.00) -> company(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> relief(118.69)
+ledger           {'dg_diag': 91.12974729711057, 'dg_off': 229.66291648400966, 'metric_steps': 5905, 'conn_updates': 9429, 'conn_pain_updates': 5530, 'conn_reward_updates': 3898, 'conn_dW_by_feature': {'food_near': 677.7951556399609, 'rival_near': 370.4120076196138, 'rival_closing': 140.1504718478747, 'allies': 627.2101778893958, 'rivals': 293.2374306614739, 'outnumbered': 243.1474982965796, 'injured': 194.9849676831117, 'backed': 427.40341949400505}}
+
+######## h1.0_f1.0
+
+--- seed 0
+== B28 (tribe B, gen 8, health 1.00)
+basis magnitudes hunger 0.46 (start 0.87)  social 1.38 (start 1.40)  explore 0.72 (start 0.69)  fight 0.63 (start 0.48)
+cross terms      hunger.social +0.15  hunger.explore +1.44  hunger.fight +0.54  social.explore -2.23  social.fight -3.05  explore.fight -1.08
+metric change    diagonal 0.814, cross terms 1.631, cond 12.7
+connection       rival, alone: +0.387  rival, with 2 allies: +0.557  outnumbered 3:1: +0.700  group 3 vs 1: +0.717  courage_index: +0.170  numbers_index: +0.017
+           allies -> social^fight     -0.375  (hyperbolic)
+      outnumbered -> social^fight     -0.365  (hyperbolic)
+    rival_closing -> social^fight     -0.361  (hyperbolic)
+           rivals -> social^fight     -0.330  (hyperbolic)
+       rival_near -> social^explore   -0.304  (elliptic)
+           backed -> social^fight     -0.304  (hyperbolic)
+habit holonomy   ||H - I|| = 104.966 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.71  e124 fear -0.94  e134 fear -0.04  e234 fear -0.83   (from memory 0%)
+memories         {'memories': 47, 'by_origin': {'experience': 15, 'imprinted': 0, 'inherited': 32}, 'activations': 2, 'activations_by_origin': {'experience': 0, 'imprinted': 0, 'inherited': 2}, 'mean_chain': 8.72340425531915}
+   [16] relief/dread, inherited, strength 76.19, used 1x: contact(1.00) -> injury(0.05) -> triumph(0.10) -> injury(0.03) -> triumph(0.05) -> contact(1.00) -> death_seen(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(57.96)
+   [0] relief/dread, inherited, strength 68.25, used 0x: meal(1.00) -> death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> rival_seen(1.71) -> meal(1.00) -> rival_seen(1.25) -> alone(1.00) -> company(1.00) -> alone(1.00) -> food_seen(1.00) -> relief(89.71)
+   [17] relief/dread, inherited, strength 59.20, used 0x: injury(0.03) -> triumph(0.05) -> contact(1.00) -> death_seen(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> food_seen(1.00) -> rival_seen(1.89) -> relief(58.71)
+   [1] relief/dread, inherited, strength 58.72, used 0x: injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.02) -> meal(1.00) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> rival_seen(1.71) -> meal(1.00) -> rival_seen(1.25) -> alone(1.00) -> relief(118.99)
+   [2] relief/dread, inherited, strength 55.57, used 0x: meal(1.00) -> meal(1.00) -> alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.02) -> meal(1.00) -> relief(118.55)
+ledger           {'dg_diag': 1.2784982815299075, 'dg_off': 4.534862034549188, 'metric_steps': 317, 'conn_updates': 642, 'conn_pain_updates': 208, 'conn_reward_updates': 433, 'conn_dW_by_feature': {'food_near': 0.0, 'rival_near': 1.4394441007993508, 'rival_closing': 4.968780942518379, 'allies': 13.597426954853411, 'rivals': 4.040943665209871, 'outnumbered': 5.172997006574542, 'injured': 0.0, 'backed': 4.045156318723426}}
+
+== B19 (tribe B, gen 7, health 1.00)
+basis magnitudes hunger 1.49 (start 1.56)  social 1.22 (start 0.74)  explore 0.49 (start 0.52)  fight 0.48 (start 0.45)
+cross terms      hunger.social +0.99  hunger.explore +2.58  hunger.fight -0.22  social.explore -2.53  social.fight -2.23  explore.fight -0.28
+metric change    diagonal 1.215, cross terms 4.735, cond 3.1
+connection       rival, alone: -0.033  rival, with 2 allies: -0.131  outnumbered 3:1: -0.002  group 3 vs 1: -0.184  courage_index: -0.098  numbers_index: -0.182
+          injured -> social^fight     -0.332  (hyperbolic)
+           backed -> social^fight     +0.287  (hyperbolic)
+           rivals -> social^fight     +0.278  (hyperbolic)
+           allies -> social^fight     +0.276  (hyperbolic)
+      outnumbered -> social^fight     +0.256  (hyperbolic)
+           allies -> hunger^explore   -0.225  (hyperbolic)
+habit holonomy   ||H - I|| = 6.596 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.26  e124 fear +0.29  e134 fear -0.19  e234 fear -0.33   (from memory 4%)
+memories         {'memories': 64, 'by_origin': {'experience': 59, 'imprinted': 3, 'inherited': 2}, 'activations': 61, 'activations_by_origin': {'experience': 41, 'imprinted': 2, 'inherited': 18}, 'mean_chain': 9.703125}
+   [59] relief/dread, experience, strength 136.50, used 0x: meal(1.00) -> death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> rival_seen(1.71) -> meal(1.00) -> rival_seen(1.25) -> alone(1.00) -> company(1.00) -> alone(1.00) -> food_seen(1.00) -> relief(89.71)
+   [18] relief/dread, experience, strength 117.44, used 0x: injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.02) -> meal(1.00) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> rival_seen(1.71) -> meal(1.00) -> rival_seen(1.25) -> alone(1.00) -> relief(118.99)
+   [20] relief/dread, experience, strength 111.14, used 1x: meal(1.00) -> meal(1.00) -> alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.02) -> meal(1.00) -> relief(118.55)
+   [10] relief/dread, experience, strength 102.02, used 0x: alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.02) -> meal(1.00) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> relief(106.06)
+   [8] relief/dread, experience, strength 58.46, used 0x: contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.02) -> meal(1.00) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> rival_seen(1.71) -> meal(1.00) -> relief(119.34)
+ledger           {'dg_diag': 16.853210917260775, 'dg_off': 40.694123571767456, 'metric_steps': 1192, 'conn_updates': 2816, 'conn_pain_updates': 1305, 'conn_reward_updates': 1510, 'conn_dW_by_feature': {'food_near': 117.34820525119179, 'rival_near': 50.49218907141134, 'rival_closing': 64.13422711308114, 'allies': 123.3833425992009, 'rivals': 58.000991579447444, 'outnumbered': 58.73261787126189, 'injured': 6.923965719699348, 'backed': 79.77756683518744}}
+
+--- seed 1
+== B21 (tribe B, gen 7, health 0.59)
+basis magnitudes hunger 1.94 (start 2.07)  social 0.88 (start 0.45)  explore 1.62 (start 2.02)  fight 0.98 (start 1.17)
+cross terms      hunger.social -1.84  hunger.explore -2.41  hunger.fight -0.31  social.explore +0.10  social.fight -2.53  explore.fight +0.70
+metric change    diagonal 2.953, cross terms 5.030, cond 2.1
+connection       rival, alone: +0.844  rival, with 2 allies: +0.760  outnumbered 3:1: +1.455  group 3 vs 1: +0.869  courage_index: -0.084  numbers_index: -0.586
+          injured -> social^fight     -0.351  (hyperbolic)
+      outnumbered -> social^fight     -0.347  (hyperbolic)
+           rivals -> social^fight     -0.341  (hyperbolic)
+        food_near -> social^fight     -0.333  (hyperbolic)
+           allies -> hunger^explore   -0.332  (hyperbolic)
+       rival_near -> social^fight     -0.309  (hyperbolic)
+habit holonomy   ||H - I|| = 174.779 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +2.72  e124 fear -0.44  e134 fear +0.85  e234 fear +1.04   (from memory 13%)
+memories         {'memories': 46, 'by_origin': {'experience': 14, 'imprinted': 0, 'inherited': 32}, 'activations': 2, 'activations_by_origin': {'experience': 0, 'imprinted': 0, 'inherited': 2}, 'mean_chain': 9.869565217391305}
+   [16] relief/dread, inherited, strength 26.92, used 0x: death_seen(1.00) -> injury(3.00) -> alone(1.00) -> company(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(265.63)
+   [17] relief/dread, inherited, strength 25.42, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> false_food(1.00) -> death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> company(1.00) -> alone(1.00) -> relief(132.03)
+   [42] relief/dread, experience, strength 22.25, used 0x: triumph(0.15) -> food_seen(1.00) -> alone(1.00) -> company(1.00) -> food_seen(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> food_seen(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> injury(0.15) -> triumph(0.15) -> relief(7.63)
+   [18] relief/dread, inherited, strength 19.73, used 0x: meal(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> company(1.00) -> relief(264.21)
+   [19] relief/dread, inherited, strength 18.71, used 1x: meal(1.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(259.57)
+ledger           {'dg_diag': 7.945629832025456, 'dg_off': 27.18924354353444, 'metric_steps': 249, 'conn_updates': 265, 'conn_pain_updates': 200, 'conn_reward_updates': 64, 'conn_dW_by_feature': {'food_near': 4.661234145203604, 'rival_near': 15.768296460590774, 'rival_closing': 9.575905031108157, 'allies': 11.195788309427014, 'rivals': 13.222050834234143, 'outnumbered': 12.574146295280714, 'injured': 3.8700214434344433, 'backed': 12.83549001860506}}
+
+== B17 (tribe B, gen 6, health 0.06)
+basis magnitudes hunger 2.13 (start 0.55)  social 1.72 (start 1.73)  explore 0.46 (start 0.75)  fight 0.83 (start 1.85)
+cross terms      hunger.social +0.35  hunger.explore -0.62  hunger.fight +0.00  social.explore -1.46  social.fight -0.50  explore.fight -1.96
+metric change    diagonal 7.353, cross terms 4.191, cond 3.2
+connection       rival, alone: -0.052  rival, with 2 allies: -0.078  outnumbered 3:1: -0.106  group 3 vs 1: -0.098  courage_index: -0.026  numbers_index: +0.008
+    rival_closing -> explore^fight    -0.326  (hyperbolic)
+           allies -> explore^fight    -0.296  (hyperbolic)
+           backed -> explore^fight    -0.295  (hyperbolic)
+           rivals -> explore^fight    -0.295  (hyperbolic)
+       rival_near -> explore^fight    -0.295  (hyperbolic)
+          injured -> explore^fight    -0.295  (hyperbolic)
+habit holonomy   ||H - I|| = 34.869 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +1.91  e124 fear -1.16  e134 fear -0.80  e234 fear -0.52   (from memory 5%)
+memories         {'memories': 64, 'by_origin': {'experience': 64, 'imprinted': 0, 'inherited': 0}, 'activations': 196, 'activations_by_origin': {'experience': 181, 'imprinted': 0, 'inherited': 15}, 'mean_chain': 8.890625}
+   [48] relief/dread, experience, strength 53.84, used 12x: death_seen(1.00) -> injury(3.00) -> alone(1.00) -> company(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(265.63)
+   [59] relief/dread, experience, strength 50.84, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> false_food(1.00) -> death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> company(1.00) -> alone(1.00) -> relief(132.03)
+   [21] relief/dread, experience, strength 39.47, used 1x: meal(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> company(1.00) -> relief(264.21)
+   [26] relief/dread, experience, strength 37.43, used 4x: meal(1.00) -> contact(1.00) -> injury(0.05) -> triumph(0.10) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(259.57)
+   [8] relief/dread, experience, strength 26.01, used 0x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> relief(264.47)
+ledger           {'dg_diag': 101.94524581106407, 'dg_off': 223.66276866938858, 'metric_steps': 7154, 'conn_updates': 9883, 'conn_pain_updates': 5310, 'conn_reward_updates': 4572, 'conn_dW_by_feature': {'food_near': 391.71860409720864, 'rival_near': 176.7651196095277, 'rival_closing': 134.9493129961852, 'allies': 427.6692488246016, 'rivals': 218.12722722522065, 'outnumbered': 228.7367012570056, 'injured': 29.8576738038968, 'backed': 202.33273519223195}}
+
+######## h1.0_f1.4
+
+--- seed 0
+== A24 (tribe A, gen 7, health 1.00)
+basis magnitudes hunger 1.10 (start 0.69)  social 1.09 (start 0.45)  explore 1.03 (start 1.14)  fight 1.65 (start 1.60)
+cross terms      hunger.social -0.55  hunger.explore -0.60  hunger.fight +1.29  social.explore -0.57  social.fight +0.26  explore.fight -1.20
+metric change    diagonal 2.138, cross terms 2.297, cond 3.3
+connection       rival, alone: +0.025  rival, with 2 allies: -0.069  outnumbered 3:1: +0.066  group 3 vs 1: -0.115  courage_index: -0.094  numbers_index: -0.180
+           allies -> social^fight     -0.286  (hyperbolic)
+        food_near -> explore^fight    -0.284  (hyperbolic)
+          injured -> explore^fight    -0.273  (hyperbolic)
+           allies -> explore^fight    +0.266  (hyperbolic)
+           backed -> social^fight     -0.225  (hyperbolic)
+        food_near -> hunger^fight     +0.217  (elliptic)
+habit holonomy   ||H - I|| = 11.618 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.39  e124 fear +0.34  e134 fear +0.34  e234 fear -0.13   (from memory 4%)
+memories         {'memories': 64, 'by_origin': {'experience': 58, 'imprinted': 0, 'inherited': 6}, 'activations': 24, 'activations_by_origin': {'experience': 16, 'imprinted': 1, 'inherited': 7}, 'mean_chain': 8.15625}
+   [53] relief/dread, experience, strength 264.79, used 1x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> death_seen(1.00) -> rival_seen(2.17) -> meal(1.00) -> rival_seen(2.05) -> meal(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> rival_seen(1.41) -> relief(370.40)
+   [48] relief/dread, experience, strength 259.02, used 0x: meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> death_seen(1.00) -> rival_seen(2.17) -> meal(1.00) -> rival_seen(2.05) -> meal(1.00) -> relief(373.38)
+   [47] relief/dread, experience, strength 255.82, used 1x: meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> death_seen(1.00) -> rival_seen(2.17) -> meal(1.00) -> rival_seen(2.05) -> relief(372.47)
+   [54] relief/dread, experience, strength 133.33, used 1x: death_seen(1.00) -> rival_seen(2.17) -> meal(1.00) -> rival_seen(2.05) -> meal(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> rival_seen(1.41) -> relief(370.24)
+   [51] relief/dread, experience, strength 131.80, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> death_seen(1.00) -> rival_seen(2.17) -> meal(1.00) -> rival_seen(2.05) -> meal(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> relief(373.38)
+ledger           {'dg_diag': 13.780440009664696, 'dg_off': 23.794679021992604, 'metric_steps': 1195, 'conn_updates': 2495, 'conn_pain_updates': 1503, 'conn_reward_updates': 991, 'conn_dW_by_feature': {'food_near': 91.1150364542094, 'rival_near': 65.4602620148279, 'rival_closing': 38.785384896065416, 'allies': 52.27171171336472, 'rivals': 31.1893567549693, 'outnumbered': 36.06586652610269, 'injured': 9.320067101130782, 'backed': 34.44272599547079}}
+
+== A18 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 2.12 (start 2.22)  social 1.22 (start 1.52)  explore 1.55 (start 2.29)  fight 0.66 (start 1.78)
+cross terms      hunger.social -2.55  hunger.explore +0.18  hunger.fight -0.05  social.explore +2.35  social.fight -3.18  explore.fight +5.24
+metric change    diagonal 6.837, cross terms 10.101, cond 1.8
+connection       rival, alone: +1.465  rival, with 2 allies: +1.983  outnumbered 3:1: +2.520  group 3 vs 1: +2.502  courage_index: +0.518  numbers_index: -0.017
+           allies -> explore^fight    +0.354  (hyperbolic)
+           backed -> explore^fight    +0.304  (hyperbolic)
+    rival_closing -> hunger^explore   -0.293  (hyperbolic)
+           rivals -> explore^fight    +0.293  (hyperbolic)
+       rival_near -> explore^fight    +0.285  (hyperbolic)
+      outnumbered -> explore^fight    +0.283  (hyperbolic)
+habit holonomy   ||H - I|| = 77976.177 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.20  e124 fear -0.11  e134 fear +0.35  e234 fear -0.40   (from memory 7%)
+memories         {'memories': 64, 'by_origin': {'experience': 63, 'imprinted': 1, 'inherited': 0}, 'activations': 179, 'activations_by_origin': {'experience': 161, 'imprinted': 1, 'inherited': 17}, 'mean_chain': 9.421875}
+   [15] relief/dread, experience, strength 19.74, used 0x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> company(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> relief(6.61)
+   [51] relief/dread, experience, strength 15.16, used 1x: company(1.00) -> alone(1.00) -> food_seen(1.00) -> rival_seen(1.89) -> company(1.00) -> alone(1.00) -> company(1.00) -> alone(1.00) -> relief(3.70)
+   [32] relief/dread, experience, strength 13.64, used 1x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> alone(1.00) -> company(1.00) -> relief(7.54)
+   [17] relief/dread, experience, strength 12.43, used 0x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> company(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> relief(5.76)
+   [3] relief/dread, experience, strength 10.02, used 0x: contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> company(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> relief(6.61)
+ledger           {'dg_diag': 103.09890123736702, 'dg_off': 243.57497430640163, 'metric_steps': 8888, 'conn_updates': 9606, 'conn_pain_updates': 4485, 'conn_reward_updates': 5120, 'conn_dW_by_feature': {'food_near': 258.4228994363382, 'rival_near': 198.13191867189116, 'rival_closing': 132.87231633352937, 'allies': 197.34782290279264, 'rivals': 200.9597059151391, 'outnumbered': 238.19129546741402, 'injured': 26.331424712788603, 'backed': 119.84219830413836}}
+
+--- seed 1
+== A18 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 1.27 (start 1.44)  social 1.14 (start 1.12)  explore 0.98 (start 0.45)  fight 0.78 (start 1.15)
+cross terms      hunger.social +0.33  hunger.explore -3.45  hunger.fight -1.17  social.explore -2.23  social.fight +5.51  explore.fight -0.45
+metric change    diagonal 2.005, cross terms 5.994, cond 2.2
+connection       rival, alone: -0.635  rival, with 2 allies: -0.593  outnumbered 3:1: -1.013  group 3 vs 1: -0.694  courage_index: +0.042  numbers_index: +0.319
+           allies -> hunger^explore   -0.355  (hyperbolic)
+           backed -> hunger^explore   -0.266  (hyperbolic)
+        food_near -> hunger^fight     -0.247  (elliptic)
+           backed -> social^explore   +0.234  (elliptic)
+           rivals -> hunger^explore   -0.228  (hyperbolic)
+    rival_closing -> social^explore   +0.224  (elliptic)
+habit holonomy   ||H - I|| = 2459.720 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.11  e124 fear +0.38  e134 fear -0.18  e234 fear +0.02   (from memory 4%)
+memories         {'memories': 64, 'by_origin': {'experience': 62, 'imprinted': 2, 'inherited': 0}, 'activations': 109, 'activations_by_origin': {'experience': 92, 'imprinted': 3, 'inherited': 14}, 'mean_chain': 6.171875}
+   [63] relief/dread, experience, strength 483.84, used 1x: food_seen(1.00) -> rival_seen(1.68) -> death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> relief(100.73)
+   [7] relief/dread, experience, strength 146.85, used 0x: death_seen(1.00) -> rival_seen(1.00) -> food_seen(1.00) -> alone(1.00) -> company(1.00) -> food_seen(1.00) -> relief(103.07)
+   [60] relief/dread, experience, strength 73.63, used 0x: rival_seen(1.00) -> food_seen(1.00) -> alone(1.00) -> company(1.00) -> food_seen(1.00) -> relief(102.58)
+   [47] relief/dread, experience, strength 72.99, used 0x: death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> food_seen(1.00) -> alone(1.00) -> company(1.00) -> relief(103.22)
+   [14] relief/dread, experience, strength 72.18, used 0x: death_seen(1.00) -> injury(3.00) -> death_seen(1.00) -> rival_seen(1.00) -> food_seen(1.00) -> alone(1.00) -> relief(102.59)
+ledger           {'dg_diag': 51.22338925133379, 'dg_off': 130.32882849122709, 'metric_steps': 6936, 'conn_updates': 8001, 'conn_pain_updates': 3093, 'conn_reward_updates': 4907, 'conn_dW_by_feature': {'food_near': 107.58948168002563, 'rival_near': 84.49889372420147, 'rival_closing': 57.57147657573226, 'allies': 225.95433993516932, 'rivals': 100.85730770224995, 'outnumbered': 93.87357936715179, 'injured': 22.356853317500107, 'backed': 96.91506935896679}}
+
+== A20 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 0.55 (start 1.14)  social 1.38 (start 1.55)  explore 0.88 (start 0.45)  fight 1.03 (start 1.57)
+cross terms      hunger.social +0.57  hunger.explore -5.64  hunger.fight -0.96  social.explore -0.16  social.fight +6.38  explore.fight +0.06
+metric change    diagonal 3.461, cross terms 6.833, cond 1.4
+connection       rival, alone: -1.236  rival, with 2 allies: -1.810  outnumbered 3:1: -2.140  group 3 vs 1: -2.311  courage_index: -0.574  numbers_index: -0.171
+           allies -> social^fight     -0.397  (hyperbolic)
+       rival_near -> social^fight     -0.392  (hyperbolic)
+      outnumbered -> social^fight     -0.383  (hyperbolic)
+           rivals -> social^fight     -0.382  (hyperbolic)
+        food_near -> social^fight     -0.364  (hyperbolic)
+           backed -> social^fight     -0.362  (hyperbolic)
+habit holonomy   ||H - I|| = 620692.697 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.00  e124 fear -0.16  e134 fear +0.15  e234 fear +0.17   (from memory 3%)
+memories         {'memories': 64, 'by_origin': {'experience': 62, 'imprinted': 2, 'inherited': 0}, 'activations': 107, 'activations_by_origin': {'experience': 81, 'imprinted': 3, 'inherited': 23}, 'mean_chain': 8.046875}
+   [15] relief/dread, imprinted, strength 285.10, used 2x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> injury(0.08) -> triumph(0.08) -> contact(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> relief(102.86)
+   [20] relief/dread, experience, strength 214.88, used 1x: injury(0.08) -> triumph(0.08) -> contact(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> relief(104.38)
+   [29] relief/dread, experience, strength 148.13, used 1x: death_seen(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> relief(105.01)
+   [60] relief/dread, experience, strength 146.65, used 1x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> relief(105.01)
+   [16] relief/dread, imprinted, strength 142.43, used 1x: contact(1.00) -> injury(0.05) -> triumph(0.10) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> injury(0.08) -> triumph(0.08) -> contact(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> relief(101.78)
+ledger           {'dg_diag': 49.78107423069633, 'dg_off': 136.45272050038403, 'metric_steps': 6766, 'conn_updates': 7248, 'conn_pain_updates': 3145, 'conn_reward_updates': 4102, 'conn_dW_by_feature': {'food_near': 188.2985048656136, 'rival_near': 96.57076949890583, 'rival_closing': 59.16745699936251, 'allies': 213.92868645910423, 'rivals': 113.15251007630151, 'outnumbered': 90.26287157163, 'injured': 17.419284563664334, 'backed': 111.98515438786133}}
+
+######## h1.4_f0.7
+
+--- seed 0
+== B18 (tribe B, gen 6, health 1.00)
+basis magnitudes hunger 1.42 (start 0.74)  social 1.55 (start 0.51)  explore 0.71 (start 1.01)  fight 0.60 (start 1.41)
+cross terms      hunger.social -2.77  hunger.explore -3.47  hunger.fight +1.68  social.explore +1.51  social.fight +0.50  explore.fight +2.95
+metric change    diagonal 5.767, cross terms 3.574, cond 9.3
+connection       rival, alone: -0.272  rival, with 2 allies: -0.388  outnumbered 3:1: -0.448  group 3 vs 1: -0.496  courage_index: -0.115  numbers_index: -0.048
+           backed -> hunger^fight     +0.341  (elliptic)
+           allies -> hunger^fight     +0.333  (elliptic)
+    rival_closing -> hunger^fight     +0.305  (elliptic)
+           rivals -> hunger^fight     +0.280  (elliptic)
+      outnumbered -> hunger^fight     +0.276  (elliptic)
+          injured -> social^explore   -0.252  (elliptic)
+habit holonomy   ||H - I|| = 76.714 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.16  e124 fear +0.18  e134 fear +0.10  e234 fear -0.12   (from memory 4%)
+memories         {'memories': 64, 'by_origin': {'experience': 59, 'imprinted': 1, 'inherited': 4}, 'activations': 178, 'activations_by_origin': {'experience': 135, 'imprinted': 1, 'inherited': 42}, 'mean_chain': 6.90625}
+   [57] relief/dread, experience, strength 113.86, used 0x: contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(233.89)
+   [62] relief/dread, experience, strength 30.78, used 0x: food_seen(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(226.35)
+   [29] reward, experience, strength 27.49, used 0x: rival_seen(1.60) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> reward(5.18)
+   [52] relief/dread, experience, strength 17.10, used 5x: injury(3.00) -> rival_seen(1.00) -> alone(1.00) -> food_seen(1.00) -> company(1.00) -> rival_seen(1.00) -> relief(235.01)
+   [37] relief/dread, experience, strength 16.98, used 2x: death_seen(1.00) -> injury(3.00) -> rival_seen(1.00) -> alone(1.00) -> food_seen(1.00) -> company(1.00) -> rival_seen(1.00) -> relief(234.63)
+ledger           {'dg_diag': 63.214733371210414, 'dg_off': 168.4854665262775, 'metric_steps': 6318, 'conn_updates': 8760, 'conn_pain_updates': 4725, 'conn_reward_updates': 4034, 'conn_dW_by_feature': {'food_near': 174.47437901149092, 'rival_near': 250.20971141249194, 'rival_closing': 179.4554850136932, 'allies': 234.20101976905633, 'rivals': 153.98550867071063, 'outnumbered': 207.940893025283, 'injured': 10.414824426777338, 'backed': 136.52880540390814}}
+
+== A20 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 0.69 (start 1.43)  social 0.90 (start 0.86)  explore 1.15 (start 1.06)  fight 1.43 (start 1.45)
+cross terms      hunger.social -0.30  hunger.explore +0.83  hunger.fight +0.71  social.explore +2.02  social.fight +3.04  explore.fight +0.87
+metric change    diagonal 1.918, cross terms 3.115, cond 18.7
+connection       rival, alone: +0.206  rival, with 2 allies: +0.412  outnumbered 3:1: +0.417  group 3 vs 1: +0.547  courage_index: +0.206  numbers_index: +0.130
+      outnumbered -> social^explore   +0.315  (elliptic)
+           rivals -> social^explore   +0.314  (elliptic)
+    rival_closing -> hunger^social    -0.297  (hyperbolic)
+       rival_near -> social^explore   +0.296  (elliptic)
+           backed -> social^explore   +0.293  (elliptic)
+       rival_near -> hunger^explore   +0.271  (hyperbolic)
+habit holonomy   ||H - I|| = 1666.968 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.04  e124 fear -0.44  e134 fear -0.38  e234 fear -0.19   (from memory 4%)
+memories         {'memories': 64, 'by_origin': {'experience': 64, 'imprinted': 0, 'inherited': 0}, 'activations': 94, 'activations_by_origin': {'experience': 85, 'imprinted': 0, 'inherited': 9}, 'mean_chain': 7.78125}
+   [21] relief/dread, experience, strength 264.98, used 1x: rival_seen(1.63) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(287.97)
+   [32] relief/dread, experience, strength 243.97, used 2x: rival_seen(1.63) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> food_seen(1.00) -> company(1.00) -> rival_seen(2.14) -> meal(1.00) -> relief(338.44)
+   [52] relief/dread, experience, strength 165.53, used 2x: rival_seen(1.63) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> food_seen(1.00) -> company(1.00) -> rival_seen(2.14) -> meal(1.00) -> rival_seen(1.51) -> meal(1.00) -> relief(338.46)
+   [56] relief/dread, experience, strength 122.19, used 1x: meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> alone(1.00) -> company(1.00) -> relief(44.49)
+   [7] relief/dread, experience, strength 89.92, used 0x: contact(1.00) -> injury(0.03) -> triumph(0.05) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> relief(14.01)
+ledger           {'dg_diag': 68.7744273251704, 'dg_off': 145.25986150444763, 'metric_steps': 4899, 'conn_updates': 5370, 'conn_pain_updates': 2476, 'conn_reward_updates': 2893, 'conn_dW_by_feature': {'food_near': 174.65554903508962, 'rival_near': 63.27865883519201, 'rival_closing': 70.15415478733956, 'allies': 369.6180890037333, 'rivals': 80.07097186009844, 'outnumbered': 72.52581287061504, 'injured': 5.200601287409902, 'backed': 98.32635401761439}}
+
+--- seed 1
+== A22 (tribe A, gen 5, health 1.00)
+basis magnitudes hunger 1.07 (start 1.03)  social 0.63 (start 0.53)  explore 1.57 (start 1.46)  fight 1.72 (start 1.40)
+cross terms      hunger.social +2.75  hunger.explore -0.29  hunger.fight -2.10  social.explore +1.99  social.fight -2.59  explore.fight +1.21
+metric change    diagonal 1.516, cross terms 8.266, cond 1.8
+connection       rival, alone: +0.121  rival, with 2 allies: +0.070  outnumbered 3:1: +0.166  group 3 vs 1: +0.066  courage_index: -0.052  numbers_index: -0.100
+           allies -> hunger^social    +0.304  (hyperbolic)
+          injured -> explore^fight    -0.299  (hyperbolic)
+           backed -> hunger^social    -0.283  (hyperbolic)
+       rival_near -> social^fight     -0.281  (hyperbolic)
+      outnumbered -> social^explore   +0.280  (elliptic)
+       rival_near -> explore^fight    +0.253  (hyperbolic)
+habit holonomy   ||H - I|| = 4.002 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.01  e124 fear +0.18  e134 fear +0.20  e234 fear +0.17   (from memory 3%)
+memories         {'memories': 64, 'by_origin': {'experience': 32, 'imprinted': 0, 'inherited': 32}, 'activations': 21, 'activations_by_origin': {'experience': 7, 'imprinted': 0, 'inherited': 14}, 'mean_chain': 8.25}
+   [0] relief/dread, inherited, strength 435.95, used 4x: company(1.00) -> food_seen(1.00) -> rival_seen(1.72) -> alone(1.00) -> company(2.00) -> death_seen(1.00) -> injury(3.00) -> meal(1.00) -> meal(1.00) -> relief(509.67)
+   [1] relief/dread, inherited, strength 225.00, used 1x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> rival_seen(1.66) -> relief(766.98)
+   [2] relief/dread, inherited, strength 203.09, used 0x: company(1.00) -> food_seen(1.00) -> rival_seen(1.72) -> alone(1.00) -> company(2.00) -> death_seen(1.00) -> injury(3.00) -> relief(490.73)
+   [3] relief/dread, inherited, strength 142.44, used 0x: company(1.00) -> food_seen(1.00) -> rival_seen(1.72) -> alone(1.00) -> company(2.00) -> death_seen(1.00) -> injury(3.00) -> meal(1.00) -> relief(509.67)
+   [4] relief/dread, inherited, strength 141.66, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> rival_seen(1.66) -> meal(1.00) -> company(1.00) -> relief(773.25)
+ledger           {'dg_diag': 24.35025716390793, 'dg_off': 59.02312126420029, 'metric_steps': 1242, 'conn_updates': 1726, 'conn_pain_updates': 1427, 'conn_reward_updates': 298, 'conn_dW_by_feature': {'food_near': 537.107640426406, 'rival_near': 14.366353931790865, 'rival_closing': 14.111291426677496, 'allies': 173.30290629454794, 'rivals': 16.831273996939412, 'outnumbered': 15.101284429872731, 'injured': 0.6257447738996835, 'backed': 19.921083489310085}}
+
+== B14 (tribe B, gen 4, health 1.00)
+basis magnitudes hunger 1.38 (start 1.51)  social 0.78 (start 0.45)  explore 0.46 (start 1.14)  fight 0.76 (start 1.06)
+cross terms      hunger.social -1.91  hunger.explore +0.02  hunger.fight +1.48  social.explore +0.84  social.fight +1.28  explore.fight +3.03
+metric change    diagonal 2.438, cross terms 5.244, cond 3.3
+connection       rival, alone: -0.354  rival, with 2 allies: -0.085  outnumbered 3:1: -0.572  group 3 vs 1: -0.015  courage_index: +0.269  numbers_index: +0.557
+           allies -> hunger^explore   -0.329  (hyperbolic)
+           backed -> explore^fight    +0.313  (hyperbolic)
+       rival_near -> explore^fight    -0.276  (hyperbolic)
+        food_near -> explore^fight    -0.249  (hyperbolic)
+    rival_closing -> hunger^fight     +0.227  (elliptic)
+      outnumbered -> explore^fight    -0.214  (hyperbolic)
+habit holonomy   ||H - I|| = 24.003 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.11  e124 fear -0.03  e134 fear +0.08  e234 fear +0.14   (from memory 9%)
+memories         {'memories': 64, 'by_origin': {'experience': 64, 'imprinted': 0, 'inherited': 0}, 'activations': 242, 'activations_by_origin': {'experience': 231, 'imprinted': 0, 'inherited': 11}, 'mean_chain': 7.84375}
+   [42] relief/dread, experience, strength 28.02, used 1x: false_food(1.00) -> food_seen(1.00) -> rival_seen(1.79) -> food_seen(1.00) -> company(1.00) -> relief(9.28)
+   [37] relief/dread, experience, strength 21.19, used 2x: rival_seen(1.26) -> alone(1.00) -> false_food(1.00) -> food_seen(1.00) -> rival_seen(1.79) -> food_seen(1.00) -> company(1.00) -> relief(10.70)
+   [33] relief/dread, experience, strength 18.34, used 0x: rival_seen(1.72) -> food_seen(1.00) -> company(1.00) -> rival_seen(1.00) -> false_food(1.00) -> rival_seen(1.00) -> relief(5.00)
+   [34] relief/dread, experience, strength 14.00, used 0x: company(1.00) -> rival_seen(1.00) -> false_food(1.00) -> rival_seen(1.00) -> relief(5.00)
+   [2] relief/dread, experience, strength 13.81, used 1x: company(1.00) -> rival_seen(1.26) -> alone(1.00) -> false_food(1.00) -> food_seen(1.00) -> relief(10.70)
+ledger           {'dg_diag': 97.59465418259352, 'dg_off': 226.86114960534852, 'metric_steps': 8118, 'conn_updates': 10897, 'conn_pain_updates': 5087, 'conn_reward_updates': 5809, 'conn_dW_by_feature': {'food_near': 163.00188570989857, 'rival_near': 120.47801917049526, 'rival_closing': 141.89562978414776, 'allies': 453.181610274274, 'rivals': 185.25500955033627, 'outnumbered': 211.09197824994826, 'injured': 6.425034195673116, 'backed': 195.03926369739236}}
+
+######## h1.4_f1.0
+
+--- seed 0
+== A16 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 0.45 (start 0.95)  social 0.68 (start 1.20)  explore 0.48 (start 1.07)  fight 1.59 (start 1.64)
+cross terms      hunger.social +1.76  hunger.explore +1.50  hunger.fight -0.20  social.explore -1.66  social.fight -0.75  explore.fight +0.64
+metric change    diagonal 2.761, cross terms 8.225, cond 2.1
+connection       rival, alone: -0.015  rival, with 2 allies: -0.093  outnumbered 3:1: -0.029  group 3 vs 1: -0.133  courage_index: -0.079  numbers_index: -0.104
+           rivals -> social^fight     -0.345  (hyperbolic)
+      outnumbered -> social^fight     -0.338  (hyperbolic)
+       rival_near -> social^fight     -0.267  (hyperbolic)
+           backed -> social^fight     -0.229  (hyperbolic)
+          injured -> hunger^fight     +0.197  (elliptic)
+    rival_closing -> hunger^fight     +0.193  (elliptic)
+habit holonomy   ||H - I|| = 8.322 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.08  e124 fear +0.02  e134 fear +0.08  e234 fear -0.13   (from memory 9%)
+memories         {'memories': 64, 'by_origin': {'experience': 63, 'imprinted': 0, 'inherited': 1}, 'activations': 191, 'activations_by_origin': {'experience': 171, 'imprinted': 0, 'inherited': 20}, 'mean_chain': 8.53125}
+   [22] relief/dread, experience, strength 19.44, used 0x: food_seen(1.00) -> contact(1.00) -> injury(0.10) -> triumph(0.05) -> company(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> false_food(1.00) -> relief(5.64)
+   [37] relief/dread, experience, strength 12.24, used 0x: injury(0.08) -> triumph(0.08) -> false_food(1.00) -> alone(1.00) -> company(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> food_seen(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> relief(4.44)
+   [54] relief/dread, experience, strength 10.65, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> false_food(1.00) -> alone(1.00) -> relief(6.00)
+   [19] relief/dread, experience, strength 10.40, used 17x: alone(1.00) -> company(2.00) -> alone(1.00) -> company(1.00) -> rival_seen(2.64) -> alone(1.00) -> company(1.00) -> rival_seen(1.33) -> relief(26.19)
+   [50] relief/dread, experience, strength 9.98, used 2x: alone(1.00) -> rival_seen(1.38) -> food_seen(1.00) -> company(1.00) -> relief(4.34)
+ledger           {'dg_diag': 123.00096523557437, 'dg_off': 314.88164643255004, 'metric_steps': 8955, 'conn_updates': 9973, 'conn_pain_updates': 4018, 'conn_reward_updates': 5954, 'conn_dW_by_feature': {'food_near': 187.87586878943242, 'rival_near': 176.98244343981094, 'rival_closing': 164.0065610108703, 'allies': 282.7782978358465, 'rivals': 198.83516629965433, 'outnumbered': 278.2789957553299, 'injured': 49.69754094872253, 'backed': 132.5599646900744}}
+
+== B22 (tribe B, gen 6, health 0.77)
+basis magnitudes hunger 1.48 (start 1.82)  social 0.45 (start 0.77)  explore 1.12 (start 1.15)  fight 1.90 (start 2.05)
+cross terms      hunger.social -1.97  hunger.explore -3.50  hunger.fight +0.03  social.explore -2.22  social.fight +4.72  explore.fight -1.79
+metric change    diagonal 2.156, cross terms 5.311, cond 2.9
+connection       rival, alone: +0.275  rival, with 2 allies: +0.120  outnumbered 3:1: +0.550  group 3 vs 1: +0.083  courage_index: -0.155  numbers_index: -0.467
+          injured -> social^fight     -0.323  (hyperbolic)
+           allies -> social^fight     -0.293  (hyperbolic)
+    rival_closing -> social^fight     -0.286  (hyperbolic)
+        food_near -> explore^fight    -0.245  (hyperbolic)
+       rival_near -> explore^fight    -0.237  (hyperbolic)
+      outnumbered -> explore^fight    -0.222  (hyperbolic)
+habit holonomy   ||H - I|| = 345.682 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.10  e124 fear -0.03  e134 fear +0.14  e234 fear -0.03   (from memory 3%)
+memories         {'memories': 64, 'by_origin': {'experience': 54, 'imprinted': 0, 'inherited': 10}, 'activations': 72, 'activations_by_origin': {'experience': 29, 'imprinted': 0, 'inherited': 43}, 'mean_chain': 9.640625}
+   [41] relief/dread, experience, strength 17.26, used 0x: triumph(0.15) -> alone(1.00) -> injury(0.15) -> company(1.00) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> company(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> relief(32.66)
+   [38] relief/dread, experience, strength 12.26, used 1x: death_seen(1.00) -> injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.15) -> alone(1.00) -> injury(0.15) -> company(1.00) -> triumph(0.15) -> meal(1.00) -> relief(31.97)
+   [39] relief/dread, experience, strength 8.39, used 0x: death_seen(1.00) -> injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.15) -> alone(1.00) -> injury(0.15) -> company(1.00) -> triumph(0.15) -> meal(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> meal(1.00) -> relief(32.38)
+   [37] relief/dread, experience, strength 8.25, used 0x: death_seen(1.00) -> injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.15) -> alone(1.00) -> injury(0.15) -> company(1.00) -> relief(32.66)
+   [36] relief/dread, experience, strength 7.86, used 0x: contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> injury(3.00) -> relief(31.47)
+ledger           {'dg_diag': 29.341742703465638, 'dg_off': 74.3946327041148, 'metric_steps': 3947, 'conn_updates': 4498, 'conn_pain_updates': 2411, 'conn_reward_updates': 2086, 'conn_dW_by_feature': {'food_near': 70.31415164032353, 'rival_near': 67.86594194055026, 'rival_closing': 39.00609679701213, 'allies': 203.52653634950175, 'rivals': 50.538917028921546, 'outnumbered': 56.783743048631756, 'injured': 11.268766564801071, 'backed': 51.88513553998012}}
+
+--- seed 1
+== B14 (tribe B, gen 4, health 1.00)
+basis magnitudes hunger 2.18 (start 1.67)  social 0.49 (start 0.69)  explore 2.01 (start 1.09)  fight 1.73 (start 1.00)
+cross terms      hunger.social -0.78  hunger.explore +1.02  hunger.fight -1.35  social.explore -0.15  social.fight -0.68  explore.fight +1.70
+metric change    diagonal 7.069, cross terms 5.930, cond 15.9
+connection       rival, alone: -0.073  rival, with 2 allies: +0.260  outnumbered 3:1: -0.109  group 3 vs 1: +0.420  courage_index: +0.333  numbers_index: +0.529
+        food_near -> hunger^explore   -0.358  (hyperbolic)
+           allies -> explore^fight    +0.220  (hyperbolic)
+    rival_closing -> explore^fight    +0.209  (hyperbolic)
+           allies -> hunger^fight     -0.193  (elliptic)
+      outnumbered -> explore^fight    +0.176  (hyperbolic)
+           backed -> social^fight     -0.158  (hyperbolic)
+habit holonomy   ||H - I|| = 186.196 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.11  e124 fear -0.08  e134 fear +0.62  e234 fear -0.05   (from memory 7%)
+memories         {'memories': 64, 'by_origin': {'experience': 64, 'imprinted': 0, 'inherited': 0}, 'activations': 216, 'activations_by_origin': {'experience': 177, 'imprinted': 0, 'inherited': 39}, 'mean_chain': 6.375}
+   [23] relief/dread, experience, strength 70.93, used 0x: company(1.00) -> alone(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> false_food(1.00) -> relief(79.30)
+   [52] relief/dread, experience, strength 51.43, used 0x: alone(1.00) -> company(1.00) -> company(1.00) -> alone(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> false_food(1.00) -> relief(78.03)
+   [30] relief/dread, experience, strength 32.29, used 0x: food_seen(1.00) -> alone(1.00) -> company(1.00) -> company(1.00) -> alone(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> relief(74.79)
+   [0] relief/dread, experience, strength 28.58, used 0x: meal(1.00) -> food_seen(1.00) -> alone(1.00) -> company(1.00) -> company(1.00) -> alone(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(67.00)
+   [39] reward, experience, strength 22.05, used 0x: meal(1.00) -> meal(1.00) -> reward(12.66)
+ledger           {'dg_diag': 213.21512078736998, 'dg_off': 531.7915501179114, 'metric_steps': 10711, 'conn_updates': 11557, 'conn_pain_updates': 7355, 'conn_reward_updates': 4201, 'conn_dW_by_feature': {'food_near': 1614.4788580411355, 'rival_near': 29.78008208499943, 'rival_closing': 69.90787854133055, 'allies': 961.0795864209001, 'rivals': 42.34818625753505, 'outnumbered': 55.312136857614114, 'injured': 0.2147389721899331, 'backed': 51.83185865117627}}
+
+== B11 (tribe B, gen 3, health 1.00)
+basis magnitudes hunger 1.38 (start 1.52)  social 1.54 (start 1.71)  explore 0.91 (start 1.20)  fight 1.86 (start 0.52)
+cross terms      hunger.social -3.97  hunger.explore +0.08  hunger.fight -0.23  social.explore +0.49  social.fight -0.63  explore.fight +2.12
+metric change    diagonal 4.741, cross terms 9.445, cond 2.9
+connection       rival, alone: +0.146  rival, with 2 allies: +0.172  outnumbered 3:1: +0.246  group 3 vs 1: +0.214  courage_index: +0.027  numbers_index: -0.032
+           allies -> explore^fight    -0.276  (hyperbolic)
+        food_near -> explore^fight    -0.257  (hyperbolic)
+        food_near -> social^explore   +0.251  (elliptic)
+           allies -> social^explore   +0.229  (elliptic)
+           allies -> social^fight     -0.195  (hyperbolic)
+          injured -> hunger^explore   +0.190  (hyperbolic)
+habit holonomy   ||H - I|| = 113.207 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.08  e124 fear +0.05  e134 fear -0.22  e234 fear -0.22   (from memory 10%)
+memories         {'memories': 64, 'by_origin': {'experience': 63, 'imprinted': 0, 'inherited': 1}, 'activations': 229, 'activations_by_origin': {'experience': 172, 'imprinted': 0, 'inherited': 57}, 'mean_chain': 7.90625}
+   [15] relief/dread, experience, strength 22.52, used 0x: company(1.00) -> food_seen(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> meal(1.00) -> relief(6.23)
+   [50] relief/dread, experience, strength 20.26, used 0x: company(1.00) -> meal(1.00) -> meal(1.00) -> relief(6.83)
+   [23] relief/dread, experience, strength 19.86, used 0x: food_seen(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> meal(1.00) -> relief(6.83)
+   [35] relief/dread, experience, strength 15.22, used 0x: meal(1.00) -> meal(1.00) -> meal(1.00) -> relief(3.93)
+   [28] relief/dread, experience, strength 9.20, used 4x: meal(1.00) -> meal(1.00) -> alone(1.00) -> company(1.00) -> relief(5.25)
+ledger           {'dg_diag': 145.4895455939395, 'dg_off': 329.9954881006812, 'metric_steps': 9296, 'conn_updates': 12041, 'conn_pain_updates': 6474, 'conn_reward_updates': 5566, 'conn_dW_by_feature': {'food_near': 745.8445425439619, 'rival_near': 142.63353441117897, 'rival_closing': 132.07364842787192, 'allies': 614.3910812989657, 'rivals': 102.47956482249771, 'outnumbered': 117.2336332553128, 'injured': 45.32632473729657, 'backed': 144.37083318887574}}
+
+######## h1.4_f1.4
+
+--- seed 0
+== A25 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 0.80 (start 0.92)  social 1.21 (start 1.36)  explore 1.27 (start 0.88)  fight 1.89 (start 1.83)
+cross terms      hunger.social +0.90  hunger.explore +4.62  hunger.fight +0.54  social.explore +0.25  social.fight +1.43  explore.fight -0.98
+metric change    diagonal 1.658, cross terms 3.666, cond 2.9
+connection       rival, alone: +0.761  rival, with 2 allies: +1.002  outnumbered 3:1: +1.295  group 3 vs 1: +1.261  courage_index: +0.241  numbers_index: -0.034
+       rival_near -> explore^fight    +0.301  (hyperbolic)
+           backed -> explore^fight    +0.301  (hyperbolic)
+           rivals -> explore^fight    +0.291  (hyperbolic)
+      outnumbered -> explore^fight    +0.280  (hyperbolic)
+           allies -> explore^fight    +0.277  (hyperbolic)
+    rival_closing -> hunger^fight     +0.268  (elliptic)
+habit holonomy   ||H - I|| = 37815.027 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.60  e124 fear +0.03  e134 fear +0.14  e234 fear -0.29   (from memory 23%)
+memories         {'memories': 64, 'by_origin': {'experience': 32, 'imprinted': 0, 'inherited': 32}, 'activations': 44, 'activations_by_origin': {'experience': 24, 'imprinted': 0, 'inherited': 20}, 'mean_chain': 8.890625}
+   [16] relief/dread, inherited, strength 37.46, used 0x: death_seen(1.00) -> injury(3.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> relief(201.71)
+   [17] relief/dread, inherited, strength 36.53, used 1x: company(1.00) -> alone(1.00) -> rival_seen(1.00) -> false_food(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> relief(201.71)
+   [0] relief/dread, inherited, strength 29.71, used 8x: death_seen(1.00) -> injury(3.00) -> alone(1.00) -> rival_seen(1.30) -> company(1.00) -> alone(1.00) -> company(1.00) -> rival_seen(1.39) -> relief(95.99)
+   [18] relief/dread, inherited, strength 26.05, used 0x: death_seen(1.00) -> injury(3.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> injury(0.01) -> triumph(0.06) -> death_seen(1.00) -> relief(198.87)
+   [19] relief/dread, inherited, strength 23.46, used 0x: company(1.00) -> alone(1.00) -> rival_seen(1.00) -> false_food(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(196.79)
+ledger           {'dg_diag': 10.259092757425808, 'dg_off': 25.55067788296419, 'metric_steps': 2158, 'conn_updates': 2158, 'conn_pain_updates': 1146, 'conn_reward_updates': 1011, 'conn_dW_by_feature': {'food_near': 18.099626454424275, 'rival_near': 7.9328152930075095, 'rival_closing': 8.229050343839246, 'allies': 34.244377965282816, 'rivals': 12.611354872743037, 'outnumbered': 12.402595433368333, 'injured': 0.014357340040870548, 'backed': 15.937676386261492}}
+
+== A22 (tribe A, gen 5, health 1.00)
+basis magnitudes hunger 1.44 (start 1.33)  social 0.47 (start 0.57)  explore 2.13 (start 1.83)  fight 2.11 (start 2.04)
+cross terms      hunger.social -0.89  hunger.explore +1.71  hunger.fight -1.47  social.explore +1.86  social.fight +1.00  explore.fight -1.87
+metric change    diagonal 1.883, cross terms 6.438, cond 6.4
+connection       rival, alone: -0.279  rival, with 2 allies: -0.220  outnumbered 3:1: -0.490  group 3 vs 1: -0.245  courage_index: +0.060  numbers_index: +0.245
+           backed -> hunger^social    -0.314  (hyperbolic)
+        food_near -> social^fight     +0.304  (hyperbolic)
+           allies -> explore^fight    -0.270  (hyperbolic)
+           rivals -> hunger^social    -0.268  (hyperbolic)
+       rival_near -> social^fight     +0.263  (hyperbolic)
+       rival_near -> hunger^social    -0.220  (hyperbolic)
+habit holonomy   ||H - I|| = 44.018 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.03  e124 fear +0.21  e134 fear +0.90  e234 fear -0.47   (from memory 6%)
+memories         {'memories': 64, 'by_origin': {'experience': 63, 'imprinted': 1, 'inherited': 0}, 'activations': 101, 'activations_by_origin': {'experience': 72, 'imprinted': 1, 'inherited': 28}, 'mean_chain': 7.859375}
+   [39] relief/dread, experience, strength 74.92, used 1x: death_seen(1.00) -> injury(3.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> relief(201.71)
+   [44] relief/dread, experience, strength 74.21, used 0x: false_food(1.00) -> contact(1.00) -> injury(0.15) -> triumph(0.15) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> relief(17.51)
+   [48] relief/dread, experience, strength 73.06, used 0x: company(1.00) -> alone(1.00) -> rival_seen(1.00) -> false_food(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> relief(201.71)
+   [22] relief/dread, imprinted, strength 52.09, used 1x: death_seen(1.00) -> injury(3.00) -> contact(1.00) -> injury(0.01) -> triumph(0.04) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> injury(0.01) -> triumph(0.06) -> death_seen(1.00) -> relief(198.87)
+   [35] relief/dread, experience, strength 46.92, used 0x: company(1.00) -> alone(1.00) -> rival_seen(1.00) -> false_food(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(196.79)
+ledger           {'dg_diag': 59.82681392742105, 'dg_off': 147.42903793603222, 'metric_steps': 4996, 'conn_updates': 5966, 'conn_pain_updates': 3854, 'conn_reward_updates': 2111, 'conn_dW_by_feature': {'food_near': 266.6879508941564, 'rival_near': 112.00118514029947, 'rival_closing': 69.19786254022979, 'allies': 143.84638308882086, 'rivals': 91.76609156829046, 'outnumbered': 111.59556639391162, 'injured': 20.66825854853205, 'backed': 82.27293012351147}}
+
+--- seed 1
+== B20 (tribe B, gen 6, health 1.00)
+basis magnitudes hunger 1.29 (start 1.25)  social 0.88 (start 0.93)  explore 1.06 (start 1.05)  fight 1.12 (start 0.51)
+cross terms      hunger.social +3.96  hunger.explore -2.55  hunger.fight -1.11  social.explore -1.95  social.fight +1.60  explore.fight +5.44
+metric change    diagonal 1.242, cross terms 2.712, cond 2.3
+connection       rival, alone: -0.439  rival, with 2 allies: -0.324  outnumbered 3:1: -0.827  group 3 vs 1: -0.342  courage_index: +0.114  numbers_index: +0.485
+        food_near -> hunger^fight     +0.375  (elliptic)
+           rivals -> hunger^fight     +0.340  (elliptic)
+           allies -> hunger^explore   -0.325  (hyperbolic)
+           backed -> hunger^fight     +0.268  (elliptic)
+       rival_near -> hunger^fight     +0.250  (elliptic)
+           backed -> hunger^explore   -0.249  (hyperbolic)
+habit holonomy   ||H - I|| = 16.153 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 +0.01  e124 fear +0.13  e134 fear +0.08  e234 fear -0.06   (from memory 3%)
+memories         {'memories': 64, 'by_origin': {'experience': 61, 'imprinted': 3, 'inherited': 0}, 'activations': 134, 'activations_by_origin': {'experience': 104, 'imprinted': 1, 'inherited': 29}, 'mean_chain': 9.234375}
+   [40] relief/dread, experience, strength 78.40, used 0x: company(1.00) -> alone(1.00) -> company(1.00) -> death_seen(1.00) -> death_seen(1.00) -> injury(6.00) -> alone(1.00) -> meal(1.00) -> relief(81.15)
+   [36] relief/dread, experience, strength 78.06, used 0x: company(1.00) -> death_seen(1.00) -> death_seen(1.00) -> injury(6.00) -> alone(1.00) -> meal(1.00) -> relief(79.17)
+   [26] relief/dread, experience, strength 40.00, used 0x: death_seen(1.00) -> death_seen(1.00) -> injury(6.00) -> alone(1.00) -> meal(1.00) -> relief(79.93)
+   [1] relief/dread, experience, strength 37.61, used 0x: alone(1.00) -> company(1.00) -> alone(1.00) -> company(1.00) -> death_seen(1.00) -> death_seen(1.00) -> injury(6.00) -> alone(1.00) -> meal(1.00) -> relief(79.01)
+   [28] relief/dread, experience, strength 34.48, used 0x: rival_seen(2.65) -> company(1.00) -> meal(1.00) -> alone(1.00) -> company(1.00) -> alone(1.00) -> company(1.00) -> death_seen(1.00) -> death_seen(1.00) -> injury(6.00) -> alone(1.00) -> meal(1.00) -> relief(73.59)
+ledger           {'dg_diag': 56.15160034565247, 'dg_off': 128.89513189611108, 'metric_steps': 7639, 'conn_updates': 8945, 'conn_pain_updates': 4058, 'conn_reward_updates': 4886, 'conn_dW_by_feature': {'food_near': 329.0285584754662, 'rival_near': 179.8933987674007, 'rival_closing': 127.60568451317293, 'allies': 258.2521192003752, 'rivals': 141.08034968109718, 'outnumbered': 106.10783566178813, 'injured': 38.424944738277155, 'backed': 241.06549408697805}}
+
+== B23 (tribe B, gen 6, health 1.00)
+basis magnitudes hunger 0.76 (start 0.78)  social 1.17 (start 0.45)  explore 1.04 (start 1.19)  fight 1.24 (start 1.05)
+cross terms      hunger.social +0.98  hunger.explore -5.35  hunger.fight +0.73  social.explore +0.26  social.fight +2.82  explore.fight -0.22
+metric change    diagonal 1.960, cross terms 7.607, cond 1.9
+connection       rival, alone: -0.094  rival, with 2 allies: -0.280  outnumbered 3:1: -0.170  group 3 vs 1: -0.389  courage_index: -0.186  numbers_index: -0.219
+    rival_closing -> hunger^explore   -0.346  (hyperbolic)
+       rival_near -> hunger^explore   -0.329  (hyperbolic)
+           backed -> hunger^explore   -0.325  (hyperbolic)
+           allies -> hunger^explore   -0.320  (hyperbolic)
+      outnumbered -> hunger^explore   -0.311  (hyperbolic)
+          injured -> hunger^explore   -0.308  (hyperbolic)
+habit holonomy   ||H - I|| = 23334.982 around nothing > food, alone > rival at food, alone > rival, with 2 allies > nothing
+felt affect      e123 -0.14  e124 fear -0.01  e134 fear +0.06  e234 fear +0.03   (from memory 8%)
+memories         {'memories': 64, 'by_origin': {'experience': 58, 'imprinted': 1, 'inherited': 5}, 'activations': 98, 'activations_by_origin': {'experience': 73, 'imprinted': 0, 'inherited': 25}, 'mean_chain': 8.578125}
+   [24] relief/dread, experience, strength 131.53, used 1x: death_seen(1.00) -> injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> company(1.00) -> relief(100.78)
+   [9] relief/dread, experience, strength 121.74, used 0x: meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> death_seen(1.00) -> injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.08) -> relief(96.64)
+   [21] relief/dread, experience, strength 88.94, used 0x: death_seen(1.00) -> injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> company(1.00) -> alone(1.00) -> relief(100.95)
+   [34] relief/dread, experience, strength 87.14, used 0x: death_seen(1.00) -> injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> relief(101.41)
+   [47] relief/dread, experience, strength 45.15, used 1x: injury(3.00) -> meal(1.00) -> contact(1.00) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> company(1.00) -> alone(1.00) -> company(1.00) -> relief(101.21)
+ledger           {'dg_diag': 30.987085034341362, 'dg_off': 86.54248310693445, 'metric_steps': 5404, 'conn_updates': 6534, 'conn_pain_updates': 2509, 'conn_reward_updates': 4024, 'conn_dW_by_feature': {'food_near': 66.35209747035812, 'rival_near': 87.87877890833775, 'rival_closing': 55.91867896426366, 'allies': 115.66776093535097, 'rivals': 81.29799483125029, 'outnumbered': 81.19599220457684, 'injured': 28.54524544692865, 'backed': 83.04600549120781}}
+
+######## control (no connection)
+
+--- seed 0
+== A21 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 1.67 (start 1.64)  social 1.20 (start 1.15)  explore 1.55 (start 1.37)  fight 0.87 (start 0.54)
+cross terms      hunger.social +0.71  hunger.explore +1.33  hunger.fight +0.77  social.explore -0.84  social.fight -1.54  explore.fight +1.37
+metric change    diagonal 1.196, cross terms 2.809, cond 2.8
+felt affect      e123 -0.08  e124 fear -0.28  e134 fear +0.75  e234 fear -0.25   (from memory 15%)
+memories         {'memories': 64, 'by_origin': {'experience': 49, 'imprinted': 0, 'inherited': 15}, 'activations': 151, 'activations_by_origin': {'experience': 115, 'imprinted': 3, 'inherited': 33}, 'mean_chain': 8.875}
+   [0] relief/dread, inherited, strength 29.77, used 10x: food_seen(1.00) -> rival_seen(1.57) -> rival_seen(1.00) -> company(1.00) -> alone(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> alone(1.00) -> relief(573.97)
+   [34] relief/dread, experience, strength 27.05, used 2x: rival_seen(1.99) -> alone(1.00) -> rival_seen(1.91) -> company(1.00) -> death_seen(1.00) -> injury(3.00) -> food_seen(1.00) -> rival_seen(1.35) -> rival_seen(2.87) -> rival_seen(1.40) -> relief(25.40)
+   [1] relief/dread, inherited, strength 19.38, used 4x: food_seen(1.00) -> food_seen(1.00) -> rival_seen(1.57) -> rival_seen(1.00) -> company(1.00) -> alone(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> alone(1.00) -> relief(567.54)
+   [2] relief/dread, inherited, strength 18.60, used 0x: food_seen(1.00) -> food_seen(1.00) -> rival_seen(1.57) -> rival_seen(1.00) -> company(1.00) -> alone(1.00) -> food_seen(1.00) -> death_seen(1.00) -> injury(3.00) -> company(1.00) -> relief(550.15)
+   [29] relief/dread, experience, strength 17.81, used 1x: alone(1.00) -> company(1.00) -> rival_seen(1.99) -> alone(1.00) -> rival_seen(1.91) -> company(1.00) -> death_seen(1.00) -> injury(3.00) -> food_seen(1.00) -> rival_seen(1.35) -> rival_seen(2.87) -> relief(25.40)
+ledger           {'dg_diag': 38.96776077669092, 'dg_off': 114.39640083198188, 'metric_steps': 5082}
+
+== A23 (tribe A, gen 6, health 1.00)
+basis magnitudes hunger 1.40 (start 1.26)  social 1.07 (start 1.59)  explore 1.68 (start 1.33)  fight 1.02 (start 1.96)
+cross terms      hunger.social -3.06  hunger.explore +0.49  hunger.fight -1.34  social.explore -0.32  social.fight -1.01  explore.fight -0.93
+metric change    diagonal 5.576, cross terms 4.586, cond 8.5
+felt affect      e123 +0.02  e124 fear -0.06  e134 fear +0.41  e234 fear -0.46   (from memory 12%)
+memories         {'memories': 64, 'by_origin': {'experience': 53, 'imprinted': 2, 'inherited': 9}, 'activations': 127, 'activations_by_origin': {'experience': 93, 'imprinted': 2, 'inherited': 32}, 'mean_chain': 11.078125}
+   [32] relief/dread, experience, strength 49.68, used 0x: rival_seen(2.59) -> food_seen(1.00) -> company(1.00) -> alone(1.00) -> food_seen(1.00) -> company(1.00) -> rival_seen(1.87) -> alone(1.00) -> relief(17.12)
+   [29] relief/dread, experience, strength 43.17, used 5x: death_seen(1.00) -> injury(3.00) -> alone(1.00) -> company(1.00) -> company(1.00) -> rival_seen(1.00) -> alone(1.00) -> rival_seen(1.57) -> relief(65.00)
+   [52] relief/dread, experience, strength 42.23, used 3x: alone(1.00) -> company(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> death_seen(1.00) -> injury(3.00) -> alone(1.00) -> company(1.00) -> relief(66.50)
+   [4] relief/dread, experience, strength 40.47, used 2x: rival_seen(1.00) -> alone(1.00) -> company(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.08) -> triumph(0.08) -> alone(1.00) -> company(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(65.07)
+   [62] relief/dread, experience, strength 39.95, used 0x: company(1.00) -> alone(1.00) -> food_seen(1.00) -> company(1.00) -> rival_seen(1.87) -> alone(1.00) -> food_seen(1.00) -> relief(20.08)
+ledger           {'dg_diag': 65.09200257305424, 'dg_off': 176.2751430471444, 'metric_steps': 4566}
+
+--- seed 1
+== B16 (tribe B, gen 4, health 1.00)
+basis magnitudes hunger 1.35 (start 0.88)  social 0.78 (start 1.06)  explore 0.49 (start 1.25)  fight 0.52 (start 1.03)
+cross terms      hunger.social -0.74  hunger.explore +2.19  hunger.fight +0.06  social.explore +0.57  social.fight -1.06  explore.fight -1.48
+metric change    diagonal 3.688, cross terms 7.377, cond 3.3
+felt affect      e123 +0.04  e124 fear -0.03  e134 fear -0.05  e234 fear +0.02   (from memory 3%)
+memories         {'memories': 64, 'by_origin': {'experience': 52, 'imprinted': 0, 'inherited': 12}, 'activations': 155, 'activations_by_origin': {'experience': 139, 'imprinted': 1, 'inherited': 15}, 'mean_chain': 6.375}
+   [0] relief/dread, inherited, strength 35.89, used 4x: meal(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> rival_seen(1.00) -> rival_seen(1.00) -> relief(1896.01)
+   [1] relief/dread, inherited, strength 14.67, used 1x: contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> rival_seen(1.00) -> rival_seen(1.00) -> meal(1.00) -> relief(1904.19)
+   [25] relief/dread, experience, strength 14.62, used 1x: company(1.00) -> food_seen(1.00) -> meal(1.00) -> meal(1.00) -> relief(4.15)
+   [2] relief/dread, inherited, strength 14.10, used 0x: meal(1.00) -> meal(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> meal(1.00) -> death_seen(1.00) -> rival_seen(1.00) -> alone(1.00) -> company(1.00) -> rival_seen(1.00) -> relief(1894.92)
+   [40] relief/dread, experience, strength 12.89, used 0x: meal(1.00) -> rival_seen(1.00) -> meal(1.00) -> death_seen(1.00) -> injury(3.00) -> relief(160.12)
+ledger           {'dg_diag': 53.21887852844879, 'dg_off': 119.683029320117, 'metric_steps': 5707}
+
+== B17 (tribe B, gen 4, health 1.00)
+basis magnitudes hunger 0.90 (start 0.73)  social 1.37 (start 0.48)  explore 1.04 (start 1.23)  fight 1.68 (start 1.28)
+cross terms      hunger.social +0.23  hunger.explore -0.92  hunger.fight -1.13  social.explore +1.37  social.fight -0.60  explore.fight -0.03
+metric change    diagonal 3.533, cross terms 7.339, cond 4.1
+felt affect      e123 +0.54  e124 fear -0.47  e134 fear -0.29  e234 fear +0.14   (from memory 6%)
+memories         {'memories': 64, 'by_origin': {'experience': 46, 'imprinted': 0, 'inherited': 18}, 'activations': 91, 'activations_by_origin': {'experience': 62, 'imprinted': 0, 'inherited': 29}, 'mean_chain': 6.890625}
+   [53] relief/dread, experience, strength 36.40, used 0x: meal(1.00) -> meal(1.00) -> food_seen(1.00) -> alone(1.00) -> relief(12.26)
+   [15] relief/dread, inherited, strength 20.52, used 3x: alone(1.00) -> rival_seen(1.00) -> food_seen(1.00) -> company(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> death_seen(1.00) -> alone(1.00) -> relief(217.94)
+   [16] relief/dread, inherited, strength 15.56, used 0x: meal(1.00) -> contact(1.00) -> injury(0.03) -> triumph(0.05) -> death_seen(1.00) -> alone(1.00) -> relief(487.67)
+   [17] relief/dread, inherited, strength 14.30, used 5x: contact(1.00) -> injury(0.03) -> triumph(0.05) -> death_seen(1.00) -> alone(1.00) -> company(1.00) -> meal(1.00) -> meal(1.00) -> relief(219.45)
+   [33] relief/dread, experience, strength 14.14, used 0x: company(1.00) -> rival_seen(1.00) -> alone(1.00) -> rival_seen(1.00) -> relief(2.87)
+ledger           {'dg_diag': 25.880457501846543, 'dg_off': 68.03104115109495, 'metric_steps': 3231}

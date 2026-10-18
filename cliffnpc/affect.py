@@ -258,6 +258,9 @@ class TrivectorAffect:
     pain: float = 0.0
     fear_now: float = 0.0                   # interface compatibility (unused)
     fear_learned: float = 0.0               # interface compatibility: sensitivity comes from g
+    # interrogation: how much affect came from real events vs replayed memory
+    src_real: float = 0.0                   # cumulative |source| from live events
+    src_primed: float = 0.0                 # cumulative |source| from replayed events
 
     @property
     def a(self) -> np.ndarray:
@@ -297,8 +300,16 @@ class TrivectorAffect:
         self.pending_death = self.pending_false = 0.0
         return ev
 
+    def _felt_source(self, C, surprise_vec, v, B) -> np.ndarray:
+        change = vector_wedge_bivector(C, B)                   # felt now
+        surprise = vector_wedge_bivector(surprise_vec, B)      # departure from expectation
+        return v * (np.abs(change) + self.tri.surprise_gain * np.abs(surprise))
+
     def step(self, C: np.ndarray, g: np.ndarray, beta_ext: np.ndarray, beta_total: np.ndarray,
-             h: float, eat: float = 0.0, density: float = 0.0) -> float:
+             h: float, eat: float = 0.0, density: float = 0.0,
+             primed: list | None = None) -> float:
+        """primed: replayed memory events (valence, bivector impulse), felt like real
+        events at reduced strength (the memory system already scaled them)."""
         t = self.tri
         if self.C_hat is None:
             self.C_hat = C.copy()
@@ -307,9 +318,14 @@ class TrivectorAffect:
         for v, B in self.events(C, beta_ext, eat, density, h):
             if not np.any(B):
                 continue
-            change = vector_wedge_bivector(C, B)               # felt now
-            surprise = vector_wedge_bivector(surprise_vec, B)  # departure from expectation
-            src += v * (np.abs(change) + t.surprise_gain * np.abs(surprise))
+            src += self._felt_source(C, surprise_vec, v, B)
+        self.src_real += float(np.abs(src).sum()) * h
+        if primed:
+            ps = np.zeros(4)
+            for v, B in primed:
+                ps += self._felt_source(C, surprise_vec, v, B / h)   # an impulse this tick
+            src += ps
+            self.src_primed += float(np.abs(ps).sum()) * h
         # leak + cubic saturation, semi-implicit (stable for any size of P)
         self.P = (self.P + h * src) / (1.0 + h * (t.decay + t.sat_gain * (self.P / t.sat_scale) ** 2))
         self.C_hat = self.C_hat + t.expect_rate * (C - self.C_hat)
