@@ -65,7 +65,7 @@ def test_event_records_are_powers_of_two():
 
 def _chain_memory():
     m = EventMemory(EpisodicConfig(match_threshold=0.5))
-    ctx = np.full(8, 0.3)
+    ctx = np.full(16, 0.3)
     t = 0.0
     for name in ("rival_seen", "contact", "injury", "alone"):
         t += 2.0

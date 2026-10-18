@@ -58,12 +58,12 @@ EVENT_TYPES = {
 TYPE_IDS = {name: k for k, name in enumerate(EVENT_TYPES)}
 TYPE_NAMES = list(EVENT_TYPES)
 APPETITIVE, AVERSIVE = 1, -1
-CTX_DIM = 8
+CTX_DIM = 16                     # = len(connection.FEATURES); float16 keeps an event at 64 B
 
 
 def event_dtype() -> np.dtype:
     base = np.dtype([("type", "<i4"), ("mag", "<f4"), ("dt", "<f4"), ("pad", "<f4"),
-                     ("ctx", "<f4", (CTX_DIM,))], align=True)
+                     ("ctx", "<f2", (CTX_DIM,))], align=True)
     return np.dtype({"names": base.names, "formats": [base.fields[n][0] for n in base.names],
                      "offsets": [base.fields[n][1] for n in base.names],
                      "itemsize": next_pow2(base.itemsize)})
@@ -154,6 +154,8 @@ class EventMemory:
 
     def _form(self, kind, strength, outcome, origin="experience") -> dict | None:
         c = self.cfg
+        if not c.store:
+            return None
         ev = self.recent(since=self.t - c.window)
         if len(ev) < 2:
             return None
@@ -207,7 +209,7 @@ class EventMemory:
         if a["type"] != b["type"]:
             return 0.0
         m = min(a["mag"], b["mag"]) / max(a["mag"], b["mag"], 1e-9)
-        d2 = float(np.sum((a["ctx"] - b["ctx"]) ** 2)) / self.cfg.context_scale ** 2
+        d2 = float(np.sum((a["ctx"].astype(np.float32) - b["ctx"].astype(np.float32)) ** 2)) / self.cfg.context_scale ** 2
         return 0.5 * m + 0.5 * float(np.exp(-d2))
 
     def _chain_similarity(self, x, y) -> float:

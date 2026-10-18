@@ -160,6 +160,9 @@ class FoodConfig:
     false_fraction: float = 0.0
     false_lifetime: float = 240.0
     discover_time: float = 2.0          # seconds of eating with no satiety before it knows
+    # Hard-coded one-shot memory of false patches (known ids are ignored afterwards).
+    # The learning gym turns it off so avoidance has to be learned.
+    remember_false: bool = True
 
 
 @dataclass
@@ -262,6 +265,7 @@ class EpisodicConfig:
     merge_threshold: float = 0.85       # chains this similar (same event types) merge
     inherit_memories: int = 16
     inherit_strength: float = 0.5
+    store: bool = True                  # False: no new memories (frozen agents)
 
 
 @dataclass

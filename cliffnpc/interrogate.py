@@ -37,8 +37,10 @@ REF_STATE = np.array([0.3, 0.0, 0.0, 0.3])   # mildly hungry, mildly ready to fi
 def situations() -> dict[str, np.ndarray]:
     """Canonical situations as context vectors (FEATURES order)."""
     def ctx(food=0.0, rival_near=0.0, closing=0.0, allies=0, rivals=0, injured=0.0):
-        return np.array([food, rival_near, closing, min(allies / 4, 1), min(rivals / 4, 1),
-                         min(rivals / (1 + allies) / 2, 1), injured, min(rivals * allies / 4, 1)])
+        x = np.zeros(len(FEATURES))
+        x[:8] = [food, rival_near, closing, min(allies / 4, 1), min(rivals / 4, 1),
+                 min(rivals / (1 + allies) / 2, 1), injured, min(rivals * allies / 4, 1)]
+        return x
     return {
         "nothing": ctx(),
         "food, alone": ctx(food=0.8),

@@ -18,8 +18,10 @@ W, so the effect of W on each drive's rate has a closed form:
 accumulated in a decaying eligibility trace per drive axis; pain blamed on axis
 k moves W against what was amplifying that axis in that situation.
 
-Context features (8, a power of two), each in [0, 1]:
-    food_near, rival_near, rival_closing, allies, rivals, outnumbered, injured, backed
+Context features (16, a power of two), each in [0, 1]:
+    food_near, rival_near, rival_closing, allies, rivals, outnumbered, injured, backed,
+    food_cue_a, food_cue_b (one-hot: how the nearest seen food looks, look A or B),
+    place_cue (nearness to a marked place), and 5 spare slots (zero)
 "outnumbered" (rivals per ally) and "backed" (rivals x allies) are the two
 interaction features a linear map needs to make fight/flight depend on both
 rivals and allies.  There is no constant feature: context-free tendencies
@@ -36,16 +38,20 @@ from .algebra import PLANES, generator_from_bivector
 from .config import ConnectionConfig
 
 FEATURES = ("food_near", "rival_near", "rival_closing", "allies", "rivals", "outnumbered",
-            "injured", "backed")
+            "injured", "backed", "food_cue_a", "food_cue_b", "place_cue",
+            "spare0", "spare1", "spare2", "spare3", "spare4")
 N_FEAT = len(FEATURES)
 DRIVES = ("hunger", "social", "explore", "fight")
 PLANE_NAMES = tuple(f"{DRIVES[i]}^{DRIVES[j]}" for i, j in PLANES)
 
 
 def context_vector(food_dist: float, rival_dist: float | None, closing: float, allies: int,
-                   rivals: int, health: float, sensor_radius: float) -> np.ndarray:
+                   rivals: int, health: float, sensor_radius: float,
+                   food_cue: int = 0, place_cue: float = 0.0) -> np.ndarray:
+    """food_cue: 0 no food in view (or no visible mark), 1 look A, 2 look B."""
     R = sensor_radius
-    return np.array([
+    x = np.zeros(N_FEAT)
+    x[:11] = [
         max(0.0, 1.0 - food_dist / R),
         0.0 if rival_dist is None else max(0.0, 1.0 - rival_dist / R),
         float(np.clip(closing / 5.0, 0.0, 1.0)),
@@ -54,7 +60,11 @@ def context_vector(food_dist: float, rival_dist: float | None, closing: float, a
         min(rivals / (1.0 + allies) / 2.0, 1.0),
         1.0 - health,
         min(rivals * allies / 4.0, 1.0),
-    ])
+        float(food_cue == 1),
+        float(food_cue == 2),
+        place_cue,
+    ]
+    return x
 
 
 def _antisym(M: np.ndarray) -> np.ndarray:

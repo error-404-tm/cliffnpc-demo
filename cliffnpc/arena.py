@@ -33,7 +33,7 @@ from .cognition import NPC, forget_frame
 from .config import (AffectConfig, CognitionConfig, CombatConfig, Config, ConnectionConfig,
                      EpisodicConfig, FoodConfig, LifeConfig, LTMConfig, SteeringConfig,
                      TrivectorConfig)
-from .connection import LearnedConnection, context_vector
+from .connection import FEATURES, LearnedConnection, context_vector
 from .episodic import EventMemory
 from .ltm import SequenceMemory
 from .steering import steer
@@ -97,6 +97,9 @@ class ArenaConfig:
     # g0 = eta * basis_scale^2.  (1, 1, 1, 1) = unit bases.
     basis_scale: tuple = (1.0, 1.0, 1.0, 1.0)
     snapshot_every: float = 0.0        # s between learning snapshots (0 = off)
+    # marked places: ((x, y), radius); place_cue = max(0, 1 - distance / radius), the
+    # largest over all places (a landmark seen from up to `radius` away)
+    place_cues: tuple = ()
     # One drive signature for every agent in the simulation (both factions);
     # None keeps the factions' own configs.  Vary it across concurrent runs.
     signature: tuple | None = None
@@ -156,6 +159,8 @@ class Agent:
     mobile: bool = True
     taken: float = 0.0          # injury taken since the last cognitive tick
     dealt: float = 0.0          # injury dealt since the last cognitive tick
+    taken_total: float = 0.0    # running totals (never reset; for scoring)
+    dealt_total: float = 0.0
     in_contact: bool = False
     ltm: SequenceMemory | None = None
     replaying: int = -1         # memory slot being replayed (-1: none)
@@ -164,6 +169,9 @@ class Agent:
     ctx: np.ndarray | None = None                    # last situation (context) vector
     prev: dict = field(default_factory=dict)          # last tick's event flags
     ledger: dict = field(default_factory=lambda: dict(dg_diag=0.0, dg_off=0.0, metric_steps=0))
+    # optional external controller (baselines, scripted agents): f(arena, agent, percept) -> velocity.
+    # Controlled agents skip cognition; they set npc.C[3] themselves to signal fight (+) / flight (-).
+    controller: object = None
     slot: int = -1              # index in the capacity-wide logs
     known_food: dict = field(default_factory=dict)   # patch id -> position (seen, finite food)
     known_false: set = field(default_factory=set)    # patch ids found to be false food
@@ -284,9 +292,9 @@ class Arena:
         m = self.fd.margin
         return self.food_rng.uniform(m, self.wcfg.size - m, 2)
 
-    def _spawn(self, pos: np.ndarray, stock: float, false: bool = False) -> None:
+    def _spawn(self, pos: np.ndarray, stock: float, false: bool = False, cue: float = 0.0) -> None:
         self.patches.append(dict(id=self._patch_id, pos=pos, stock=stock, stock0=stock,
-                                 false=false, born=self.t))
+                                 false=false, born=self.t, cue=cue))
         self.food_events.append(dict(t=self.t, what="spawned", id=self._patch_id, pos=pos.copy(),
                                      false=false))
         self._patch_id += 1
@@ -309,15 +317,18 @@ class Arena:
                 for a in at:
                     a.probe[p["id"]] = a.probe.get(p["id"], 0.0) + dt
                     if a.probe[p["id"]] >= self.fd.discover_time and p["id"] not in a.known_false:
-                        a.known_false.add(p["id"])
-                        a.known_food.pop(p["id"], None)
+                        if self.fd.remember_false:
+                            a.known_false.add(p["id"])
+                            a.known_food.pop(p["id"], None)
+                        else:
+                            a.probe[p["id"]] = -1e9     # felt once per visit, nothing remembered
                         if isinstance(a.affect, TrivectorAffect):
                             a.affect.add_false_food()       # disappointment
                         if a.episodic is not None and a.ctx is not None:
                             a.episodic.observe_event("false_food", 1.0, a.ctx, self.t)
                         self.food_events.append(dict(t=self.t, what="discovered_false",
                                                      id=p["id"], by=a.name))
-                if self.t - p["born"] >= self.fd.false_lifetime:
+                if self.fd.false_lifetime > 0 and self.t - p["born"] >= self.fd.false_lifetime:
                     self.patches.remove(p)
                     self.food_events.append(dict(t=self.t, what="expired", id=p["id"], pos=p["pos"]))
                 continue
@@ -394,6 +405,12 @@ class Arena:
         h = dt * w.cog_every
         percepts = [self.percept(a) for a in self.agents]
         for i, (a, p) in enumerate(zip(self.agents, percepts)):
+            if a.controller is not None:
+                v = a.controller(self, a, p) if a.mobile else np.zeros(2)
+                new = np.clip(a.pos + v * dt, 0.0, w.size)
+                a.vel = (new - a.pos) / dt
+                a.pos = new
+                continue
             if cog_tick:
                 self._think(i, a, p, h)
             if a.mobile:
@@ -441,9 +458,8 @@ class Arena:
             beta = beta_world + a.affect.behaviour_bivector(npc.C, npc.g)
         eat = float(self._eating(a)) if self.fd is not None else float(a.mobile and X[0] < npc.cfg.eat_radius)
         # situation vector (context for the connection and for episodic events)
-        rivals_n, allies_n = self._rivals_near(a), self.allies_near(a)
-        a.ctx = context_vector(X[0], None if p.threat_vec is None else float(np.linalg.norm(p.threat_vec)),
-                               X[1], allies_n, rivals_n, a.health, self.wcfg.sensor_radius)
+        allies_n = self.allies_near(a)
+        a.ctx = self.context_of(a, p, X)
         if a.conn is not None:                       # learned tendencies
             beta = beta + a.conn.beta(a.ctx)
         if a.episodic is not None:
@@ -515,6 +531,31 @@ class Arena:
         if allies_n == 0 and pv.get("allies", 0) > 0:
             emit("alone", 1.0)
         pv.update(rival=rival, contact=a.in_contact, food=food, eat=bool(eat), allies=allies_n)
+
+    def context_of(self, a: Agent, p: coupling.Percept, X: np.ndarray | None = None) -> np.ndarray:
+        """The agent's situation vector (connection.FEATURES order)."""
+        if X is None:
+            X = coupling.invariants(p, self.wcfg)
+        return context_vector(X[0], None if p.threat_vec is None else float(np.linalg.norm(p.threat_vec)),
+                              X[1], self.allies_near(a), self._rivals_near(a), a.health,
+                              self.wcfg.sensor_radius, food_cue=self.food_cue(a),
+                              place_cue=self.place_cue(a))
+
+    def food_cue(self, a: Agent) -> int:
+        """How the nearest seen food patch looks: 0 none in view / unmarked, 1 look A, 2 look B."""
+        R = self.wcfg.sensor_radius
+        seen = [p for p in self.patches if np.linalg.norm(p["pos"] - a.pos) <= R
+                and p["id"] not in a.known_false]
+        if not seen:
+            return 0
+        return int(min(seen, key=lambda p: np.linalg.norm(p["pos"] - a.pos)).get("cue", 0))
+
+    def place_cue(self, a: Agent) -> float:
+        """Nearness to the closest marked place: 1 at its centre, 0 at `radius` and beyond."""
+        best = 0.0
+        for c, r in self.cfg.place_cues:
+            best = max(best, 1.0 - np.linalg.norm(np.asarray(c, float) - a.pos) / r)
+        return float(best)
 
     def _rivals_near(self, a: Agent) -> int:
         R = self.wcfg.sensor_radius
@@ -618,7 +659,7 @@ class Arena:
             if isinstance(w.affect, TrivectorAffect):
                 w.affect.add_death(f)                      # felt as a strong threat event
             if w.episodic is not None:
-                ctx = w.ctx if w.ctx is not None else np.zeros(8)
+                ctx = w.ctx if w.ctx is not None else np.zeros(len(FEATURES))
                 w.episodic.observe_event("death_seen", f, ctx, self.t)
                 w.episodic.imprint(life.dread_valence * f * w.episodic.cfg.loss_aversion, self.t)
             w.npc.C[3] -= life.shock_flight * f          # recoil: flight
@@ -739,11 +780,15 @@ class Arena:
                 x.health -= to_a / n
                 x.taken += to_a / n
                 x.dealt += to_b / n
+                x.taken_total += to_a / n
+                x.dealt_total += to_b / n
                 x.in_contact = True
             for x in side_b:
                 x.health -= to_b / m
                 x.taken += to_b / m
                 x.dealt += to_a / m
+                x.taken_total += to_b / m
+                x.dealt_total += to_a / m
                 x.in_contact = True
             self._track_tribe_episode(side_a, side_b, to_a, to_b)
         return True
