@@ -44,7 +44,11 @@ from .config import FoodConfig
 from .connection import N_FEAT
 
 SIG = (-1.0, 1.0, 1.0, -1.0)
+# Body: give hunger an aversive pole (steering.food_aversion) for all Clifford
+# variants.  E12 ran without it; E13 sets this True.
+FOOD_AVERSION = False
 POLICIES = ("clifford", "frozen", "random", "linear_ac", "optimal")
+TD_POLICIES = ("clifford_td", "clifford_td_affect", "clifford_td_metric", "clifford_td_affine")
 OPTIONS = ("approach_food", "avoid_food", "fight", "flee", "wander")
 DECIDE_EVERY = 0.5          # s between controller decisions
 CENTER = np.array([50.0, 50.0])
@@ -63,9 +67,15 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
                                    false_fraction=0.0, false_lifetime=0.0, remember_false=False)
     cfg.life.birth_cooldown = 1e12
     cfg.life.starve_level = 1e12
+    cfg.base.steer.food_aversion = FOOD_AVERSION
     if policy == "frozen":
         cfg.learning = False
         cfg.episodic.store = False
+    if policy.startswith("clifford_td"):          # actor-critic connection (step 2)
+        cfg.connection.rule = "td"
+        cfg.connection.reward = "affect" if policy == "clifford_td_affect" else "objective"
+        cfg.metric_learning = policy == "clifford_td_metric"
+        cfg.connection.affine = policy == "clifford_td_affine"
     ar = Arena(cfg)
     learner = ar.agents[0]
     for b in list(ar.agents[1:]):                 # tribes mode made one B agent: remove it
@@ -110,6 +120,8 @@ def _reset_learner(ar: Arena, a: Agent, hunger: float | None = 1.0) -> None:
         a.npc.C[0] = hunger                         # hungry at the start of every trial
     if a.controller is not None:
         a.controller.new_trial()
+    if a.conn is not None and a.conn.cfg.rule == "td":
+        a.conn.reset_episode()                      # teleported: no bootstrap across trials
 
 
 # ------------------------------------------------------------------ controllers

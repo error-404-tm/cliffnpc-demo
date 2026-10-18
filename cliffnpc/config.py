@@ -242,6 +242,23 @@ class ConnectionConfig:
     decay: float = 0.0002               # per learning step: habits slowly fade
     max_norm: float = 0.6               # cap on each feature's bivector (Frobenius)
     inherit: float = 0.8                # child's W = inherit * mean of the parents' W
+    # Learning rule.  "pain": per-axis pain aversion (blame x eligibility).
+    # "td": actor-critic -- a linear critic V(situation) and exploration noise in
+    # the bivector space; W moves along (situation x noise) when the TD error says
+    # the outcome beat expectation.
+    rule: str = "pain"
+    reward: str = "objective"           # td: "objective" (eating, injury dealt - taken) or "affect" (-felt pain)
+    td_horizon: float = 10.0            # s; gamma = exp(-h / td_horizon)
+    td_lambda: float = 0.9
+    critic_rate: float = 0.05           # normalised LMS step
+    actor_rate: float = 0.03
+    actor_step_max: float = 0.02        # cap on one update's change per feature (no single-step lock-in)
+    noise_sigma: float = 0.3            # exploration: per-plane bivector coefficient
+    noise_tau: float = 1.0              # s, exploration noise correlation time (Ornstein-Uhlenbeck)
+    td_max_norm: float = 2.0            # cap on each feature's bivector under td
+    # td only: also learn a direct drive push b(x) = U x (dC/dt += b), beside the
+    # bivector.  Diagnostic: is the generator-only form (dC = M C) the limit?
+    affine: bool = False
 
 
 @dataclass
@@ -288,6 +305,9 @@ class SteeringConfig:
     reactive_boost: float = 3.0         # extra threat weight when s < 0
     reactive_scale: float = 0.1         # softness of the regime switch
     wander_turn: float = 0.6            # heading noise (rad/sqrt(s))
+    # hunger < 0 turns the agent away from food in view (an aversive pole, like
+    # flight on the threat axis).  False: hunger <= 0 simply ignores food.
+    food_aversion: bool = False
 
 
 @dataclass

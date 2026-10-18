@@ -48,6 +48,8 @@ def steer(coeffs: np.ndarray, s: float, p: Percept, heading: float,
             # hungry and no food known: search, harder the hungrier (hunger^2 term)
             w = hunger + cfg.search_gain * hunger ** 2
             v += k[0] * w * np.array([np.cos(heading), np.sin(heading)])
+    elif cfg.food_aversion and p.food_vec is not None:
+        v += k[0] * hunger * _unit(p.food_vec)  # hunger < 0: turn away from food in view
     if len(p.peer_vecs):
         centroid = p.peer_vecs.mean(axis=0)
         v += k[1] * social * _unit(centroid)  # social<0 pushes away

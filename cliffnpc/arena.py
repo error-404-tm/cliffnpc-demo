@@ -82,6 +82,7 @@ class ArenaConfig:
     lair: tuple = (85.0, 50.0)
     food: tuple = ((55.0, 50.0),)
     learning: bool = True
+    metric_learning: bool = True       # pain-aversion metric learning (with `learning`)
     ltm: LTMConfig | None = None       # long-term sequence memory (None = off)
     life: LifeConfig | None = None     # death, birth, inheritance, witnessing (None = off)
     food_dynamics: FoodConfig | None = None   # finite, moving food (None = fixed infinite food)
@@ -266,6 +267,8 @@ class Arena:
             npc.L0 = npc.L.copy()
         ep = EventMemory(copy.deepcopy(cfg.episodic)) if cfg.episodic is not None else None
         conn = LearnedConnection(copy.deepcopy(cfg.connection)) if cfg.connection is not None else None
+        if conn is not None and conn.cfg.rule == "td":
+            conn.rng = np.random.default_rng(int(self.rng.integers(2**32)))
         return Agent(name, faction, npc, affect, home, pos,
                      heading=self.rng.uniform(0, 2 * np.pi), ltm=ltm,
                      slot=self._free.pop(0), born=self.t, episodic=ep, conn=conn)
@@ -460,8 +463,15 @@ class Arena:
         # situation vector (context for the connection and for episodic events)
         allies_n = self.allies_near(a)
         a.ctx = self.context_of(a, p, X)
-        if a.conn is not None:                       # learned tendencies
-            beta = beta + a.conn.beta(a.ctx)
+        td = a.conn is not None and a.conn.cfg.rule == "td"
+        if td and self.cfg.learning:
+            # credit the tick that just ended (reward earned since), then draw this
+            # tick's exploration -- so noise and the situation it acts in are paired
+            r = (eat * h + 10.0 * (a.dealt - a.taken) if a.conn.cfg.reward == "objective"
+                 else -a.affect.pain * h)
+            a.conn.td_update(a.ctx, r, h)
+        if a.conn is not None:                       # learned tendencies (+ exploration under td)
+            beta = beta + a.conn.act(a.ctx)
         if a.episodic is not None:
             self._detect_events(a, p, X, eat, allies_n)
         a.affect.observe_injury(a.taken, a.dealt, h)
@@ -470,6 +480,8 @@ class Arena:
         push = None
         if self.life is not None:     # injury reflex: the strongest repulsive drive
             push = np.array([0.0, 0.0, 0.0, -self.life.injury_reflex * a.affect.taken_rate])
+        if a.conn is not None and (b := a.conn.push(a.ctx)) is not None:
+            push = b if push is None else push + b
         npc.dynamics_step(beta, h, eat=eat, company=X[2], push=push)
         npc.drive_residual(X, h)
         ok = lambda g: metric_ok(g, a.affect.cfg, npc.eta)  # noqa: E731
@@ -483,17 +495,17 @@ class Arena:
                 a.episodic.observe_pain(a.affect.pain, self.t)
         else:
             a.affect.step(npc.C, beta_total, h)
-        if a.conn is not None:
+        if a.conn is not None and not td:
             a.conn.accumulate(a.ctx, npc.C, npc.g, h, a.affect.cfg.action_scale,
                               a.affect.cfg.trace_tau)
         if self.cfg.learning:
             g_before = npc.g
-            if npc.commit_frame(a.affect.learn(npc.L, npc.eta), ok):
+            if self.cfg.metric_learning and npc.commit_frame(a.affect.learn(npc.L, npc.eta), ok):
                 d = npc.g - g_before
                 a.ledger["dg_diag"] += float(np.abs(np.diag(d)).sum())
                 a.ledger["dg_off"] += float(np.abs(d - np.diag(np.diag(d))).sum())
                 a.ledger["metric_steps"] += 1
-            if a.conn is not None:
+            if a.conn is not None and not td:
                 a.conn.learn(a.affect.blame)
         if a.ltm is not None:
             a.ltm.observe(sense_vector(self, a, X, p), npc.C, a.affect.pain, self.t,

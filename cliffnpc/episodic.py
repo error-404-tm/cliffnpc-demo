@@ -180,8 +180,8 @@ class EventMemory:
                 w0 = float(s["strength"][j])
                 w = w0 + strength
                 s["events"][j]["mag"][:n] = (w0 * s["events"][j]["mag"][:n] + strength * chain["mag"]) / w
-                s["events"][j]["ctx"][:n] = (w0 * s["events"][j]["ctx"][:n]
-                                            + strength * chain["ctx"]) / w
+                s["events"][j]["ctx"][:n] = (w0 * s["events"][j]["ctx"][:n].astype(np.float32)   # f16 storage
+                                            + strength * chain["ctx"].astype(np.float32)) / w
                 s["strength"][j] = w
                 rec = dict(t=self.t, what="merged", slot=int(j), kind=kind, origin=origin,
                            types=[TYPE_NAMES[k] for k in chain["type"]])

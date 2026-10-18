@@ -1,0 +1,89 @@
+E13 Learning gym, TD actor-critic connection (Cl(2,2))
+======================================================
+20 seeds per (task, policy); mean ± 95% CI over seeds.
+
+LEVEL 1
+discrimination: error rate (first patch reached is false), among trials that reached one
+   frozen     first 30: 0.495 ± 0.056   last 30: 0.492 ± 0.051   no arrival (last 30): 0.000 ± 0.000
+   clifford   first 30: 0.471 ± 0.057   last 30: 0.500 ± 0.054   no arrival (last 30): 0.223 ± 0.054
+   clifford_td first 30: 0.494 ± 0.053   last 30: 0.494 ± 0.052   no arrival (last 30): 0.053 ± 0.043
+   clifford_td_affect first 30: 0.485 ± 0.049   last 30: 0.466 ± 0.039   no arrival (last 30): 0.097 ± 0.032
+   clifford_td_metric first 30: 0.497 ± 0.052   last 30: 0.576 ± 0.076   no arrival (last 30): 0.253 ± 0.102
+   clifford_td_affine first 30: 0.483 ± 0.063   last 30: 0.488 ± 0.050   no arrival (last 30): 0.000 ± 0.000
+   random     first 30: 0.490 ± 0.067   last 30: 0.498 ± 0.053   no arrival (last 30): 0.582 ± 0.047
+   linear_ac  first 30: 0.448 ± 0.067   last 30: 0.227 ± 0.046   no arrival (last 30): 0.037 ± 0.019
+   optimal    first 30: 0.000 ± 0.000   last 30: 0.000 ± 0.000   no arrival (last 30): 0.000 ± 0.000
+reversal: error rate before the swap (trials 120-150), just after (150-180), late (270-300)
+   frozen     pre: 0.492 ± 0.051   just after: 0.505 ± 0.022   late: 0.530 ± 0.036
+   clifford   pre: 0.500 ± 0.054   just after: 0.537 ± 0.035   late: 0.508 ± 0.048
+   clifford_td pre: 0.494 ± 0.052   just after: 0.486 ± 0.027   late: 0.493 ± 0.037
+   clifford_td_affect pre: 0.466 ± 0.039   just after: 0.506 ± 0.036   late: 0.490 ± 0.034
+   clifford_td_metric pre: 0.576 ± 0.076   just after: 0.385 ± 0.089   late: 0.464 ± 0.062
+   clifford_td_affine pre: 0.488 ± 0.050   just after: 0.478 ± 0.066   late: 0.518 ± 0.050
+   random     pre: 0.498 ± 0.053   just after: 0.459 ± 0.074   late: 0.469 ± 0.064
+   linear_ac  pre: 0.227 ± 0.046   just after: 0.747 ± 0.079   late: 0.638 ± 0.073
+   optimal    pre: 0.000 ± 0.000   just after: 0.000 ± 0.000   late: 0.000 ± 0.000
+fear: share of trials reaching the ambush site first; health lost per acquisition trial
+   frozen     acq first 10: 0.545 ± 0.077   acq last 30: 0.480 ± 0.034   ext last 30: 0.493 ± 0.035   health lost (acq last 30): 0.047 ± 0.005
+   clifford   acq first 10: 0.536 ± 0.079   acq last 30: 0.437 ± 0.054   ext last 30: 0.482 ± 0.032   health lost (acq last 30): 0.070 ± 0.010
+   clifford_td acq first 10: 0.502 ± 0.089   acq last 30: 0.481 ± 0.030   ext last 30: 0.496 ± 0.038   health lost (acq last 30): 0.090 ± 0.012
+   clifford_td_affect acq first 10: 0.468 ± 0.081   acq last 30: 0.471 ± 0.049   ext last 30: 0.464 ± 0.045   health lost (acq last 30): 0.070 ± 0.015
+   clifford_td_metric acq first 10: 0.499 ± 0.071   acq last 30: 0.428 ± 0.048   ext last 30: 0.429 ± 0.046   health lost (acq last 30): 0.103 ± 0.016
+   clifford_td_affine acq first 10: 0.555 ± 0.088   acq last 30: 0.480 ± 0.037   ext last 30: 0.493 ± 0.040   health lost (acq last 30): 0.050 ± 0.005
+   random     acq first 10: 0.466 ± 0.105   acq last 30: 0.537 ± 0.050   ext last 30: 0.481 ± 0.078   health lost (acq last 30): 0.069 ± 0.008
+   linear_ac  acq first 10: 0.629 ± 0.116   acq last 30: 0.500 ± 0.037   ext last 30: 0.485 ± 0.036   health lost (acq last 30): 0.048 ± 0.007
+   optimal    acq first 10: 0.000 ± 0.000   acq last 30: 0.000 ± 0.000   ext last 30: 0.487 ± 0.048   health lost (acq last 30): 0.000 ± 0.000
+one-shot: share of trials reaching the landmark first, trials 11-60 (death at trial 10)
+   frozen     death: 0.515 ± 0.018   control: 0.515 ± 0.018   paired diff: 0.000 ± 0.000   first 10 after, diff: 0.000 ± 0.000
+   clifford   death: 0.510 ± 0.022   control: 0.515 ± 0.018   paired diff: -0.005 ± 0.007   first 10 after, diff: -0.007 ± 0.010
+   clifford_td death: 0.513 ± 0.020   control: 0.512 ± 0.019   paired diff: 0.001 ± 0.005   first 10 after, diff: -0.005 ± 0.017
+   clifford_td_affect death: 0.504 ± 0.022   control: 0.507 ± 0.020   paired diff: -0.003 ± 0.014   first 10 after, diff: -0.019 ± 0.040
+   clifford_td_metric death: 0.487 ± 0.031   control: 0.473 ± 0.027   paired diff: 0.014 ± 0.037   first 10 after, diff: 0.004 ± 0.044
+   clifford_td_affine death: 0.516 ± 0.019   control: 0.514 ± 0.018   paired diff: 0.002 ± 0.003   first 10 after, diff: 0.005 ± 0.010
+   random     death: 0.499 ± 0.049   control: 0.514 ± 0.049   paired diff: -0.015 ± 0.024   first 10 after, diff: -0.034 ± 0.052
+   linear_ac  death: 0.530 ± 0.017   control: 0.538 ± 0.019   paired diff: -0.008 ± 0.021   first 10 after, diff: -0.029 ± 0.079
+
+LEVEL 2
+courage: discrimination index (fight share outnumbering − not), payoff, defeats
+   frozen     index first 100: 0.282 ± 0.025   last 100: 0.278 ± 0.021   payoff last 100: -0.033 ± 0.006   defeated: 0.117 ± 0.013
+   clifford   index first 100: 0.097 ± 0.019   last 100: 0.090 ± 0.021   payoff last 100: -0.081 ± 0.009   defeated: 0.223 ± 0.018
+   clifford_td index first 100: 0.071 ± 0.019   last 100: 0.065 ± 0.034   payoff last 100: -0.050 ± 0.009   defeated: 0.139 ± 0.026
+   clifford_td_affect index first 100: 0.068 ± 0.024   last 100: 0.060 ± 0.021   payoff last 100: -0.085 ± 0.011   defeated: 0.216 ± 0.024
+   clifford_td_metric index first 100: 0.103 ± 0.024   last 100: 0.079 ± 0.018   payoff last 100: -0.119 ± 0.016   defeated: 0.260 ± 0.025
+   clifford_td_affine index first 100: -0.000 ± 0.058   last 100: -0.027 ± 0.074   payoff last 100: -0.035 ± 0.008   defeated: 0.067 ± 0.023
+   random     index first 100: 0.001 ± 0.005   last 100: 0.002 ± 0.007   payoff last 100: -0.145 ± 0.014   defeated: 0.343 ± 0.022
+   linear_ac  index first 100: -0.002 ± 0.019   last 100: 0.002 ± 0.003   payoff last 100: -0.018 ± 0.014   defeated: 0.049 ± 0.055
+   optimal    index first 100: 0.977 ± 0.001   last 100: 0.976 ± 0.001   payoff last 100: 0.093 ± 0.005   defeated: 0.004 ± 0.003
+   normalised payoff, last 100 (0 = random, 1 = optimal): frozen: 0.47   clifford: 0.27   clifford_td: 0.40   clifford_td_affect: 0.25   clifford_td_metric: 0.11   clifford_td_affine: 0.46   random: 0.00   linear_ac: 0.53   optimal: 1.00
+
+LEARNING EFFECT (variant − frozen, paired by seed; negative error = better)
+   discrimination error, last 30
+      clifford             0.009 ± 0.041
+      clifford_td          0.002 ± 0.038
+      clifford_td_affect   -0.025 ± 0.035
+      clifford_td_metric   0.084 ± 0.089
+      clifford_td_affine   -0.003 ± 0.004
+   reversal error, late
+      clifford             -0.022 ± 0.044
+      clifford_td          -0.037 ± 0.040
+      clifford_td_affect   -0.040 ± 0.029
+      clifford_td_metric   -0.066 ± 0.065
+      clifford_td_affine   -0.012 ± 0.039
+   fear: ambush-site rate, acq last 30
+      clifford             -0.043 ± 0.062
+      clifford_td          0.001 ± 0.021
+      clifford_td_affect   -0.009 ± 0.043
+      clifford_td_metric   -0.052 ± 0.063
+      clifford_td_affine   -0.000 ± 0.024
+   courage index, last 100
+      clifford             -0.188 ± 0.030
+      clifford_td          -0.213 ± 0.030
+      clifford_td_affect   -0.218 ± 0.027
+      clifford_td_metric   -0.198 ± 0.034
+      clifford_td_affine   -0.305 ± 0.072
+   courage payoff, last 100
+      clifford             -0.048 ± 0.009
+      clifford_td          -0.017 ± 0.010
+      clifford_td_affect   -0.052 ± 0.011
+      clifford_td_metric   -0.086 ± 0.014
+      clifford_td_affine   -0.001 ± 0.008

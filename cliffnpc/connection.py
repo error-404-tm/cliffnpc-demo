@@ -83,11 +83,32 @@ class LearnedConnection:
     dW_total: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))   # signed sum
     dW_abs: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT))             # |dW| per feature
     last_x: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT))
+    # TD actor-critic state (rule == "td")
+    rng: np.random.Generator | None = None
+    v: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))   # critic (features + bias)
+    xi: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))       # exploration bivector
+    e_actor: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))
+    e_critic: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))
+    prev_phi: np.ndarray | None = None
+    U: np.ndarray = field(default_factory=lambda: np.zeros((4, N_FEAT)))      # affine push (td + affine)
+    zeta: np.ndarray = field(default_factory=lambda: np.zeros(4))
+    e_push: np.ndarray = field(default_factory=lambda: np.zeros((4, N_FEAT)))
+    td_errors: list = field(default_factory=list)                          # (delta, reward) per tick
 
     # --- forcing ------------------------------------------------------------
     def beta(self, x: np.ndarray) -> np.ndarray:
         """Bivector the connection contributes in situation x."""
         return self.cfg.gain * np.einsum("f,fij->ij", x, self.W)
+
+    def act(self, x: np.ndarray) -> np.ndarray:
+        """Bivector actually applied: the learned habit plus exploration (td only)."""
+        return self.beta(x) + self.xi
+
+    def push(self, x: np.ndarray) -> np.ndarray | None:
+        """Direct drive push b(x) = U x (+ exploration); None unless td + affine."""
+        if not (self.cfg.rule == "td" and self.cfg.affine):
+            return None
+        return self.U @ x + self.zeta
 
     def response(self, x: np.ndarray, C: np.ndarray, g: np.ndarray) -> np.ndarray:
         """dC/dt the connection alone would cause in situation x (for interrogation)."""
@@ -128,6 +149,59 @@ class LearnedConnection:
         self.dW_total += dW
         self.dW_abs += np.linalg.norm(dW, axis=(1, 2))
         return dW
+
+    def td_update(self, x: np.ndarray, reward: float, h: float) -> float | None:
+        """One actor-critic step.  `reward` was earned over the tick that just ended,
+        under the previous situation and the exploration then applied.  Returns the TD error."""
+        c = self.cfg
+        phi = np.append(x, 1.0)
+        gamma = np.exp(-h / c.td_horizon)
+        delta = None
+        if self.prev_phi is not None:
+            delta = reward + gamma * self.v @ phi - self.v @ self.prev_phi
+            self.v += c.critic_rate * delta * self.e_critic / (1.0 + self.prev_phi @ self.prev_phi)
+            dW = c.actor_rate * delta * self.e_actor
+            n = np.linalg.norm(dW, axis=(1, 2))           # bound each update per feature
+            big = n > c.actor_step_max
+            dW[big] *= (c.actor_step_max / n[big])[:, None, None]
+            self.W = self.W + dW
+            if c.affine:
+                dU = c.actor_rate * delta * self.e_push
+                n = np.linalg.norm(dU, axis=0)
+                big = n > c.actor_step_max
+                dU[:, big] *= c.actor_step_max / n[big]
+                self.U = np.clip(self.U + dU, -c.td_max_norm, c.td_max_norm)
+            n = np.linalg.norm(self.W, axis=(1, 2))
+            over = n > c.td_max_norm
+            self.W[over] *= (c.td_max_norm / n[over])[:, None, None]
+            self.updates += 1
+            self.pain_updates += delta < 0
+            self.reward_updates += delta > 0
+            self.dW_total += dW
+            self.dW_abs += np.linalg.norm(dW, axis=(1, 2))
+            self.td_errors.append((float(delta), float(reward)))
+        # exploration for the coming tick: Ornstein-Uhlenbeck in the six planes
+        k = np.exp(-h / c.noise_tau)
+        z = np.zeros((4, 4))
+        for (i, j), r in zip(PLANES, self.rng.normal(size=len(PLANES))):
+            z[i, j], z[j, i] = r, -r
+        self.xi = k * self.xi + np.sqrt(1.0 - k * k) * c.noise_sigma * z
+        decay = gamma * c.td_lambda
+        if c.affine:
+            self.zeta = k * self.zeta + np.sqrt(1.0 - k * k) * c.noise_sigma * self.rng.normal(size=4)
+            self.e_push = decay * self.e_push + np.outer(self.zeta, x) / c.noise_sigma
+        self.e_critic = decay * self.e_critic + phi
+        self.e_actor = decay * self.e_actor + np.einsum("f,ij->fij", x, self.xi) / c.noise_sigma
+        self.prev_phi = phi
+        self.last_x = x
+        return delta
+
+    def reset_episode(self) -> None:
+        """Forget the TD bootstrap and traces (after a discontinuity such as a teleport)."""
+        self.prev_phi = None
+        self.e_push[:] = 0.0
+        self.e_actor[:] = 0.0
+        self.e_critic[:] = 0.0
 
     def inherit(self, parents: list["LearnedConnection"], factor: float) -> None:
         self.W = factor * np.mean([p.W for p in parents], axis=0)
