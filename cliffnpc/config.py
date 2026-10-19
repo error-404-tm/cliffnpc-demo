@@ -259,6 +259,12 @@ class ConnectionConfig:
     # td only: also learn a direct drive push b(x) = U x (dC/dt += b), beside the
     # bivector.  Diagnostic: is the generator-only form (dC = M C) the limit?
     affine: bool = False
+    # td only: Cartan-split connection.  Besides the bivector (so(g): redirects
+    # drives, preserves the interval C.gC) each feature carries a g-symmetric
+    # generator P = g^-1 S (p: rescales / shears drives, changes the interval).
+    cartan: bool = False
+    learn_rotation: bool = True         # cartan: False freezes the bivector part (p-only ablation)
+    p_noise_sigma: float = 1.0          # exploration in p (per entry of S); strong enough to change behaviour
 
 
 @dataclass

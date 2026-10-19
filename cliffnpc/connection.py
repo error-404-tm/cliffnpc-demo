@@ -90,6 +90,9 @@ class LearnedConnection:
     e_actor: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))
     e_critic: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))
     prev_phi: np.ndarray | None = None
+    S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))   # p part (td + cartan), symmetric
+    xs: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))          # exploration in p
+    e_S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))
     U: np.ndarray = field(default_factory=lambda: np.zeros((4, N_FEAT)))      # affine push (td + affine)
     zeta: np.ndarray = field(default_factory=lambda: np.zeros(4))
     e_push: np.ndarray = field(default_factory=lambda: np.zeros((4, N_FEAT)))
@@ -104,15 +107,39 @@ class LearnedConnection:
         """Bivector actually applied: the learned habit plus exploration (td only)."""
         return self.beta(x) + self.xi
 
-    def push(self, x: np.ndarray) -> np.ndarray | None:
-        """Direct drive push b(x) = U x (+ exploration); None unless td + affine."""
-        if not (self.cfg.rule == "td" and self.cfg.affine):
+    def p_generator(self, x: np.ndarray, g: np.ndarray, explore: bool = False) -> np.ndarray:
+        """The p part in situation x: P = g^-1 S(x), g-symmetric (g P is symmetric)."""
+        S = np.einsum("f,fij->ij", x, self.S) + (self.xs if explore else 0.0)
+        return np.linalg.solve(g, S)
+
+    def push(self, x: np.ndarray, C: np.ndarray, g: np.ndarray) -> np.ndarray | None:
+        """Drive-rate terms beyond the bivector: the p part P C (cartan) and the
+        direct push U x (affine), with exploration.  None when neither is on."""
+        c = self.cfg
+        if c.rule != "td" or not (c.cartan or c.affine):
             return None
-        return self.U @ x + self.zeta
+        out = np.zeros(4)
+        if c.cartan:
+            out += self.p_generator(x, g, explore=True) @ C
+        if c.affine:
+            out += self.U @ x + self.zeta
+        return out
 
     def response(self, x: np.ndarray, C: np.ndarray, g: np.ndarray) -> np.ndarray:
-        """dC/dt the connection alone would cause in situation x (for interrogation)."""
-        return generator_from_bivector(self.beta(x), g) @ C
+        """dC/dt the connection alone would cause in situation x (for interrogation),
+        without exploration: bivector part, plus the p part and push when learned."""
+        r = generator_from_bivector(self.beta(x), g) @ C
+        if self.cfg.rule == "td" and self.cfg.cartan:
+            r = r + self.p_generator(x, g) @ C
+        if self.cfg.rule == "td" and self.cfg.affine:
+            r = r + self.U @ x
+        return r
+
+    def response_parts(self, x: np.ndarray, C: np.ndarray, g: np.ndarray) -> dict:
+        """The response split by algebra part: so(g) (redirects, keeps C.gC) and p (rescales)."""
+        rot = generator_from_bivector(self.beta(x), g) @ C
+        p = self.p_generator(x, g) @ C if self.cfg.cartan else np.zeros(4)
+        return dict(rotation=rot, p=p, interval_rate=float(2 * C @ g @ (rot + p)))
 
     # --- learning -------------------------------------------------------------
     def accumulate(self, x: np.ndarray, C: np.ndarray, g: np.ndarray, h: float,
@@ -164,7 +191,18 @@ class LearnedConnection:
             n = np.linalg.norm(dW, axis=(1, 2))           # bound each update per feature
             big = n > c.actor_step_max
             dW[big] *= (c.actor_step_max / n[big])[:, None, None]
+            if c.cartan and not c.learn_rotation:
+                dW[:] = 0.0
             self.W = self.W + dW
+            if c.cartan:
+                dS = c.actor_rate * delta * self.e_S
+                n = np.linalg.norm(dS, axis=(1, 2))
+                big = n > c.actor_step_max
+                dS[big] *= (c.actor_step_max / n[big])[:, None, None]
+                self.S = self.S + dS
+                n = np.linalg.norm(self.S, axis=(1, 2))
+                over = n > c.td_max_norm
+                self.S[over] *= (c.td_max_norm / n[over])[:, None, None]
             if c.affine:
                 dU = c.actor_rate * delta * self.e_push
                 n = np.linalg.norm(dU, axis=0)
@@ -187,6 +225,12 @@ class LearnedConnection:
             z[i, j], z[j, i] = r, -r
         self.xi = k * self.xi + np.sqrt(1.0 - k * k) * c.noise_sigma * z
         decay = gamma * c.td_lambda
+        if c.cartan:
+            z = np.triu(self.rng.normal(size=(4, 4)))
+            z = (z + z.T) / np.sqrt(2.0)                  # symmetric; diagonal and off-diagonal alike
+            z[np.diag_indices(4)] /= np.sqrt(2.0)
+            self.xs = k * self.xs + np.sqrt(1.0 - k * k) * c.p_noise_sigma * z
+            self.e_S = decay * self.e_S + np.einsum("f,ij->fij", x, self.xs) / c.p_noise_sigma
         if c.affine:
             self.zeta = k * self.zeta + np.sqrt(1.0 - k * k) * c.noise_sigma * self.rng.normal(size=4)
             self.e_push = decay * self.e_push + np.outer(self.zeta, x) / c.noise_sigma
@@ -199,6 +243,7 @@ class LearnedConnection:
     def reset_episode(self) -> None:
         """Forget the TD bootstrap and traces (after a discontinuity such as a teleport)."""
         self.prev_phi = None
+        self.e_S[:] = 0.0
         self.e_push[:] = 0.0
         self.e_actor[:] = 0.0
         self.e_critic[:] = 0.0

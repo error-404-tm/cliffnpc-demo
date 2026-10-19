@@ -480,7 +480,7 @@ class Arena:
         push = None
         if self.life is not None:     # injury reflex: the strongest repulsive drive
             push = np.array([0.0, 0.0, 0.0, -self.life.injury_reflex * a.affect.taken_rate])
-        if a.conn is not None and (b := a.conn.push(a.ctx)) is not None:
+        if a.conn is not None and (b := a.conn.push(a.ctx, npc.C, npc.g)) is not None:
             push = b if push is None else push + b
         npc.dynamics_step(beta, h, eat=eat, company=X[2], push=push)
         npc.drive_residual(X, h)

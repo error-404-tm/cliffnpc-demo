@@ -49,6 +49,7 @@ SIG = (-1.0, 1.0, 1.0, -1.0)
 FOOD_AVERSION = False
 POLICIES = ("clifford", "frozen", "random", "linear_ac", "optimal")
 TD_POLICIES = ("clifford_td", "clifford_td_affect", "clifford_td_metric", "clifford_td_affine")
+CARTAN_POLICIES = ("clifford_cartan", "clifford_cartan_affect", "clifford_p_only")
 OPTIONS = ("approach_food", "avoid_food", "fight", "flee", "wander")
 DECIDE_EVERY = 0.5          # s between controller decisions
 CENTER = np.array([50.0, 50.0])
@@ -76,6 +77,12 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
         cfg.connection.reward = "affect" if policy == "clifford_td_affect" else "objective"
         cfg.metric_learning = policy == "clifford_td_metric"
         cfg.connection.affine = policy == "clifford_td_affine"
+    if policy.startswith("clifford_cartan") or policy == "clifford_p_only":   # Cartan-split connection
+        cfg.connection.rule = "td"
+        cfg.connection.cartan = True
+        cfg.connection.learn_rotation = policy != "clifford_p_only"
+        cfg.connection.reward = "affect" if policy == "clifford_cartan_affect" else "objective"
+        cfg.metric_learning = False
     ar = Arena(cfg)
     learner = ar.agents[0]
     for b in list(ar.agents[1:]):                 # tribes mode made one B agent: remove it
