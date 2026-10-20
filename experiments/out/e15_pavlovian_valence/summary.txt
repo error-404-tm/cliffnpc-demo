@@ -1,0 +1,94 @@
+E15 Pavlovian valence (Cl(2,2))
+===============================
+20 seeds per (task, policy); mean ± 95% CI over seeds.
+
+LEVEL 1
+discrimination: error rate (first patch reached is false), among trials that reached one
+   frozen     first 30: 0.495 ± 0.056   last 30: 0.492 ± 0.051   no arrival (last 30): 0.000 ± 0.000
+   clifford_td first 30: 0.494 ± 0.053   last 30: 0.494 ± 0.052   no arrival (last 30): 0.053 ± 0.043
+   clifford_cartan first 30: 0.468 ± 0.049   last 30: 0.446 ± 0.057   no arrival (last 30): 0.083 ± 0.026
+   clifford_p_only first 30: 0.462 ± 0.050   last 30: 0.422 ± 0.061   no arrival (last 30): 0.078 ± 0.037
+   clifford_pav_drive first 30: 0.167 ± 0.042   last 30: 0.000 ± 0.000   no arrival (last 30): 0.278 ± 0.042
+   clifford_pav_body first 30: 0.461 ± 0.060   last 30: 0.130 ± 0.024   no arrival (last 30): 0.000 ± 0.000
+   clifford_pav_cartan first 30: 0.269 ± 0.039   last 30: 0.214 ± 0.050   no arrival (last 30): 0.022 ± 0.022
+   random     first 30: 0.490 ± 0.067   last 30: 0.498 ± 0.053   no arrival (last 30): 0.582 ± 0.047
+   linear_ac  first 30: 0.448 ± 0.067   last 30: 0.227 ± 0.046   no arrival (last 30): 0.037 ± 0.019
+   optimal    first 30: 0.000 ± 0.000   last 30: 0.000 ± 0.000   no arrival (last 30): 0.000 ± 0.000
+reversal: error rate before the swap (trials 120-150), just after (150-180), late (270-300)
+   frozen     pre: 0.492 ± 0.051   just after: 0.505 ± 0.022   late: 0.530 ± 0.036
+   clifford_td pre: 0.494 ± 0.052   just after: 0.486 ± 0.027   late: 0.493 ± 0.037
+   clifford_cartan pre: 0.446 ± 0.057   just after: 0.509 ± 0.042   late: 0.500 ± 0.034
+   clifford_p_only pre: 0.422 ± 0.061   just after: 0.506 ± 0.039   late: 0.483 ± 0.050
+   clifford_pav_drive pre: 0.000 ± 0.000   just after: 0.916 ± 0.040   late: 0.020 ± 0.025
+   clifford_pav_body pre: 0.130 ± 0.024   just after: 0.565 ± 0.033   late: 0.305 ± 0.037
+   clifford_pav_cartan pre: 0.214 ± 0.050   just after: 0.506 ± 0.053   late: 0.268 ± 0.063
+   random     pre: 0.498 ± 0.053   just after: 0.459 ± 0.074   late: 0.469 ± 0.064
+   linear_ac  pre: 0.227 ± 0.046   just after: 0.747 ± 0.079   late: 0.638 ± 0.073
+   optimal    pre: 0.000 ± 0.000   just after: 0.000 ± 0.000   late: 0.000 ± 0.000
+fear: share of trials reaching the ambush site first; health lost per acquisition trial
+   frozen     acq first 10: 0.545 ± 0.077   acq last 30: 0.480 ± 0.034   ext last 30: 0.493 ± 0.035   health lost (acq last 30): 0.047 ± 0.005
+   clifford_td acq first 10: 0.502 ± 0.089   acq last 30: 0.481 ± 0.030   ext last 30: 0.496 ± 0.038   health lost (acq last 30): 0.090 ± 0.012
+   clifford_cartan acq first 10: 0.512 ± 0.061   acq last 30: 0.519 ± 0.043   ext last 30: 0.515 ± 0.038   health lost (acq last 30): 0.053 ± 0.006
+   clifford_p_only acq first 10: 0.532 ± 0.080   acq last 30: 0.502 ± 0.048   ext last 30: 0.479 ± 0.028   health lost (acq last 30): 0.050 ± 0.007
+   clifford_pav_drive acq first 10: 0.545 ± 0.077   acq last 30: 0.480 ± 0.034   ext last 30: 0.493 ± 0.035   health lost (acq last 30): 0.027 ± 0.007
+   clifford_pav_body acq first 10: 0.550 ± 0.079   acq last 30: 0.665 ± 0.065   ext last 30: 0.750 ± 0.069   health lost (acq last 30): 0.061 ± 0.008
+   clifford_pav_cartan acq first 10: 0.507 ± 0.080   acq last 30: 0.539 ± 0.052   ext last 30: 0.522 ± 0.030   health lost (acq last 30): 0.067 ± 0.015
+   random     acq first 10: 0.466 ± 0.105   acq last 30: 0.537 ± 0.050   ext last 30: 0.481 ± 0.078   health lost (acq last 30): 0.069 ± 0.008
+   linear_ac  acq first 10: 0.629 ± 0.116   acq last 30: 0.500 ± 0.037   ext last 30: 0.485 ± 0.036   health lost (acq last 30): 0.048 ± 0.007
+   optimal    acq first 10: 0.000 ± 0.000   acq last 30: 0.000 ± 0.000   ext last 30: 0.487 ± 0.048   health lost (acq last 30): 0.000 ± 0.000
+one-shot: share of trials reaching the landmark first, trials 11-60 (death at trial 10)
+   frozen     death: 0.515 ± 0.018   control: 0.515 ± 0.018   paired diff: 0.000 ± 0.000   first 10 after, diff: 0.000 ± 0.000
+   clifford_td death: 0.513 ± 0.020   control: 0.512 ± 0.019   paired diff: 0.001 ± 0.005   first 10 after, diff: -0.005 ± 0.017
+   clifford_cartan death: 0.501 ± 0.027   control: 0.491 ± 0.019   paired diff: 0.010 ± 0.018   first 10 after, diff: 0.010 ± 0.057
+   clifford_p_only death: 0.521 ± 0.037   control: 0.514 ± 0.031   paired diff: 0.007 ± 0.018   first 10 after, diff: 0.019 ± 0.042
+   clifford_pav_drive death: 0.515 ± 0.018   control: 0.515 ± 0.018   paired diff: 0.000 ± 0.000   first 10 after, diff: 0.000 ± 0.000
+   clifford_pav_body death: 0.515 ± 0.018   control: 0.515 ± 0.018   paired diff: 0.000 ± 0.000   first 10 after, diff: 0.000 ± 0.000
+   clifford_pav_cartan death: 0.501 ± 0.027   control: 0.491 ± 0.019   paired diff: 0.010 ± 0.018   first 10 after, diff: 0.010 ± 0.057
+   random     death: 0.499 ± 0.049   control: 0.514 ± 0.049   paired diff: -0.015 ± 0.024   first 10 after, diff: -0.034 ± 0.052
+   linear_ac  death: 0.530 ± 0.017   control: 0.538 ± 0.019   paired diff: -0.008 ± 0.021   first 10 after, diff: -0.029 ± 0.079
+
+LEVEL 2
+courage: discrimination index (fight share outnumbering − not), payoff, defeats
+   frozen     index first 100: 0.282 ± 0.025   last 100: 0.278 ± 0.021   payoff last 100: -0.033 ± 0.006   defeated: 0.117 ± 0.013
+   clifford_td index first 100: 0.071 ± 0.019   last 100: 0.065 ± 0.034   payoff last 100: -0.050 ± 0.009   defeated: 0.139 ± 0.026
+   clifford_cartan index first 100: 0.030 ± 0.026   last 100: -0.007 ± 0.033   payoff last 100: -0.063 ± 0.012   defeated: 0.208 ± 0.038
+   clifford_p_only index first 100: 0.052 ± 0.025   last 100: 0.039 ± 0.020   payoff last 100: -0.056 ± 0.011   defeated: 0.152 ± 0.034
+   clifford_pav_drive index first 100: 0.115 ± 0.023   last 100: 0.152 ± 0.023   payoff last 100: -0.009 ± 0.002   defeated: 0.011 ± 0.004
+   clifford_pav_body index first 100: 0.268 ± 0.031   last 100: 0.232 ± 0.036   payoff last 100: -0.018 ± 0.002   defeated: 0.015 ± 0.005
+   clifford_pav_cartan index first 100: 0.063 ± 0.016   last 100: 0.050 ± 0.020   payoff last 100: -0.027 ± 0.006   defeated: 0.058 ± 0.015
+   random     index first 100: 0.001 ± 0.005   last 100: 0.002 ± 0.007   payoff last 100: -0.145 ± 0.014   defeated: 0.343 ± 0.022
+   linear_ac  index first 100: -0.002 ± 0.019   last 100: 0.002 ± 0.003   payoff last 100: -0.018 ± 0.014   defeated: 0.049 ± 0.055
+   optimal    index first 100: 0.977 ± 0.001   last 100: 0.976 ± 0.001   payoff last 100: 0.093 ± 0.005   defeated: 0.004 ± 0.003
+   normalised payoff, last 100 (0 = random, 1 = optimal): frozen: 0.47   clifford_td: 0.40   clifford_cartan: 0.35   clifford_p_only: 0.37   clifford_pav_drive: 0.57   clifford_pav_body: 0.54   clifford_pav_cartan: 0.50   random: 0.00   linear_ac: 0.53   optimal: 1.00
+
+LEARNING EFFECT (variant − frozen, paired by seed; negative error = better)
+   discrimination error, last 30
+      clifford_p_only      -0.070 ± 0.044
+      clifford_pav_drive   -0.492 ± 0.051
+      clifford_pav_body    -0.362 ± 0.037
+      clifford_pav_cartan  -0.278 ± 0.042
+      linear_ac            -0.264 ± 0.074
+   reversal error, late
+      clifford_p_only      -0.047 ± 0.030
+      clifford_pav_drive   -0.506 ± 0.039
+      clifford_pav_body    -0.225 ± 0.027
+      clifford_pav_cartan  -0.262 ± 0.056
+      linear_ac            0.108 ± 0.072
+   fear: ambush-site rate, acq last 30
+      clifford_p_only      0.022 ± 0.049
+      clifford_pav_drive   0.000 ± 0.000
+      clifford_pav_body    0.185 ± 0.072
+      clifford_pav_cartan  0.059 ± 0.060
+      linear_ac            0.020 ± 0.030
+   courage index, last 100
+      clifford_p_only      -0.239 ± 0.026
+      clifford_pav_drive   -0.125 ± 0.029
+      clifford_pav_body    -0.046 ± 0.036
+      clifford_pav_cartan  -0.227 ± 0.030
+      linear_ac            -0.275 ± 0.022
+   courage payoff, last 100
+      clifford_p_only      -0.023 ± 0.009
+      clifford_pav_drive   0.024 ± 0.006
+      clifford_pav_body    0.016 ± 0.005
+      clifford_pav_cartan  0.006 ± 0.008
+      linear_ac            0.015 ± 0.016

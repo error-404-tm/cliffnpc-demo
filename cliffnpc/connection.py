@@ -37,6 +37,12 @@ import numpy as np
 from .algebra import PLANES, generator_from_bivector
 from .config import ConnectionConfig
 
+# which features describe which stimulus (for Pavlovian valence)
+STIMULI = {
+    "food": ("food_cue_a", "food_cue_b"),
+    "place": ("place_cue",),
+    "rival": ("rival_near", "rival_closing", "allies", "rivals", "outnumbered", "backed"),
+}
 FEATURES = ("food_near", "rival_near", "rival_closing", "allies", "rivals", "outnumbered",
             "injured", "backed", "food_cue_a", "food_cue_b", "place_cue",
             "spare0", "spare1", "spare2", "spare3", "spare4")
@@ -177,6 +183,18 @@ class LearnedConnection:
         self.dW_abs += np.linalg.norm(dW, axis=(1, 2))
         return dW
 
+    def valence(self, x: np.ndarray) -> dict:
+        """Learned value of each perceived stimulus: its features' share of the
+        linear critic, v_f x_f summed over the stimulus' features.  The rival's value
+        counts only while a rival is in view."""
+        out = {}
+        for s, fs in STIMULI.items():
+            idx = [FEATURES.index(f) for f in fs]
+            out[s] = float(self.v[idx] @ x[idx])
+        if x[FEATURES.index("rival_near")] <= 0.0:
+            out["rival"] = 0.0
+        return out
+
     def td_update(self, x: np.ndarray, reward: float, h: float) -> float | None:
         """One actor-critic step.  `reward` was earned over the tick that just ended,
         under the previous situation and the exploration then applied.  Returns the TD error."""
@@ -187,6 +205,11 @@ class LearnedConnection:
         if self.prev_phi is not None:
             delta = reward + gamma * self.v @ phi - self.v @ self.prev_phi
             self.v += c.critic_rate * delta * self.e_critic / (1.0 + self.prev_phi @ self.prev_phi)
+            if not c.actor:                                # critic only (Pavlovian)
+                self.td_errors.append((float(delta), float(reward)))
+                self.e_critic = gamma * c.td_lambda * self.e_critic + phi
+                self.prev_phi, self.last_x = phi, x
+                return delta
             dW = c.actor_rate * delta * self.e_actor
             n = np.linalg.norm(dW, axis=(1, 2))           # bound each update per feature
             big = n > c.actor_step_max
@@ -218,6 +241,10 @@ class LearnedConnection:
             self.dW_total += dW
             self.dW_abs += np.linalg.norm(dW, axis=(1, 2))
             self.td_errors.append((float(delta), float(reward)))
+        if not c.actor:
+            self.e_critic = gamma * c.td_lambda * self.e_critic + phi
+            self.prev_phi, self.last_x = phi, x
+            return delta
         # exploration for the coming tick: Ornstein-Uhlenbeck in the six planes
         k = np.exp(-h / c.noise_tau)
         z = np.zeros((4, 4))

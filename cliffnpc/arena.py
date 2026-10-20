@@ -173,6 +173,7 @@ class Agent:
     # optional external controller (baselines, scripted agents): f(arena, agent, percept) -> velocity.
     # Controlled agents skip cognition; they set npc.C[3] themselves to signal fight (+) / flight (-).
     controller: object = None
+    valence_v: np.ndarray | None = None              # Pavlovian body-layer velocity (world frame)
     slot: int = -1              # index in the capacity-wide logs
     known_food: dict = field(default_factory=dict)   # patch id -> position (seen, finite food)
     known_false: set = field(default_factory=set)    # patch ids found to be false food
@@ -420,6 +421,11 @@ class Arena:
                 a.heading += self.steer_cfg.wander_turn * np.sqrt(dt) * self.rng.normal()
                 v = steer(a.npc.coefficients(), a.npc.cone(), p, a.heading, self.steer_cfg,
                           a.npc.cfg.signature)
+                if a.valence_v is not None:             # Pavlovian reflex, same speed limit
+                    v = v + a.valence_v
+                    sp = np.linalg.norm(v)
+                    if sp > self.steer_cfg.max_speed:
+                        v = v * (self.steer_cfg.max_speed / sp)
                 if self.life is not None and not self.life.immobility:
                     v = v * a.health                     # speed falls in proportion to injury
                     sat = np.clip(-a.npc.C[0] / self.life.satiety_ref, 0.0, 1.0)
@@ -482,6 +488,12 @@ class Arena:
             push = np.array([0.0, 0.0, 0.0, -self.life.injury_reflex * a.affect.taken_rate])
         if a.conn is not None and (b := a.conn.push(a.ctx, npc.C, npc.g)) is not None:
             push = b if push is None else push + b
+        if a.conn is not None and a.conn.cfg.valence != "none":
+            self._pavlovian(a, p, a.conn.valence(a.ctx))
+            if a.conn.cfg.valence == "drive":       # incentive salience: valence moves the owning drive
+                vd = a.conn.valence(a.ctx)
+                b = a.conn.cfg.valence_gain_drive * np.array([vd["food"], 0.0, 0.0, vd["rival"]])
+                push = b if push is None else push + b
         npc.dynamics_step(beta, h, eat=eat, company=X[2], push=push)
         npc.drive_residual(X, h)
         ok = lambda g: metric_ok(g, a.affect.cfg, npc.eta)  # noqa: E731
@@ -543,6 +555,32 @@ class Arena:
         if allies_n == 0 and pv.get("allies", 0) > 0:
             emit("alone", 1.0)
         pv.update(rival=rival, contact=a.in_contact, food=food, eat=bool(eat), allies=allies_n)
+
+    def _pavlovian(self, a: Agent, p: coupling.Percept, val: dict) -> None:
+        """Body-layer valence: velocity toward (+) / away from (-) each valued stimulus."""
+        a.valence_v = None
+        if a.conn.cfg.valence != "body":
+            return
+        v = np.zeros(2)
+        unit = lambda d: d / max(np.linalg.norm(d), 1e-9)  # noqa: E731
+        if p.food_vec is not None:
+            v += val["food"] * unit(p.food_vec)
+        pv = self.place_vec(a)
+        if pv is not None:
+            v += val["place"] * unit(pv)
+        if p.threat_vec is not None:
+            v += val["rival"] * unit(p.threat_vec)
+        a.valence_v = a.conn.cfg.valence_gain_body * v
+
+    def place_vec(self, a: Agent) -> np.ndarray | None:
+        """Vector to the nearest marked place within its radius, else None."""
+        best, bd = None, np.inf
+        for c, r in self.cfg.place_cues:
+            d = np.asarray(c, float) - a.pos
+            n = np.linalg.norm(d)
+            if n < r and n < bd:
+                best, bd = d, n
+        return best
 
     def context_of(self, a: Agent, p: coupling.Percept, X: np.ndarray | None = None) -> np.ndarray:
         """The agent's situation vector (connection.FEATURES order)."""

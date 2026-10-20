@@ -265,6 +265,17 @@ class ConnectionConfig:
     cartan: bool = False
     learn_rotation: bool = True         # cartan: False freezes the bivector part (p-only ablation)
     p_noise_sigma: float = 1.0          # exploration in p (per entry of S); strong enough to change behaviour
+    actor: bool = True                  # td: False = critic only (no exploration, no actor updates)
+    # Pavlovian valence: the critic's learned value of each perceived stimulus
+    # (its features' share of V) acts directly as approach (+) / avoid (-).
+    #   "none"   off
+    #   "drive"  a push on the drive that owns the stimulus: food -> hunger,
+    #            encounter -> fight/flight (incentive salience: changes wanting)
+    #   "body"   a velocity toward / away from the stimulus itself (food, landmark,
+    #            rival), bypassing the drives (a conditioned reflex)
+    valence: str = "none"
+    valence_gain_drive: float = 3.0     # drive-rate per unit value
+    valence_gain_body: float = 10.0     # speed per unit value (a value of ~0.5 rivals full approach speed)
 
 
 @dataclass
