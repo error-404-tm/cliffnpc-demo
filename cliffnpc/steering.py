@@ -62,6 +62,8 @@ def steer(coeffs: np.ndarray, s: float, p: Percept, heading: float,
     if p.threat_vec is not None:
         w = abs(threat) * k[3]
         v += w * np.sign(threat) * _unit(p.threat_vec)
+    elif cfg.flee_places and p.danger_vec is not None and threat < 0:
+        v += abs(threat) * k[3] * -_unit(p.danger_vec)    # flight from a feared place
 
     speed = cfg.max_speed * np.tanh(cfg.urgency * np.linalg.norm(v))
     return speed * _unit(v)

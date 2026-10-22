@@ -29,6 +29,7 @@ class Percept:
     peer_vecs: np.ndarray            # relative positions of perceived peers
     home_vec: np.ndarray
     food_memory: np.ndarray | None = None  # remembered nearest food (steering only)
+    danger_vec: np.ndarray | None = None   # nearest marked place in range (steering only)
 
 
 def sense(world: World, pos: np.ndarray, vel: np.ndarray, threat_vel: np.ndarray,

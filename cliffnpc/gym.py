@@ -47,10 +47,18 @@ SIG = (-1.0, 1.0, 1.0, -1.0)
 # Body: give hunger an aversive pole (steering.food_aversion) for all Clifford
 # variants.  E12 ran without it; E13 sets this True.
 FOOD_AVERSION = False
+FLEE_PLACES = False         # steering.flee_places (fear v2 sets it True)
 POLICIES = ("clifford", "frozen", "random", "linear_ac", "optimal")
 TD_POLICIES = ("clifford_td", "clifford_td_affect", "clifford_td_metric", "clifford_td_affine")
 CARTAN_POLICIES = ("clifford_cartan", "clifford_cartan_affect", "clifford_p_only")
-PAV_POLICIES = ("clifford_pav_drive", "clifford_pav_body", "clifford_pav_cartan")
+PAV_POLICIES = ("clifford_pav_drive", "clifford_pav_body", "clifford_pav_cartan", "clifford_pav_drive_affect")
+
+
+def fear_v2(seed: int, policy: str, n_trials: int = 200, extinguish_at: int = 100) -> list:
+    """Fear conditioning, redesigned: the ambush is three rivals (outnumbered 3:1,
+    so it is costly under the objective reward, not a fair fight), and landmarks can
+    be fled (steering.flee_places).  Set FOOD_AVERSION and FLEE_PLACES before calling."""
+    return fear(seed, policy, n_trials=n_trials, extinguish_at=extinguish_at, ambushers=3)
 OPTIONS = ("approach_food", "avoid_food", "fight", "flee", "wander")
 DECIDE_EVERY = 0.5          # s between controller decisions
 CENTER = np.array([50.0, 50.0])
@@ -70,6 +78,7 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
     cfg.life.birth_cooldown = 1e12
     cfg.life.starve_level = 1e12
     cfg.base.steer.food_aversion = FOOD_AVERSION
+    cfg.base.steer.flee_places = FLEE_PLACES
     if policy == "frozen":
         cfg.learning = False
         cfg.episodic.store = False
@@ -86,7 +95,7 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
         cfg.metric_learning = False
     if policy.startswith("clifford_pav"):        # Pavlovian valence from the TD critic
         cfg.connection.rule = "td"
-        cfg.connection.reward = "objective"
+        cfg.connection.reward = "affect" if policy == "clifford_pav_drive_affect" else "objective"
         cfg.metric_learning = False
         cfg.connection.valence = "body" if policy == "clifford_pav_body" else "drive"
         cfg.connection.cartan = policy == "clifford_pav_cartan"
@@ -303,7 +312,7 @@ def discrimination(seed: int, policy: str, n_trials: int = 60, reverse_at: int |
 
 
 def fear(seed: int, policy: str, n_trials: int = 80, extinguish_at: int = 40,
-         ambush_len: float = 6.0) -> list:
+         ambush_len: float = 6.0, ambushers: int = 1) -> list:
     """Both patches real; one at a landmark.  Reaching it brings an ambush (acquisition);
     from `extinguish_at` on, nothing happens there (extinction)."""
     ar, a = gym_arena(seed, policy)
@@ -334,21 +343,26 @@ def fear(seed: int, policy: str, n_trials: int = 80, extinguish_at: int = 40,
         def on_step():
             if (state["acq"] and amb["t"] is None
                     and np.linalg.norm(a.pos - state["cursed"]["pos"]) < 5.0):
-                pos = a.pos + 6.0 * _unit(rng.normal(size=2))
-                amb["rival"] = _add(ar, "B", pos, chaser(a))
+                th = rng.uniform(0, 2 * np.pi)
+                amb["rival"] = [_add(ar, "B", a.pos + 6.0 * np.array([np.cos(th + 2 * np.pi * j / ambushers),
+                                                                      np.sin(th + 2 * np.pi * j / ambushers)]),
+                                     chaser(a)) for j in range(ambushers)]
                 amb["t"] = ar.t
             if amb["rival"] is not None:
                 if ar.t - amb["t"] > ambush_len:
-                    _remove(ar, amb["rival"])
+                    for b in amb["rival"]:
+                        _remove(ar, b)
                     amb["rival"] = None
-        h0 = a.health
+        h0, d0, k0 = a.health, a.dealt_total, a.taken_total
         first, t_meal = _run_food_trial(ar, a, pats, on_step=on_step)
         if amb["rival"] is not None:
-            _remove(ar, amb["rival"])
+            for b in amb["rival"]:
+                _remove(ar, b)
         recs.append(dict(trial=trial, first=None if first is None else
                          ("cursed" if pats[first] is state["cursed"] else "safe"),
                          t_meal=t_meal, ambushed=amb["t"] is not None, health_end=a.health,
-                         health_start=h0, phase="acquisition" if state["acq"] else "extinction"))
+                         health_start=h0, phase="acquisition" if state["acq"] else "extinction",
+                         dealt=a.dealt_total - d0, taken=a.taken_total - k0))
     return recs
 
 
@@ -486,6 +500,7 @@ TASKS = {
     "discrimination": lambda s, p: discrimination(s, p, n_trials=60),
     "reversal": lambda s, p: discrimination(s, p, n_trials=100, reverse_at=50),
     "fear": lambda s, p: fear(s, p),
+    "fear_v2": lambda s, p: fear_v2(s, p),
     "one_shot": lambda s, p: one_shot(s, p, death_at=10),
     "one_shot_control": lambda s, p: one_shot(s, p, death_at=None),
     "courage": lambda s, p: courage(s, p),

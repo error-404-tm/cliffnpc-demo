@@ -325,6 +325,9 @@ class SteeringConfig:
     # hunger < 0 turns the agent away from food in view (an aversive pole, like
     # flight on the threat axis).  False: hunger <= 0 simply ignores food.
     food_aversion: bool = False
+    # with no rival in view and fight/flight < 0, move away from a nearby marked
+    # place (a landmark can be fled; whether it is, the drive decides)
+    flee_places: bool = False
 
 
 @dataclass

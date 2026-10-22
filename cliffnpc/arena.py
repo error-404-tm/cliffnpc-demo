@@ -399,6 +399,7 @@ class Arena:
             peer_vecs=peer_vecs,
             home_vec=a.home - a.pos,
             food_memory=min(known, key=np.linalg.norm) if known else None,
+            danger_vec=self.place_vec(a) if self.cfg.place_cues else None,
         )
 
     # ---------------------------------------------------------------- main loop
@@ -492,7 +493,9 @@ class Arena:
             self._pavlovian(a, p, a.conn.valence(a.ctx))
             if a.conn.cfg.valence == "drive":       # incentive salience: valence moves the owning drive
                 vd = a.conn.valence(a.ctx)
-                b = a.conn.cfg.valence_gain_drive * np.array([vd["food"], 0.0, 0.0, vd["rival"]])
+                # a landmark is a danger cue: it is owned by fight/flight, like a rival
+                b = a.conn.cfg.valence_gain_drive * np.array([vd["food"], 0.0, 0.0,
+                                                              vd["rival"] + vd["place"]])
                 push = b if push is None else push + b
         npc.dynamics_step(beta, h, eat=eat, company=X[2], push=push)
         npc.drive_residual(X, h)
