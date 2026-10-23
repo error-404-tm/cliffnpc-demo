@@ -274,6 +274,19 @@ class ConnectionConfig:
     #   "body"   a velocity toward / away from the stimulus itself (food, landmark,
     #            rival), bypassing the drives (a conditioned reflex)
     valence: str = "none"
+    # Surprise-gated value learning (Pearce-Hall associability): the critic's step
+    # grows with how surprising the TD error is relative to its running spread:
+    #   rate = critic_rate * (1 + surprise_gain * max(0, |delta| / sd - surprise_z)),
+    # capped at critic_rate_max.  Ordinary ticks learn slowly; a rare large event
+    # (a witnessed death) writes its signed value into the stimuli present at once.
+    surprise_gain: float = 0.0          # 0 = off
+    surprise_z: float = 8.0             # big events only: a witnessed death is ~50 SD, injury ~11, a meal ~3-4
+    surprise_tau: float = 60.0          # s, running spread of delta
+    critic_rate_max: float = 1.0
+    # which features take the boosted step: "all", or "stimuli" (the features that
+    # describe a stimulus -- food looks, landmark, rival encounter -- connection.STIMULI);
+    # context features (food nearness, health, the constant) keep the slow rate
+    surprise_targets: str = "all"       # "stimuli" was tested and fails discrimination (4 seeds)
     valence_gain_drive: float = 3.0     # drive-rate per unit value
     valence_gain_body: float = 10.0     # speed per unit value (a value of ~0.5 rivals full approach speed)
 

@@ -1,0 +1,28 @@
+E17 Surprise-gated value learning (Cl(2,2))
+===========================================
+20 seeds; mean ± 95% CI over seeds.
+
+ONE-SHOT: landmark-first rate in the 10 trials after the death, death run minus paired control
+   frozen                               death 0.505  control 0.505  paired diff +0.000 ± 0.000   (n=20)   landmark value at end: death +0.000 ± 0.000, control +0.000 ± 0.000
+   clifford_pav_drive                   death 0.498  control 0.503  paired diff -0.006 ± 0.011   (n=20)   landmark value at end: death -0.039 ± 0.017, control -0.032 ± 0.020
+   clifford_pav_drive_surprise          death 0.050  control 0.503  paired diff -0.453 ± 0.081   (n=20)   landmark value at end: death -0.124 ± 0.034, control -0.041 ± 0.016
+   clifford_pav_drive_affect            death 0.000  control 0.000  paired diff +0.000 ± 0.000   (n=20)   landmark value at end: death -4.595 ± 0.208, control -4.106 ± 0.151
+   clifford_pav_drive_affect_surprise   death 0.000  control 0.000  paired diff +0.000 ± 0.000   (n=20)   landmark value at end: death -8.980 ± 0.523, control -4.082 ± 0.162
+
+FEAR v2: ambush-site rate, acquisition trials 1-10 and last 30; extinction last 30; trials to criterion (5 avoidances in a row)
+   frozen                               acq 1-10 +0.455 ± 0.072   acq last 30 +0.490 ± 0.043   ext last 30 +0.470 ± 0.046   trials to criterion 45.0 ± 16.0
+   clifford_pav_drive                   acq 1-10 +0.163 ± 0.027   acq last 30 +0.012 ± 0.009   ext last 30 +0.514 ± 0.039   trials to criterion 4.1 ± 0.9
+   clifford_pav_drive_surprise          acq 1-10 +0.262 ± 0.045   acq last 30 +0.037 ± 0.015   ext last 30 +0.477 ± 0.028   trials to criterion 7.8 ± 1.7
+   clifford_pav_drive_affect            acq 1-10 +0.097 ± 0.010   acq last 30 +0.000 ± 0.000   ext last 30 +0.000 ± 0.000   trials to criterion 2.0 ± 0.6
+   clifford_pav_drive_affect_surprise   acq 1-10 +0.102 ± 0.014   acq last 30 +0.000 ± 0.000   ext last 30 +0.000 ± 0.000   trials to criterion 2.1 ± 0.6
+
+NO HARM: discrimination error (last 30), reversal error (just after / late), courage index and payoff (last 100)
+   frozen                               discr +0.492 ± 0.051   rev just after +0.505 ± 0.022 late +0.530 ± 0.036   courage +0.278 ± 0.021   payoff -0.033 ± 0.006   gated steps (courage) 0
+   clifford_pav_drive                   discr +0.000 ± 0.000   rev just after +0.916 ± 0.040 late +0.020 ± 0.025   courage +0.152 ± 0.023   payoff -0.009 ± 0.002   gated steps (courage) 0
+   clifford_pav_drive_surprise          discr +0.482 ± 0.052   rev just after +0.505 ± 0.022 late +0.517 ± 0.041   courage +0.056 ± 0.029   payoff -0.008 ± 0.002   gated steps (courage) 23
+   clifford_pav_drive_affect            discr +1.000 ± 0.000   rev just after +0.000 ± 0.000 late +0.556 ± 0.344   courage +0.483 ± 0.032   payoff +0.049 ± 0.009   gated steps (courage) 0
+   clifford_pav_drive_affect_surprise   discr +0.357 ± 0.108   rev just after +0.554 ± 0.145 late +0.343 ± 0.107   courage +0.273 ± 0.066   payoff +0.010 ± 0.009   gated steps (courage) 68
+
+GATED (surprise) VS UNGATED, paired by seed
+   clifford_pav_drive_surprise − clifford_pav_drive:  fear acq 1-10 +0.100 ± 0.049   trials to criterion +3.700 ± 1.519
+   clifford_pav_drive_affect_surprise − clifford_pav_drive_affect:  fear acq 1-10 +0.005 ± 0.010   trials to criterion +0.050 ± 0.098

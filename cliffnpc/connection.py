@@ -47,6 +47,7 @@ FEATURES = ("food_near", "rival_near", "rival_closing", "allies", "rivals", "out
             "injured", "backed", "food_cue_a", "food_cue_b", "place_cue",
             "spare0", "spare1", "spare2", "spare3", "spare4")
 N_FEAT = len(FEATURES)
+STIMULUS_IDX = sorted({FEATURES.index(f) for fs in STIMULI.values() for f in fs})
 DRIVES = ("hunger", "social", "explore", "fight")
 PLANE_NAMES = tuple(f"{DRIVES[i]}^{DRIVES[j]}" for i, j in PLANES)
 
@@ -96,6 +97,8 @@ class LearnedConnection:
     e_actor: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))
     e_critic: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))
     prev_phi: np.ndarray | None = None
+    delta_sd: float = 0.0                 # running spread of the TD error (surprise gate)
+    gated_steps: list = field(default_factory=list)   # (delta, z, rate) when the gate opened
     S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))   # p part (td + cartan), symmetric
     xs: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))          # exploration in p
     e_S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))
@@ -204,7 +207,25 @@ class LearnedConnection:
         delta = None
         if self.prev_phi is not None:
             delta = reward + gamma * self.v @ phi - self.v @ self.prev_phi
-            self.v += c.critic_rate * delta * self.e_critic / (1.0 + self.prev_phi @ self.prev_phi)
+            rate = np.full(N_FEAT + 1, c.critic_rate)
+            if c.surprise_gain > 0:                       # surprise-gated step (Pearce-Hall)
+                z = abs(delta) / self.delta_sd if self.delta_sd > 0 else 0.0
+                if z > c.surprise_z:
+                    big = min(c.critic_rate_max, c.critic_rate * (1.0 + c.surprise_gain * (z - c.surprise_z)))
+                    if c.surprise_targets == "stimuli":
+                        rate[STIMULUS_IDX] = big          # the event's value goes to the stimuli present
+                    else:
+                        rate[:] = big
+                    self.gated_steps.append((float(delta), float(z), float(big)))
+                k = np.exp(-h / c.surprise_tau)
+                self.delta_sd = np.sqrt(k * self.delta_sd ** 2 + (1 - k) * delta ** 2)
+            # normaliser: a step along the trace e changes V(prev) by rate * delta * (e . phi_prev) / norm;
+            # with a large (gated) rate, normalise by e . phi_prev so V(prev) moves by at most rate * delta
+            # (the trace sums several ticks of features -- plain LMS normalisation would overshoot)
+            norm = 1.0 + self.prev_phi @ self.prev_phi
+            if rate.max() > c.critic_rate:
+                norm = max(norm, float(self.e_critic @ self.prev_phi))
+            self.v += rate * delta * self.e_critic / norm
             if not c.actor:                                # critic only (Pavlovian)
                 self.td_errors.append((float(delta), float(reward)))
                 self.e_critic = gamma * c.td_lambda * self.e_critic + phi

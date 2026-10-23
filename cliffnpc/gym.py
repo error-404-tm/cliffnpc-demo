@@ -95,9 +95,10 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
         cfg.metric_learning = False
     if policy.startswith("clifford_pav"):        # Pavlovian valence from the TD critic
         cfg.connection.rule = "td"
-        cfg.connection.reward = "affect" if policy == "clifford_pav_drive_affect" else "objective"
+        cfg.connection.reward = "affect" if "affect" in policy else "objective"
         cfg.metric_learning = False
         cfg.connection.valence = "body" if policy == "clifford_pav_body" else "drive"
+        cfg.connection.surprise_gain = 1.0 if policy.endswith("_surprise") else 0.0
         cfg.connection.cartan = policy == "clifford_pav_cartan"
         cfg.connection.actor = policy == "clifford_pav_cartan"
     ar = Arena(cfg)
@@ -374,6 +375,7 @@ def one_shot(seed: int, policy: str, n_trials: int = 50, death_at: int | None = 
     rng = np.random.default_rng(seed + 303)
     if a.controller is not None:
         a.controller.rule = lambda ar, a: 0 if nearest_food(ar, a) is not None else 4
+    state = dict(died=False, trial=None)
     recs = []
     for trial in range(n_trials):
         _clear_food(ar)
@@ -385,17 +387,24 @@ def one_shot(seed: int, policy: str, n_trials: int = 50, death_at: int | None = 
         ev = dict(done=False)
 
         def on_step():
-            if (trial == death_at and not ev["done"]
-                    and np.linalg.norm(a.pos - marked["pos"]) < 12.0):
+            # the first trial from death_at on in which the learner is close enough to
+            # perceive the landmark cue (cue > 0.3): an ally dies there, in view
+            if (death_at is not None and trial >= death_at and not state["died"]
+                    and ar.place_cue(a) > 0.3):
                 ally = _add(ar, a.faction, marked["pos"] + np.array([1.0, 0.0]), still)
                 ally.ctx = None
                 ar._die(ally, "injury")
                 ev["done"] = True
+                state["died"] = True
+                state["trial"] = trial
         first, t_meal = _run_food_trial(ar, a, pats, on_step=on_step)
         recs.append(dict(trial=trial, first=None if first is None else
                          ("marked" if pats[first] is marked else "unmarked"),
                          t_meal=t_meal, death=ev["done"],
                          phase="before" if trial <= split else "after"))
+    for r in recs:                                    # trials since the death (None: before / no death)
+        r["since_death"] = None if state["trial"] is None or r["trial"] <= state["trial"] \
+            else r["trial"] - state["trial"]
     return recs
 
 

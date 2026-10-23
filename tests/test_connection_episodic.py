@@ -131,3 +131,18 @@ def test_interrogation_runs_on_a_learning_arena():
     assert "basis magnitudes" in explain(a)
     snap = population_snapshot(ar)
     assert "courage_index" in snap and "primed_share" in snap
+
+
+def test_surprise_gate_writes_a_rare_large_delta_in_one_step_without_overshoot():
+    from cliffnpc.connection import N_FEAT
+    for gain, expect_big in ((0.0, False), (1.0, True)):
+        c = LearnedConnection(ConnectionConfig(rule="td", actor=False, surprise_gain=gain))
+        x = np.zeros(N_FEAT)
+        x[FEATURES.index("place_cue")] = 0.5
+        for _ in range(500):                                  # quiet background: small rewards
+            c.td_update(x, 0.001, 0.2)
+        v0 = c.v @ np.append(x, 1.0)
+        delta = c.td_update(x, -3.0, 0.2)                     # a witnessed death
+        dv = c.v @ np.append(x, 1.0) - v0
+        assert (dv < -1.0) == expect_big                      # gated: most of delta written at once
+        assert dv >= delta - 1e-9                             # normalised: never more than delta
