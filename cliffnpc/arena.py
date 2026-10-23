@@ -174,6 +174,7 @@ class Agent:
     # Controlled agents skip cognition; they set npc.C[3] themselves to signal fight (+) / flight (-).
     controller: object = None
     valence_v: np.ndarray | None = None              # Pavlovian body-layer velocity (world frame)
+    wanting: np.ndarray = field(default_factory=lambda: np.zeros(4))   # Pavlovian wanting (action only)
     slot: int = -1              # index in the capacity-wide logs
     known_food: dict = field(default_factory=dict)   # patch id -> position (seen, finite food)
     known_false: set = field(default_factory=set)    # patch ids found to be false food
@@ -420,7 +421,7 @@ class Arena:
                 self._think(i, a, p, h)
             if a.mobile:
                 a.heading += self.steer_cfg.wander_turn * np.sqrt(dt) * self.rng.normal()
-                v = steer(a.npc.coefficients(), a.npc.cone(), p, a.heading, self.steer_cfg,
+                v = steer(a.npc.coefficients() + a.wanting, a.npc.cone(), p, a.heading, self.steer_cfg,
                           a.npc.cfg.signature)
                 if a.valence_v is not None:             # Pavlovian reflex, same speed limit
                     v = v + a.valence_v
@@ -491,6 +492,11 @@ class Arena:
             push = b if push is None else push + b
         if a.conn is not None and a.conn.cfg.valence != "none":
             self._pavlovian(a, p, a.conn.valence(a.ctx))
+            if a.conn.cfg.valence == "wanting":     # wanting: action-only, not felt
+                vd = a.conn.valence(a.ctx)
+                target = a.conn.cfg.valence_gain_drive * np.array([vd["food"], 0.0, 0.0,
+                                                                   vd["rival"] + vd["place"]])
+                a.wanting = a.wanting + h * (target - a.wanting / a.conn.cfg.wanting_tau)
             if a.conn.cfg.valence == "drive":       # incentive salience: valence moves the owning drive
                 vd = a.conn.valence(a.ctx)
                 # a landmark is a danger cue: it is owned by fight/flight, like a rival

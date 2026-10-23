@@ -98,6 +98,7 @@ class LearnedConnection:
     e_critic: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))
     prev_phi: np.ndarray | None = None
     delta_sd: float = 0.0                 # running spread of the TD error (surprise gate)
+    reward_avg: float | None = None       # running average reward (differential TD)
     gated_steps: list = field(default_factory=list)   # (delta, z, rate) when the gate opened
     S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))   # p part (td + cartan), symmetric
     xs: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))          # exploration in p
@@ -204,6 +205,12 @@ class LearnedConnection:
         c = self.cfg
         phi = np.append(x, 1.0)
         gamma = np.exp(-h / c.td_horizon)
+        if c.differential == "on" or (c.differential == "auto" and c.reward == "affect"):
+            if self.reward_avg is None:
+                self.reward_avg = reward
+            k = np.exp(-h / c.reward_avg_tau)
+            self.reward_avg = k * self.reward_avg + (1 - k) * reward
+            reward = reward - self.reward_avg             # relative to what is usual
         delta = None
         if self.prev_phi is not None:
             delta = reward + gamma * self.v @ phi - self.v @ self.prev_phi

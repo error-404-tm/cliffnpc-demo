@@ -1,0 +1,24 @@
+E18 Felt-affect reward for food (Cl(2,2))
+=========================================
+20 seeds; mean ± 95% CI over seeds.
+
+ONE-SHOT: landmark-first rate in the 10 trials after the death, death run minus paired control
+   frozen                               death 0.505  control 0.505  paired diff +0.000 ± 0.000   (n=20)   landmark value at end: death +0.000 ± 0.000, control +0.000 ± 0.000
+   clifford_pav_drive                   death 0.493  control 0.505  paired diff -0.012 ± 0.017   (n=20)   landmark value at end: death -0.032 ± 0.018, control -0.032 ± 0.022
+   clifford_pav_drive_affect            death 0.000  control 0.000  paired diff +0.000 ± 0.000   (n=20)   landmark value at end: death -3.906 ± 0.130, control -3.622 ± 0.132
+   clifford_pav_want_affect             death 0.015  control 0.069  paired diff -0.054 ± 0.076   (n=20)   landmark value at end: death -1.644 ± 0.081, control -1.463 ± 0.171
+   clifford_pav_want                    death 0.500  control 0.505  paired diff -0.005 ± 0.010   (n=20)   landmark value at end: death -0.112 ± 0.022, control -0.078 ± 0.018
+
+FEAR v2: ambush-site rate, acquisition trials 1-10 and last 30; extinction last 30; trials to criterion (5 avoidances in a row)
+   frozen                               acq 1-10 +0.455 ± 0.072   acq last 30 +0.497 ± 0.035   ext last 30 +0.463 ± 0.046   trials to criterion 45.5 ± 16.3
+   clifford_pav_drive                   acq 1-10 +0.176 ± 0.028   acq last 30 +0.005 ± 0.006   ext last 30 +0.498 ± 0.029   trials to criterion 4.7 ± 1.0
+   clifford_pav_drive_affect            acq 1-10 +0.097 ± 0.010   acq last 30 +0.000 ± 0.000   ext last 30 +0.000 ± 0.000   trials to criterion 2.0 ± 0.6
+   clifford_pav_want_affect             acq 1-10 +0.104 ± 0.004   acq last 30 +0.000 ± 0.000   ext last 30 +0.000 ± 0.000   trials to criterion 2.4 ± 0.6
+   clifford_pav_want                    acq 1-10 +0.318 ± 0.050   acq last 30 +0.005 ± 0.007   ext last 30 +0.000 ± 0.000   trials to criterion 9.2 ± 2.2
+
+NO HARM: discrimination error (last 30), reversal error (just after / late), courage index and payoff (last 100)
+   frozen                               discr +0.492 ± 0.051   rev just after +0.505 ± 0.022 late +0.530 ± 0.036   courage +0.286 ± 0.029   payoff -0.032 ± 0.005   gated steps (courage) 0
+   clifford_pav_drive                   discr +0.000 ± 0.000   rev just after +0.907 ± 0.043 late +0.008 ± 0.016   courage +0.134 ± 0.022   payoff -0.010 ± 0.002   gated steps (courage) 0
+   clifford_pav_drive_affect            discr +0.492 ± 0.051   rev just after +0.505 ± 0.022 late +0.530 ± 0.036   courage +0.524 ± 0.027   payoff +0.051 ± 0.010   gated steps (courage) 0
+   clifford_pav_want_affect             discr +0.102 ± 0.061   rev just after +0.370 ± 0.070 late +0.259 ± 0.091   courage +0.024 ± 0.015   payoff +0.008 ± 0.004   gated steps (courage) 0
+   clifford_pav_want                    discr +0.188 ± 0.055   rev just after +0.612 ± 0.061 late +0.319 ± 0.062   courage +0.222 ± 0.044   payoff -0.019 ± 0.003   gated steps (courage) 0

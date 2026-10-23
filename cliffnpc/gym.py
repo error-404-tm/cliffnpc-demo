@@ -97,7 +97,8 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
         cfg.connection.rule = "td"
         cfg.connection.reward = "affect" if "affect" in policy else "objective"
         cfg.metric_learning = False
-        cfg.connection.valence = "body" if policy == "clifford_pav_body" else "drive"
+        cfg.connection.valence = ("body" if policy == "clifford_pav_body" else
+                                  "wanting" if "_want" in policy else "drive")
         cfg.connection.surprise_gain = 1.0 if policy.endswith("_surprise") else 0.0
         cfg.connection.cartan = policy == "clifford_pav_cartan"
         cfg.connection.actor = policy == "clifford_pav_cartan"
@@ -143,6 +144,8 @@ def _reset_learner(ar: Arena, a: Agent, hunger: float | None = 1.0) -> None:
     a.probe.clear()
     if hunger is not None:
         a.npc.C[0] = hunger                         # hungry at the start of every trial
+    if getattr(a.affect, "C_hat", None) is not None:
+        a.affect.C_hat = a.npc.C.copy()             # the reset itself is not felt as a surprise
     if a.controller is not None:
         a.controller.new_trial()
     if a.conn is not None and a.conn.cfg.rule == "td":

@@ -1,48 +1,98 @@
 # cliffnpc: Clifford-algebra NPC cognition, first demo
 
 An experimental demo of the NPC-cognition half of the Clifford-algebra game
-engine described in `../clifford-npc-spec.md`. The NPC's drives live in
-**Cl(3,1)** (hunger, social and explore are spacelike; threat is timelike). Its
-personality is its own frame `L`, with metric `g = Lᵀ η L`. World events push it
-through bivector generators. Everything is plain NumPy/SciPy with 4×4 matrices,
-runs headless, and saves its plots to files.
+engine described in `../clifford-npc-spec.md`. An NPC's four drives (hunger,
+social, explore, fight/flight) are a vector in a Clifford algebra Cl(p,q). The
+signature is configurable: the single-NPC experiments use **Cl(3,1)** (threat
+timelike), and the current arena work uses **Cl(2,2)** (hunger and fight/flight
+timelike). Its personality is its own frame `L`, with metric `g = Lᵀ η L`. World
+events push it through bivector generators. Everything is plain NumPy/SciPy with
+4×4 matrices, runs headless, and saves its plots to files.
 
 Beyond the spec's phases, the project now has:
-* an **arena** where an NPC pack and an anti-social rival compete for food;
-* a **pain/reward Clifford space** whose prediction error drives learning;
 * a **frame law** that keeps the frame's orientation (the holonomy of experience)
   and stops personality from going singular;
-* a **long-term sequence memory** that replays rewarding or relieving behaviour as
-  attractors, with loss aversion and gating by present pain.
+* a **two-tribe arena** with finite food, combat physics, death, birth and
+  inheritance;
+* **affects as trivectors**, the grade-3 dual of the drives, with three kinds of fear;
+* **memory**: an event-chain episodic memory (partial match → fast, weak replay
+  that primes affect), and an older drive-sequence memory;
+* a **learned connection** (situation → drive generator), a **TD critic**, and
+  **Pavlovian valence** (learned value → wanting);
+* a **learning gym** of controlled tasks with baselines (E12–E18), which is where
+  the current findings come from.
 
-See the sections from [Frame law](#frame-law-option-b) on.
+Start with [Current state](#current-state-october-2026) for the short version.
+
+## Current state (October 2026)
+
+What works, from the gym experiments (20 seeds each, against frozen, random, a
+linear actor-critic and a hand-coded optimum):
+
+| Ability | Mechanism that delivers it | Result |
+|---|---|---|
+| Learn which food is real | TD critic + Pavlovian valence on the drives | error 0.00 (linear AC 0.23) |
+| Re-learn after the rule swaps | same | 0.02 late (linear AC stuck at 0.64) |
+| Fear conditioning and extinction | same, landmark owned by fight/flight | 0.01 → 0.50, like the optimum |
+| One-shot fear from a witnessed death | surprise-gated value learning | landmark preference 0.50 → 0.06 |
+| Fight when outnumbering | felt-affect reward, drive valence | courage index 0.52, best payoff |
+
+What we learned about the architecture:
+* **Value learning works everywhere.** A linear critic on 16 situation features
+  learns correct values in every variant tried.
+* **Habits as a connection cannot change how much a drive is felt.** A bivector
+  generator preserves the drive interval (d/dt C·gC = 0), so it can only redirect
+  motivation. Adding the symmetric **p** part (Cartan split) gives a real but small
+  gain. Learned habits are the weak channel.
+* **Learned wanting is the strong channel.** The critic's value of each perceived
+  stimulus, pushed onto the drive that owns it (food → hunger, rivals and danger
+  landmarks → fight/flight), solves discrimination, reversal and fear.
+* **How much is learned should follow the size of the value delta.** A witnessed
+  death is ~50 SD of surprise; gating the critic's step by surprise turns it into
+  one-shot learning.
+* **Felt affect as reward needs care.** It must be relative to its running
+  average (chronic pain otherwise blames whatever is in view), and valence must not
+  feed back into the felt drive state (a separate wanting channel). Even then it
+  produces lifelike but rigid behaviour: strong courage, fast fear, and
+  **phobias** — avoided cues are never re-tested, so a slightly negative value
+  hardens into permanent avoidance.
+
+Open: re-testing avoided cues (confidence-weighted valence, curiosity), one-shot
+learning without the gate's flexibility cost, and bringing the gym's winning
+mechanisms back into the full two-tribe arena.
 
 ```
 cliffnpc/
-  algebra.py    metric/frames, bivector generators, plane types, rotor step + rapidity clamp,
-                trivectors (frustration), Gram minors / sensitivities
-  cognition.py  NPC state, dynamics step, readouts, prediction/residuals, metric learning
-  world.py      2D world: food, home, peers, periodically attacking threat, haunted disc
-  coupling.py   sensor -> invariants -> low-rank coupling channels (Omega_ext)
-  steering.py   cognition -> steering readout (isolated, swappable)
-  sim.py        single-NPC main loop (multirate, optional surprise gating), logging
-  memory.py     Phase 3: episodes, place rotors, collective metric, LOD transitions, gossip
-  village.py    Phase 3: many tiered NPCs, social graph
-  viewer.py     live viewer (matplotlib window, or headless GIF/MP4 render)
-  affect.py     pain/reward space Cl(3,0), pain prediction error, pain-aversion learning
-  arena.py      NPC pack + anti-social rival competing for food; combat physics, immobility
-  ltm.py        long-term sequence memory: attractor recall, loss aversion, memory Clifford space
-  config.py     every tunable constant
-experiments/    e1..e6, e8, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/          67 tests
+  algebra.py      metric/frames, bivector generators, plane types, rotor step + rapidity clamp,
+                  trivectors, Gram minors / sensitivities
+  cognition.py    NPC state, dynamics step (saturation law), readouts, prediction, metric learning
+  world.py        2D world: food, home, peers, periodically attacking threat, haunted disc
+  coupling.py     sensor -> invariants -> low-rank coupling channels (Omega_ext)
+  steering.py     cognition -> steering readout (isolated, swappable)
+  sim.py          single-NPC main loop (multirate, optional surprise gating), logging
+  memory.py       Phase 3: episodes, place rotors, collective metric, LOD transitions, gossip
+  village.py      Phase 3: many tiered NPCs, social graph
+  viewer.py       live viewer for the single NPC (window, or headless GIF/MP4)
+  arena.py        two tribes (or NPC pack + rival): food, combat, life, affect, memory, learning
+  arena_viewer.py live viewer for the arena
+  affect.py       affect: trivector affects (current) and the older Cl(3,0) pain space
+  ltm.py          drive-sequence memory: attractor recall, loss aversion, memory Clifford space
+  episodic.py     event-chain memory: partial-segment match -> fast weak replay priming affect
+  connection.py   learned connection, TD actor-critic, Cartan split, Pavlovian valence,
+                  surprise-gated critic
+  interrogate.py  read-only reports on what an agent learned and why
+  gym.py          learning gym: controlled tasks x policies (E12-E18)
+  config.py       every tunable constant
+experiments/      e1..e6, e8..e18, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            121 tests
 ```
 
 ## Running it
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 67 tests, ~20 s
-experiments/run_all.sh                 # all experiments in parallel, ~3 min on 12 cores
+.venv/bin/python -m pytest -q          # 121 tests, ~80 s
+experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
 
@@ -54,8 +104,7 @@ bottleneck is Python/NumPy overhead on many tiny 4×4 operations, not arithmetic
 independent runs (seeds, conditions) over worker processes (`experiments/common.py:
 pmap`). Processes, not threads: this Python build has the GIL, and one simulation's
 agents are too few to split. Every run is seeded, so parallel results are identical
-to serial ones; checked for E3, E6 and E8. The full suite takes ~3 min instead of
-~25. Set `CLIFFNPC_WORKERS=1` to run serially. Each experiment's output goes to
+to serial ones; checked for E3, E6 and E8. Set `CLIFFNPC_WORKERS=1` to run serially. Each experiment's output goes to
 `experiments/out/<name>/run.log`.
 
 The venv was created with `python3 -m venv .venv && .venv/bin/pip install numpy
@@ -80,6 +129,13 @@ Panels:
 
 Controls: `space` pause, `t` threat attacks now, `h` haunted disc on/off, `r` reset,
 `+`/`-` speed, `q` quit, left click moves the food, right click moves home.
+
+The arena has its own viewer (two tribes, food, fights, deaths and births):
+
+```bash
+.venv/bin/python -m cliffnpc.arena_viewer --signature 22         # interactive
+.venv/bin/python -m cliffnpc.arena_viewer --save arena.gif --seconds 60
+```
 
 It uses only matplotlib (TkAgg). The interactive mode blits: static parts are
 drawn once, and only the moving artists are redrawn each frame. Scale changes are
@@ -125,7 +181,7 @@ food; affine like hunger drift), **per-drive damping rates**, a remembered food
 location for steering, a deadband on threat closing speed, and a threat that
 retreats after contact.
 
-## Results (numbers from `experiments/out/*/summary.txt`)
+## Results: single NPC and village, E1–E6 (numbers from `experiments/out/*/summary.txt`)
 
 All numbers are from the current model (frame law included); E1–E6 were re-run
 after it.
@@ -247,53 +303,59 @@ the natural candidate.
 
 ## Arena (`arena.py`)
 
-Five NPCs and one rival compete for one food patch. Both factions run the same
-Cl(3,1) cognition and differ only in temperament. The rival is withdrawn (social
-baseline < 0) and finds crowding painful.
+**Two tribes** of identical agents (5 each at the start) share a 200×200 world.
+They run the same cognition and regard only their own tribe as allies. One
+drive signature is used for every agent in a simulation, and concurrent runs vary it.
 
-Combat is world physics; it is never told to the agents:
-* contact between a mobile NPC and the mobile rival is a mutual attack;
-* every fighting NPC (C⁴ > 0) within 4 units of the rival joins it;
-* with n attackers and rival strength k = 2, the rival takes n/(n+k) of the damage
-  and the attackers share the rest. Alone, an NPC takes 2/3; four together take
-  1/12 each;
-* below 0.3 health an agent is immobile until it recovers above 0.6. It can't move
-  or eat, and nobody targets it meanwhile. Injured agents also move slower.
+**Food is finite and moving.** Each patch holds a stock and disappears when
+eaten out. New patches spawn half at two fixed sites and half at random places,
+and 30% look like food but give no satiety (false food).
 
-Social homeostasis (off outside the arena): solitude raises loneliness and
-company satisfies it, the same way hunger drift and eating work.
+**Combat is world physics**, never told to the agents. Agents of different tribes
+in contact fight; fighting members (C⁴ > 0) of either side nearby join. With n on
+one side and m on the other, a side takes m/(n+m) of the damage, shared equally.
 
-## Pain and reward (`affect.py`)
+**Life.** Agents starve or die of injury; speed falls with injury and slightly
+with satiety. Sated, healthy adults reproduce in pairs; children inherit a blend
+of their parents' frames, some memories and the learned connection. An agent that
+sees another die gets a strong shock (felt injury, flight recoil) and an imprinted
+memory. Each drive also obeys a cubic **saturation law** (semi-implicit): pushes
+have diminishing returns and nothing blows up.
 
-A second Clifford space, Cl(3,0), with basis hunger, social and injury. Each
-axis is bipolar, + pain / − reward:
+(The original arena, an NPC pack against one anti-social rival, is still the
+default `ArenaConfig`.)
 
-| Axis | + pain | − reward |
-|---|---|---|
-| hunger | hungry | sated |
-| social | lonely (or crowded, for the anti-social rival) | in company |
-| injury | injury taken | injury dealt to a rival (triumph) |
+## Affects as trivectors (`affect.py`)
 
-The drive state and body map into it every tick. The pain prediction error is
-measured against a **slow** baseline (~100 s). A fast baseline made every injury
-produce an equal and opposite "relief" error afterwards, so lessons cancelled.
+Drives are vectors; **affects are the dual trivectors**. With drives hunger (1),
+social (2), explore (3), fight/flight (4), the four affect directions are e123 and
+the three fears e124, e134, e234 (each containing fight/flight). Each affect is
+coupled to the three drives it contains.
 
-**Pain-aversion learning.** The dynamics are `dC/dt = −β g C`, linear in g, so the
-metric's effect on the active action tendencies s is
-`E = sym((β s) Cᵀ)` (checked against finite differences). Each pain axis is tied to
-the drive it is about (hunger → e1, social → e2, injury → e4), each drive axis
-keeps its own eligibility trace, and the metric moves against pain:
-`g ← g − rate·Σₖ vₖ Tₖ`. Pain after an action dampens it in that context; relief
-or triumph amplifies it. Guards: learning may never change any drive's causal
-character (hunger/social/explore stay spacelike, threat timelike), and cond(g) is
-capped.
+* **Events** are designed drive-space bivectors with a valence: unmet hunger,
+  meals, loneliness, company, injury taken and dealt, witnessed death, false food,
+  and the world's push. Each contributes its change C∧B and its surprise
+  (C − Ĉ)∧B to the affect state P.
+* **Felt affect** is F = (felt matrix) · P, where the felt matrix is the metric g
+  induces on trivectors (its 3×3 minors), sign-normalised and divided by
+  |det g|^¾, so it depends on the shape of the personality, not its scale.
+* **Behaviour:** the contraction C ⌋ F acts as a generator on the drives (capped).
+  Rivals near add a boost in the social–threat plane (the mob channel).
+* **Learning:** felt pain drives pain-aversion metric learning with per-drive
+  eligibility traces; blame goes to each affect's three drives.
 
-**Status:** the intended lesson ("fight in company, flee when alone") emerges in
-some seeds (in one, lone NPCs go from fighting 100% of the time to 0% while groups
-still fight 77%), but it is not reliable across seeds. Likely cause: hunger,
-loneliness and injury lessons share the same metric entries (cross-talk).
+The older Cl(3,0) pain space (hunger, social, injury axes) is still available as
+`affect_model="vector"`.
 
-## Long-term sequence memory (`ltm.py`)
+**E9/E10 (two-tribe arena, 4 seeds × 2000–4000 s).** Life produces births across
+6–9 generations, witnessed deaths and imprinting. Cl(2,2) is the most violent and
+fertile signature, Cl(3,1) the calmest. Cl(4,0) alone shows a structural courage
+pattern (fights alone 0.24, with tribe-mates 0.59), built in rather than learned.
+No signature shows learning-driven change over time; that motivated the gym.
+
+## Drive-sequence memory (`ltm.py`, older)
+
+Superseded in the current setup by the event-chain memory below; kept for E8.
 
 **Storage.** When pain drops sharply (relief → an *aversive* memory) or turns into
 clear pleasure (reward → an *appetitive* memory), the agent stores its last 16
@@ -353,21 +415,97 @@ yet.
   ~13 s that *ended* in relief, so after an injury it often contains the fight
   itself.
 
+## Event-chain episodic memory (`episodic.py`)
+
+Memories are **chains of discrete events** (rival seen, contact, injury, triumph,
+food seen, meal, false food, company, alone, death seen), each with its situation
+vector. A chain of the last 30 s is stored when pain is relieved, reward arrives
+(loss aversion 2: relief counts double) or a death is witnessed (imprinting).
+
+**Activation by partial match.** When the recent events match a contiguous
+segment of a stored chain, the rest of the chain **replays** at 0.2× strength and
+8× speed, as weak impulses into the affect state: the memory primes how the
+agent feels, it does not move it. Records are 64 bytes per event and 2048 per
+chain, all buffers 64-byte aligned. Children inherit some of their parents' chains.
+
+## Learned connection, critic and valence (`connection.py`)
+
+The agent's **situation** is a 16-feature vector: food near, rival near and
+closing, allies, rivals, outnumbered, injured, backed (rivals × allies), the
+nearest food's look (A/B, one-hot), nearness to a marked landmark, and spare slots.
+
+* **Connection.** Each feature carries a generator; in a situation x the drives
+  move by β(x) = Σ x_f W_f. Options: bivectors only (so(g), redirect drives), or
+  the **Cartan split** so(g) ⊕ p, where the p part P = g⁻¹S rescales drives.
+* **Learning rules.** Per-axis pain aversion (original), or a **TD actor-critic**:
+  a linear critic V(x) with TD(λ), and an actor that explores with smooth noise in
+  the generator space and moves along (situation × noise) by the TD error.
+* **Pavlovian valence.** The critic is linear, so each perceived stimulus has its
+  own learned value (its features' share of V). That value becomes approach/avoid:
+  pushed onto the drive that owns the stimulus (`"drive"`), into a separate
+  action-only **wanting** state (`"wanting"`), or as a reflex velocity (`"body"`).
+* **Surprise-gated critic** (Pearce–Hall). The step grows with |δ| relative to its
+  running spread above 8 SD, capped at 1, normalised by the eligibility trace so it
+  never overshoots: rare large events are learned in one exposure.
+* **Differential TD** for the felt-affect reward: reward relative to its running
+  average.
+
+`interrogate.py` reads all of this out per agent: courage and response tables,
+strongest learned entries, habit holonomy, basis magnitudes and cross terms,
+how much felt affect came from replay, memories, and a learning ledger.
+
+**E11 (arena, Cl(2,2)).** Starting basis magnitudes (hunger, fight/flight in
+{0.7, 1, 1.4}) wash out: metric learning carries both to ~1.2–1.5. Connection
+learning fills the tribes and lowers pain, but no population-level courage
+emerges; its weights saturate.
+
+## Learning gym (`gym.py`, E12–E18)
+
+Controlled tasks in a 100×100 world with one learner and scripted food, rivals
+and allies, each run under several policies (20 seeds per pair) with pass
+criteria fixed before running:
+
+* **discrimination** — two patches on opposite sides, look A real, look B false;
+* **reversal** — the looks swap meaning halfway;
+* **fear v2** — one patch at a landmark brings an ambush by three rivals, then
+  stops (extinction);
+* **one-shot** — an ally dies at the landmark once, against a no-death control;
+* **courage** — the learner with k allies meets m rivals; fighting pays iff k+1 > m.
+
+Baselines: the same agent frozen, random, a linear actor-critic on the same
+features (objective reward), and a hand-coded optimum. Controllers perceive
+exactly what the agent perceives.
+
+| Exp. | Question | Answer |
+|---|---|---|
+| E12 | Does the agent learn at all? | No: no task beats frozen; learning *erases* built-in courage. The linear AC learns discrimination. |
+| E13 | TD actor-critic on the connection? | Critics learn correct values, but behaviour doesn't change: a bivector connection preserves C·gC, so it can't change hunger along its own axis. Also: hunger needed an aversive pole. |
+| E14 | Cartan split so(g) ⊕ p? | First real gain: discrimination error −0.05 to −0.07, all of it in p. |
+| E15 | Pavlovian valence? | Drive-layer valence: discrimination 0.00, reversal 0.02 late, best courage payoff, 1% defeats. Body-layer valence sign-tracks the landmark. |
+| E16 | Fear task redesigned (the 1-vs-1 ambush cost nothing) | Drive valence learns (0.01) and extinguishes (0.50) like the optimum. Felt-affect reward learns fastest but never extinguishes (avoidance paradox). |
+| E17 | Learning gated by the value delta? | One witnessed death: landmark preference 0.50 → 0.06 (paired −0.45 ± 0.08). Costs a little flexibility. |
+| E18 | Felt-affect reward for food | Differential TD + wanting channel: discrimination 1.00 → 0.10. Still phobic. |
+
+Gym bugs found on the way and fixed: in E12–E16 the one-shot death never happened
+in 11 of 20 seeds; a 1-vs-1 ambush cost nothing under the objective reward; the
+actor's exploration was paired with the wrong situation; gated steps overshot
+along the eligibility trace.
+
 ## Known limitations and next steps
 
-* Tuning is fragile. The foraging cycle and the snap both depend on the damping
-  anisotropy and on eating, and all constants are in `config.py`.
+* **Phobias.** Under the felt-affect reward, avoided cues are never re-tested, so
+  a slightly negative value becomes permanent avoidance. Next: confidence-weighted
+  valence, or curiosity overriding avoidance.
+* The surprise gate gives one-shot learning but slows extinction and reversal.
+* The gym's winning mechanisms (critic, valence, surprise gate) are not yet
+  tested in the full two-tribe arena.
+* Landmarks are owned by fight/flight by design; a general way to bind stimuli
+  to drives is open.
+* The felt-affect reward was tuned in a gym whose trial structure (hunger reset,
+  2 s meals) is unnatural.
+* Tuning is fragile; all constants are in `config.py`.
 * The frame's orientation is recorded but doesn't yet feed back into the dynamics
   (see [Frame law](#frame-law-option-b)).
-* Pain-aversion learning finds the intended courage lesson only in some seeds;
-  the pain axes cross-talk through shared metric entries.
-* Relief sequences still include the fight that preceded the relief. Next: trim
-  them to what ended the pain, and add avoidance memories (pain anticipated and
-  dodged).
-* The memory Clifford space is identified but unused by the dynamics.
-* Place-memory replay exists, but the village never feeds it (the haunted disc is
-  off there).
-* A hyperbolic personality plane needs a real saturation law; the state cap is
-  only a NaN guard.
-* Not done: Cl(3,1,1) null-direction drift, reconstructive recall, an arena or
-  village mode for the viewer, porting to a GA library (Kingdon).
+* The memory Clifford space (`ltm.py`) is identified but unused.
+* Not done: Cl(3,1,1) null-direction drift, reconstructive recall, porting to a
+  GA library (Kingdon).

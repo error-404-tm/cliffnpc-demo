@@ -248,6 +248,12 @@ class ConnectionConfig:
     # the outcome beat expectation.
     rule: str = "pain"
     reward: str = "objective"           # td: "objective" (eating, injury dealt - taken) or "affect" (-felt pain)
+    # Differential (average-reward) TD: learn from reward minus its running average.
+    # Felt affect is a level with a large chronic component (hunger, loneliness);
+    # in absolute terms every tick is a disappointment and whatever is in view gets
+    # blamed for it.  "auto": on for the affect reward, off for the objective one.
+    differential: str = "auto"
+    reward_avg_tau: float = 60.0        # s, running average of the reward
     td_horizon: float = 10.0            # s; gamma = exp(-h / td_horizon)
     td_lambda: float = 0.9
     critic_rate: float = 0.05           # normalised LMS step
@@ -273,7 +279,12 @@ class ConnectionConfig:
     #            encounter -> fight/flight (incentive salience: changes wanting)
     #   "body"   a velocity toward / away from the stimulus itself (food, landmark,
     #            rival), bypassing the drives (a conditioned reflex)
+    #   "wanting" valence drives a separate wanting state w (dw/dt = gain * valence - w / tau)
+    #            that adds to the drives only where they become action (steering);
+    #            the felt drive state C -- and so felt affect -- never contains the
+    #            agent's own valence push (wanting vs needing; no valence -> affect loop)
     valence: str = "none"
+    wanting_tau: float = 1.0            # s, wanting state time constant
     # Surprise-gated value learning (Pearce-Hall associability): the critic's step
     # grows with how surprising the TD error is relative to its running spread:
     #   rate = critic_rate * (1 + surprise_gain * max(0, |delta| / sd - surprise_z)),
