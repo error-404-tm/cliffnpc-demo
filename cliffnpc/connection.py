@@ -99,6 +99,7 @@ class LearnedConnection:
     prev_phi: np.ndarray | None = None
     delta_sd: float = 0.0                 # running spread of the TD error (surprise gate)
     reward_avg: float | None = None       # running average reward (differential TD)
+    evidence: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))   # confidence
     gated_steps: list = field(default_factory=list)   # (delta, z, rate) when the gate opened
     S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))   # p part (td + cartan), symmetric
     xs: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))          # exploration in p
@@ -192,12 +193,18 @@ class LearnedConnection:
         linear critic, v_f x_f summed over the stimulus' features.  The rival's value
         counts only while a rival is in view."""
         out = {}
+        w = self.v[:N_FEAT] * (self.confidence() if self.cfg.confidence else 1.0)
         for s, fs in STIMULI.items():
             idx = [FEATURES.index(f) for f in fs]
-            out[s] = float(self.v[idx] @ x[idx])
+            out[s] = float(w[idx] @ x[idx])
         if x[FEATURES.index("rival_near")] <= 0.0:
             out["rival"] = 0.0
         return out
+
+    def confidence(self) -> np.ndarray:
+        """Per-feature confidence in the learned value, n / (n + n0)."""
+        n = self.evidence[:N_FEAT]
+        return n / (n + self.cfg.confidence_n0)
 
     def td_update(self, x: np.ndarray, reward: float, h: float) -> float | None:
         """One actor-critic step.  `reward` was earned over the tick that just ended,
@@ -233,6 +240,9 @@ class LearnedConnection:
             if rate.max() > c.critic_rate:
                 norm = max(norm, float(self.e_critic @ self.prev_phi))
             self.v += rate * delta * self.e_critic / norm
+            if c.confidence:                              # evidence = size of the step actually taken
+                kc = np.exp(-h / c.confidence_tau)
+                self.evidence = kc * self.evidence + np.abs(rate * self.e_critic) / norm
             if not c.actor:                                # critic only (Pavlovian)
                 self.td_errors.append((float(delta), float(reward)))
                 self.e_critic = gamma * c.td_lambda * self.e_critic + phi

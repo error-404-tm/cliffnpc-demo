@@ -146,3 +146,19 @@ def test_surprise_gate_writes_a_rare_large_delta_in_one_step_without_overshoot()
         dv = c.v @ np.append(x, 1.0) - v0
         assert (dv < -1.0) == expect_big                      # gated: most of delta written at once
         assert dv >= delta - 1e-9                             # normalised: never more than delta
+
+
+def test_confidence_grows_with_evidence_and_fades_without_it():
+    from cliffnpc.connection import N_FEAT
+    c = LearnedConnection(ConnectionConfig(rule="td", actor=False, confidence=True, confidence_tau=50.0))
+    x = np.zeros(N_FEAT)
+    k = FEATURES.index("place_cue")
+    x[k] = 1.0
+    for _ in range(300):                                  # the cue is present and informative
+        c.td_update(x, -0.05, 0.2)
+    high = c.confidence()[k]
+    for _ in range(1500):                                 # cue absent: no fresh evidence
+        c.td_update(np.zeros(N_FEAT), 0.0, 0.2)
+    assert high > 0.5 and c.confidence()[k] < 0.5 * high
+    val = c.valence(x)["place"]
+    assert abs(val) < abs(c.v[k])                         # an untested value drives action less

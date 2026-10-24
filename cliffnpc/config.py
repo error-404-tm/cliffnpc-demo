@@ -253,6 +253,14 @@ class ConnectionConfig:
     # in absolute terms every tick is a disappointment and whatever is in view gets
     # blamed for it.  "auto": on for the affect reward, off for the objective one.
     differential: str = "auto"
+    # Confidence-weighted valence: each feature accumulates evidence -- the size of
+    # the critic's actual step on it (a surprise-gated event adds a lot at once) --
+    # which decays without fresh evidence.  Valence uses c_f v_f x_f with
+    # c_f = n_f / (n_f + n0): an avoided, untested cue gradually loses its grip on
+    # action, so it gets re-tested (extinction or re-confirmation).
+    confidence: bool = False
+    confidence_tau: float = 200.0       # s, evidence decay without fresh evidence
+    confidence_n0: float = 3.0          # evidence at which confidence is 0.5
     reward_avg_tau: float = 60.0        # s, running average of the reward
     td_horizon: float = 10.0            # s; gamma = exp(-h / td_horizon)
     td_lambda: float = 0.9

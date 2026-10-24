@@ -99,7 +99,8 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
         cfg.metric_learning = False
         cfg.connection.valence = ("body" if policy == "clifford_pav_body" else
                                   "wanting" if "_want" in policy else "drive")
-        cfg.connection.surprise_gain = 1.0 if policy.endswith("_surprise") else 0.0
+        cfg.connection.surprise_gain = 1.0 if "_surprise" in policy else 0.0
+        cfg.connection.confidence = "_conf" in policy
         cfg.connection.cartan = policy == "clifford_pav_cartan"
         cfg.connection.actor = policy == "clifford_pav_cartan"
     ar = Arena(cfg)
