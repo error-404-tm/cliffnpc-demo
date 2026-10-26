@@ -118,8 +118,8 @@ relation, and the set is kept small enough to sweep:
 | cue validity | cues uninformative / predictive | knowledge · food, knowledge · safety > 0 |
 | scarcity | rich / scarce | strengthens every food relation |
 
-Design: a centre point plus one-factor-at-a-time sweeps (11 environments), not a
-full factorial (162). Pairwise interactions only where a one-factor sweep shows a
+Design: a centre point plus one-factor-at-a-time sweeps (7 environments), not a
+full factorial (48). Pairwise interactions only where a one-factor sweep shows a
 change in signature or plane type.
 
 Caveat: the measured geometry also depends on the policy that generates the

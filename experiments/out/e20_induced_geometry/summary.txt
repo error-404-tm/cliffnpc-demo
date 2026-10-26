@@ -1,0 +1,98 @@
+E20 Geometry induced by circumstance (spec-v2 phase B)
+======================================================
+4 seeds x 64 episodes x 60 s per condition; exploratory controller (6 primitives, episode weights + OU noise).
+Cosines of the action-gradient goal metric M = A A^T, [95% bootstrap CI over episodes].
+
+## skill1_thr0.3_shel1_cue1_scar0   mean return per episode: food 0.63  safety -0.08  social 47.68  knowledge 1.29
+   T=16  (n= 9599) social·food +0.27 [-0.16,+0.58]  safety·food -0.36 [-0.70,+0.49]  knowledge·food +0.84 [+0.61,+0.93]  safety·social -0.18 [-0.68,+0.73]  safety·knowledge -0.48 [-0.77,+0.41]  social·knowledge -0.19 [-0.58,+0.23]
+            outcome-moment signature (p,q,0): knowledge valued 0 (2, 4, 19), valued 1 (2, 4, 19)
+   T=32  (n= 4799) social·food +0.25 [-0.19,+0.60]  safety·food -0.64 [-0.87,+0.04]  knowledge·food +0.84 [+0.58,+0.95]  safety·social -0.19 [-0.70,+0.46]  safety·knowledge -0.77 [-0.90,+0.00]  social·knowledge -0.17 [-0.54,+0.27]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 4, 20), valued 1 (2, 4, 19)
+   T=64  (n= 2399) social·food +0.22 [-0.30,+0.61]  safety·food -0.76 [-0.92,-0.23]  knowledge·food +0.79 [+0.42,+0.91]  safety·social -0.22 [-0.75,+0.37]  safety·knowledge -0.80 [-0.93,-0.26]  social·knowledge -0.30 [-0.68,+0.28]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 4, 20), valued 1 (2, 4, 19)
+   return curvature signature in theta: scalarised (k=0) (3, 3, 0), (k=1) (2, 3, 1);  per goal food (3, 3, 0)  safety (3, 3, 0)  social (2, 3, 1)  knowledge (2, 3, 1)
+   strongest action gradients (T=32): food<-forager(+0.08)  safety<-food(-0.02)  social<-shelter(+0.04)  knowledge<-food(+0.06)
+
+## skill0_thr0.3_shel1_cue1_scar0   mean return per episode: food 0.43  safety -0.08  social 52.47  knowledge 1.21
+   T=16  (n= 9599) social·food +0.31 [-0.15,+0.66]  safety·food +0.40 [-0.56,+0.84]  knowledge·food +0.91 [+0.70,+0.96]  safety·social +0.26 [-0.44,+0.71]  safety·knowledge +0.60 [-0.42,+0.84]  social·knowledge +0.22 [-0.20,+0.58]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 4, 20), valued 1 (1, 4, 20)
+   T=32  (n= 4799) social·food +0.42 [-0.03,+0.68]  safety·food -0.45 [-0.79,+0.44]  knowledge·food +0.90 [+0.68,+0.96]  safety·social -0.00 [-0.64,+0.74]  safety·knowledge -0.39 [-0.83,+0.31]  social·knowledge +0.34 [-0.08,+0.58]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 4, 20), valued 1 (1, 4, 20)
+   T=64  (n= 2399) social·food +0.39 [-0.16,+0.69]  safety·food -0.68 [-0.91,+0.01]  knowledge·food +0.85 [+0.29,+0.94]  safety·social -0.26 [-0.69,+0.51]  safety·knowledge -0.81 [-0.93,+0.12]  social·knowledge +0.36 [-0.33,+0.74]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 3, 21), valued 1 (2, 4, 19)
+   return curvature signature in theta: scalarised (k=0) (3, 3, 0), (k=1) (3, 2, 1);  per goal food (2, 3, 1)  safety (3, 2, 1)  social (3, 2, 1)  knowledge (3, 3, 0)
+   strongest action gradients (T=32): food<-food(+0.08)  safety<-wander(+0.01)  social<-forager(+0.05)  knowledge<-food(+0.07)
+
+## skill1_thr0.0_shel1_cue1_scar0   mean return per episode: food 0.59  safety 0.00  social 48.47  knowledge 1.15
+   T=16  (n= 9599) social·food +0.70 [+0.26,+0.90]  safety·food +0.00 [+0.00,+0.00]  knowledge·food +0.89 [+0.68,+0.96]  safety·social +0.00 [+0.00,+0.00]  safety·knowledge +0.00 [+0.00,+0.00]  social·knowledge +0.39 [-0.01,+0.71]
+            outcome-moment signature (p,q,0): knowledge valued 0 (4, 4, 9), valued 1 (4, 4, 9)
+   T=32  (n= 4799) social·food +0.65 [+0.27,+0.88]  safety·food +0.00 [+0.00,+0.00]  knowledge·food +0.94 [+0.70,+0.98]  safety·social +0.00 [+0.00,+0.00]  safety·knowledge +0.00 [+0.00,+0.00]  social·knowledge +0.45 [+0.04,+0.73]
+            outcome-moment signature (p,q,0): knowledge valued 0 (4, 5, 8), valued 1 (4, 5, 8)
+   T=64  (n= 2399) social·food +0.56 [+0.05,+0.84]  safety·food +0.00 [+0.00,+0.00]  knowledge·food +0.94 [+0.63,+0.98]  safety·social +0.00 [+0.00,+0.00]  safety·knowledge +0.00 [+0.00,+0.00]  social·knowledge +0.51 [+0.02,+0.77]
+            outcome-moment signature (p,q,0): knowledge valued 0 (4, 5, 8), valued 1 (4, 4, 9)
+   return curvature signature in theta: scalarised (k=0) (2, 3, 1), (k=1) (2, 3, 1);  per goal food (3, 3, 0)  safety (0, 0, 6)  social (3, 2, 1)  knowledge (2, 3, 1)
+   strongest action gradients (T=32): food<-forager(+0.08)  safety<-food(+0.00)  social<-forager(+0.04)  knowledge<-forager(+0.06)
+
+## skill1_thr0.7_shel1_cue1_scar0   mean return per episode: food 0.53  safety -0.14  social 47.41  knowledge 1.14
+   T=16  (n= 9599) social·food +0.53 [+0.14,+0.71]  safety·food -0.12 [-0.75,+0.60]  knowledge·food +0.75 [+0.44,+0.90]  safety·social -0.20 [-0.76,+0.53]  safety·knowledge -0.17 [-0.74,+0.49]  social·knowledge -0.10 [-0.41,+0.30]
+            outcome-moment signature (p,q,0): knowledge valued 0 (2, 4, 19), valued 1 (2, 4, 19)
+   T=32  (n= 4799) social·food +0.43 [+0.07,+0.65]  safety·food -0.62 [-0.84,-0.03]  knowledge·food +0.81 [+0.52,+0.93]  safety·social -0.14 [-0.62,+0.33]  safety·knowledge -0.66 [-0.92,-0.11]  social·knowledge -0.15 [-0.48,+0.24]
+            outcome-moment signature (p,q,0): knowledge valued 0 (2, 4, 19), valued 1 (2, 4, 19)
+   T=64  (n= 2399) social·food +0.25 [-0.29,+0.57]  safety·food -0.88 [-0.95,-0.22]  knowledge·food +0.80 [+0.42,+0.95]  safety·social -0.06 [-0.51,+0.37]  safety·knowledge -0.86 [-0.96,-0.26]  social·knowledge -0.23 [-0.59,+0.28]
+            outcome-moment signature (p,q,0): knowledge valued 0 (2, 3, 20), valued 1 (2, 4, 19)
+   return curvature signature in theta: scalarised (k=0) (3, 3, 0), (k=1) (2, 3, 1);  per goal food (2, 4, 0)  safety (4, 2, 0)  social (2, 3, 1)  knowledge (2, 3, 1)
+   strongest action gradients (T=32): food<-food(+0.07)  safety<-food(-0.02)  social<-wander(-0.05)  knowledge<-food(+0.06)
+
+## skill1_thr0.3_shel0_cue1_scar0   mean return per episode: food 0.65  safety -0.08  social 48.08  knowledge 1.28
+   T=16  (n= 9599) social·food +0.45 [+0.00,+0.69]  safety·food -0.75 [-0.89,-0.12]  knowledge·food +0.90 [+0.75,+0.97]  safety·social -0.60 [-0.84,+0.35]  safety·knowledge -0.65 [-0.84,-0.01]  social·knowledge +0.17 [-0.25,+0.48]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 4, 19), valued 1 (1, 4, 19)
+   T=32  (n= 4799) social·food +0.47 [+0.03,+0.70]  safety·food -0.77 [-0.90,-0.39]  knowledge·food +0.91 [+0.78,+0.97]  safety·social -0.32 [-0.72,+0.31]  safety·knowledge -0.79 [-0.89,-0.39]  social·knowledge +0.21 [-0.22,+0.51]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 5, 18), valued 1 (1, 5, 18)
+   T=64  (n= 2399) social·food +0.51 [+0.04,+0.76]  safety·food -0.87 [-0.94,-0.55]  knowledge·food +0.90 [+0.66,+0.96]  safety·social -0.58 [-0.81,-0.00]  safety·knowledge -0.86 [-0.94,-0.51]  social·knowledge +0.20 [-0.32,+0.59]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 5, 18), valued 1 (2, 4, 18)
+   return curvature signature in theta: scalarised (k=0) (2, 3, 1), (k=1) (3, 3, 0);  per goal food (3, 3, 0)  safety (3, 3, 0)  social (3, 3, 0)  knowledge (2, 3, 1)
+   strongest action gradients (T=32): food<-food(+0.09)  safety<-food(-0.03)  social<-shelter(+0.04)  knowledge<-food(+0.08)
+
+## skill1_thr0.3_shel1_cue0_scar0   mean return per episode: food 0.65  safety -0.07  social 49.22  knowledge 1.24
+   T=16  (n= 9599) social·food +0.50 [+0.21,+0.71]  safety·food -0.22 [-0.62,+0.32]  knowledge·food +0.86 [+0.67,+0.95]  safety·social +0.53 [-0.11,+0.76]  safety·knowledge -0.60 [-0.81,+0.06]  social·knowledge +0.11 [-0.28,+0.41]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 4, 20), valued 1 (2, 4, 19)
+   T=32  (n= 4799) social·food +0.46 [+0.15,+0.69]  safety·food -0.45 [-0.69,-0.08]  knowledge·food +0.85 [+0.62,+0.94]  safety·social +0.40 [-0.11,+0.68]  safety·knowledge -0.81 [-0.91,-0.39]  social·knowledge +0.07 [-0.35,+0.40]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 4, 20), valued 1 (2, 4, 19)
+   T=64  (n= 2399) social·food +0.44 [+0.00,+0.72]  safety·food -0.63 [-0.83,-0.14]  knowledge·food +0.84 [+0.40,+0.95]  safety·social +0.25 [-0.23,+0.68]  safety·knowledge -0.88 [-0.95,-0.32]  social·knowledge +0.23 [-0.32,+0.59]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 3, 21), valued 1 (3, 4, 18)
+   return curvature signature in theta: scalarised (k=0) (2, 4, 0), (k=1) (3, 3, 0);  per goal food (3, 3, 0)  safety (4, 2, 0)  social (2, 3, 1)  knowledge (3, 3, 0)
+   strongest action gradients (T=32): food<-forager(+0.11)  safety<-wander(-0.03)  social<-shelter(+0.05)  knowledge<-food(+0.07)
+
+## skill1_thr0.3_shel1_cue1_scar1   mean return per episode: food 0.31  safety -0.08  social 45.22  knowledge 1.18
+   T=16  (n= 9599) social·food +0.30 [-0.15,+0.66]  safety·food -0.36 [-0.82,+0.46]  knowledge·food +0.77 [+0.28,+0.92]  safety·social -0.56 [-0.76,+0.51]  safety·knowledge -0.16 [-0.80,+0.58]  social·knowledge -0.17 [-0.60,+0.30]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 3, 21), valued 1 (2, 4, 19)
+   T=32  (n= 4799) social·food +0.15 [-0.28,+0.59]  safety·food -0.43 [-0.73,+0.48]  knowledge·food +0.87 [+0.44,+0.95]  safety·social +0.18 [-0.37,+0.66]  safety·knowledge -0.57 [-0.82,+0.23]  social·knowledge -0.33 [-0.64,+0.11]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 3, 21), valued 1 (2, 3, 20)
+   T=64  (n= 2399) social·food +0.11 [-0.40,+0.51]  safety·food -0.28 [-0.65,+0.34]  knowledge·food +0.92 [+0.57,+0.97]  safety·social +0.46 [-0.07,+0.72]  safety·knowledge -0.51 [-0.81,-0.04]  social·knowledge -0.17 [-0.53,+0.32]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 3, 21), valued 1 (2, 3, 20)
+   return curvature signature in theta: scalarised (k=0) (2, 3, 1), (k=1) (2, 4, 0);  per goal food (3, 3, 0)  safety (4, 2, 0)  social (1, 3, 2)  knowledge (2, 4, 0)
+   strongest action gradients (T=32): food<-food(+0.04)  safety<-food(-0.02)  social<-shelter(+0.06)  knowledge<-shelter(-0.06)
+
+## centre, policy B   mean return per episode: food 0.71  safety -0.07  social 52.22  knowledge 1.24
+   T=16  (n= 9599) social·food -0.07 [-0.57,+0.48]  safety·food +0.64 [-0.21,+0.86]  knowledge·food +0.79 [+0.43,+0.91]  safety·social -0.05 [-0.66,+0.65]  safety·knowledge +0.69 [-0.27,+0.85]  social·knowledge -0.38 [-0.72,+0.18]
+            outcome-moment signature (p,q,0): knowledge valued 0 (2, 3, 20), valued 1 (2, 4, 19)
+   T=32  (n= 4799) social·food -0.24 [-0.66,+0.32]  safety·food +0.03 [-0.66,+0.62]  knowledge·food +0.90 [+0.47,+0.96]  safety·social -0.01 [-0.67,+0.58]  safety·knowledge +0.09 [-0.62,+0.59]  social·knowledge -0.51 [-0.80,+0.16]
+            outcome-moment signature (p,q,0): knowledge valued 0 (2, 3, 20), valued 1 (2, 4, 19)
+   T=64  (n= 2399) social·food -0.53 [-0.87,+0.14]  safety·food -0.45 [-0.82,+0.27]  knowledge·food +0.79 [+0.37,+0.91]  safety·social +0.08 [-0.63,+0.66]  safety·knowledge -0.54 [-0.83,+0.22]  social·knowledge -0.36 [-0.73,+0.27]
+            outcome-moment signature (p,q,0): knowledge valued 0 (1, 3, 21), valued 1 (3, 4, 18)
+   return curvature signature in theta: scalarised (k=0) (3, 3, 0), (k=1) (3, 3, 0);  per goal food (3, 3, 0)  safety (4, 2, 0)  social (2, 4, 0)  knowledge (2, 4, 0)
+   strongest action gradients (T=32): food<-forager(+0.06)  safety<-fight(-0.02)  social<-wander(-0.03)  knowledge<-forager(+0.04)
+
+Centre, T=32: outcome-moment eigen-directions (largest |eigenvalue| first), top features
+   eigenvalue -9.638: outnumbered -0.57, rival_near -0.41, rivals -0.40, ambush -0.38
+   eigenvalue -0.995: allies +0.48, forager_near +0.38, backed +0.32, home_near +0.29
+   eigenvalue +0.883: in_shelter -0.43, home_near -0.41, forager_near +0.39, food_near +0.37
+   eigenvalue -0.837: injured -0.54, health +0.54, outnumbered +0.34, allies +0.21
+   eigenvalue -0.609: food_cue_b +0.50, food_near +0.46, lean_food +0.32, lean_wander -0.27
+   eigenvalue -0.331: backed +0.53, food_cue_b +0.37, food_cue_a -0.32, outnumbered -0.28
+
+EXPECTATIONS (fixed before running)
+   T=16: social·food skilled +0.27 vs unskilled +0.31;  safety·food at threat 0/0.3/0.7: +0.00/-0.36/-0.12;  knowledge·food valid +0.84 vs random cues +0.86;  food relations rich vs scarce: social·food +0.27/+0.30, safety·food -0.36/-0.36
+   T=32: social·food skilled +0.25 vs unskilled +0.42;  safety·food at threat 0/0.3/0.7: +0.00/-0.64/-0.62;  knowledge·food valid +0.84 vs random cues +0.85;  food relations rich vs scarce: social·food +0.25/+0.15, safety·food -0.64/-0.43
+   T=64: social·food skilled +0.22 vs unskilled +0.39;  safety·food at threat 0/0.3/0.7: +0.00/-0.76/-0.88;  knowledge·food valid +0.79 vs random cues +0.84;  food relations rich vs scarce: social·food +0.22/+0.11, safety·food -0.76/-0.28
+   policy dependence (centre, T=32): social·food A +0.25 vs policy B -0.24; safety·food -0.64 vs +0.03

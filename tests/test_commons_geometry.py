@@ -1,0 +1,69 @@
+"""Commons environment and induced-geometry estimators."""
+
+import numpy as np
+
+from cliffnpc.commons import (GOALS, PRIMITIVES, Commons, Env, environments, record_dtype,
+                              record_windows, tick_dtype)
+from cliffnpc.geometry import (action_gradients, goal_metric, outcome_moment, return_curvature,
+                               signature)
+
+
+def test_record_layout_is_powers_of_two():
+    assert tick_dtype().itemsize == 256
+    for T in (16, 32, 64):
+        assert record_dtype(T).itemsize == 256 * T
+
+
+def test_sweep_is_centre_plus_one_factor_changes():
+    envs = environments()
+    assert len(envs) == 7 and len({e.name() for e in envs}) == 7
+
+
+def test_commons_logs_controls_senses_and_goal_progress():
+    log = Commons(Env(threat=0.0), seed=0).run(2)
+    n = len(log["r"])
+    assert n == 600 and log["s"].shape == (n, 24) and log["r"].shape == (n, len(GOALS))
+    assert log["xi"].shape == (n, len(PRIMITIVES)) and np.all(log["r"][:, 1] <= 1e-12)  # no threat: no injury
+    W = record_windows(log, 32)
+    assert W["G"].shape[1] == len(GOALS) and W["xi"].shape[1] == 32
+
+
+def test_action_gradients_recover_a_planted_effect():
+    rng = np.random.default_rng(0)
+    n, T = 2000, 16
+    xi = rng.normal(size=(n, T, 6))
+    lean = xi[:, :8].mean(axis=1)
+    A_true = np.zeros((4, 6))
+    A_true[0, 0], A_true[2, 1], A_true[0, 1] = 1.0, 1.0, 0.5      # food <- food, forager; social <- forager
+    G = lean @ A_true.T + 0.1 * rng.normal(size=(n, 4))
+    W = dict(xi=xi, s=rng.normal(size=(n, T, 24)) * 0.0, theta=np.zeros((n, T, 6)), G=G,
+             u=np.zeros((n, T, 3)), r=np.zeros((n, T, 4)), episode=np.arange(n))
+    A = action_gradients(W)
+    _, cos = goal_metric(A)
+    assert cos[0, 2] > 0.3                                         # food and social share the forager lean
+    assert np.argmax(np.abs(A[0])) == 0
+
+
+def test_signature_and_moment_are_indefinite_for_contrasting_outcomes():
+    assert signature(np.diag([2.0, 1.0, -1.5, 0.0])) == (2, 1, 1)
+    rng = np.random.default_rng(1)
+    n, T = 1000, 16
+    x1, x2 = rng.normal(size=n), rng.normal(size=n)
+    W = dict(u=np.zeros((n, T, 3)), xi=np.zeros((n, T, 6)), theta=np.zeros((n, T, 6)),
+             s=np.repeat(np.stack([x1, x2] + [np.zeros(n)] * 22, 1)[:, None], T, 1),
+             G=np.zeros((n, 4)), r=np.zeros((n, T, 4)), episode=np.arange(n))
+    w = x1 ** 2 - x2 ** 2                                          # extremes of x1 pay, of x2 cost
+    S = outcome_moment(W, w / w.std())
+    p, q, _ = signature(S)
+    assert p >= 1 and q >= 1
+
+
+def test_return_curvature_finds_a_planted_saddle():
+    rng = np.random.default_rng(2)
+    E = 400
+    th = rng.uniform(-1, 1, (E, 6))
+    J = th[:, 0] ** 2 - th[:, 1] ** 2
+    log = dict(episode=np.repeat(np.arange(E), 2), theta=np.repeat(th, 2, axis=0),
+               r=np.repeat(np.stack([J / 2] + [rng.normal(size=E) * 0.01] * 3, 1), 2, axis=0))
+    H = return_curvature(log, goal=0)
+    assert H[0, 0] > 0 > H[1, 1]
