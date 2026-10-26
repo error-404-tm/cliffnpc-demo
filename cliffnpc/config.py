@@ -264,6 +264,13 @@ class ConnectionConfig:
     # chronic need is explained by the need, not by whatever is in view.  Needs
     # never enter valence (only stimulus features do).
     need_features: bool = False
+    # Bounded, normalised valence: valence = tanh(raw / s), raw = sum_f (c_f) v_f x_f,
+    # s = running spread (std) of the critic's value V.  Valence is then relative to
+    # the agent's usual value range (independent of the reward's units), and large
+    # values saturate, so a strong fear gives a capped push that a strong need can
+    # overcome (the avoided cue gets re-tested).  The gains then set the cap.
+    valence_norm: bool = False
+    value_spread_tau: float = 200.0     # s, running mean / spread of V
     confidence_tau: float = 200.0       # s, evidence decay without fresh evidence
     confidence_n0: float = 3.0          # evidence at which confidence is 0.5
     reward_avg_tau: float = 60.0        # s, running average of the reward

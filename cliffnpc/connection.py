@@ -102,6 +102,8 @@ class LearnedConnection:
     delta_sd: float = 0.0                 # running spread of the TD error (surprise gate)
     reward_avg: float | None = None       # running average reward (differential TD)
     evidence: np.ndarray = field(default_factory=lambda: np.zeros(N_CRIT))   # confidence
+    v_mean: float = 0.0                   # running mean of V (valence normalisation)
+    v_var: float = 0.0                    # running variance of V
     gated_steps: list = field(default_factory=list)   # (delta, z, rate) when the gate opened
     S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))   # p part (td + cartan), symmetric
     xs: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))          # exploration in p
@@ -196,9 +198,13 @@ class LearnedConnection:
         counts only while a rival is in view."""
         out = {}
         w = self.v[:N_FEAT] * (self.confidence() if self.cfg.confidence else 1.0)
+        spread = np.sqrt(self.v_var)
         for s, fs in STIMULI.items():
             idx = [FEATURES.index(f) for f in fs]
-            out[s] = float(w[idx] @ x[idx])
+            raw = float(w[idx] @ x[idx])
+            if self.cfg.valence_norm:                 # relative to the usual value range, bounded
+                raw = float(np.tanh(raw / spread)) if spread > 1e-9 else 0.0
+            out[s] = raw
         if x[FEATURES.index("rival_near")] <= 0.0:
             out["rival"] = 0.0
         return out
@@ -220,6 +226,11 @@ class LearnedConnection:
         c = self.cfg
         phi = self.phi(x, need)
         gamma = np.exp(-h / c.td_horizon)
+        if c.valence_norm:                                # running mean / spread of V
+            Vx = float(self.v @ phi)
+            kv = np.exp(-h / c.value_spread_tau)
+            self.v_mean = kv * self.v_mean + (1 - kv) * Vx
+            self.v_var = kv * self.v_var + (1 - kv) * (Vx - self.v_mean) ** 2
         if c.differential == "on" or (c.differential == "auto" and c.reward == "affect"):
             if self.reward_avg is None:
                 self.reward_avg = reward

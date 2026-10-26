@@ -102,6 +102,9 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
         cfg.connection.surprise_gain = 1.0 if "_surprise" in policy else 0.0
         cfg.connection.confidence = "_conf" in policy
         cfg.connection.need_features = "_need" in policy
+        if "_norm" in policy:                       # bounded, normalised valence; gain = cap
+            cfg.connection.valence_norm = True
+            cfg.connection.valence_gain_drive = 2.0 if "_g2" in policy else 1.0
         cfg.connection.cartan = policy == "clifford_pav_cartan"
         cfg.connection.actor = policy == "clifford_pav_cartan"
     ar = Arena(cfg)
