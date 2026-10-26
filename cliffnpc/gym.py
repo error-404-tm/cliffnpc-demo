@@ -101,6 +101,7 @@ def gym_arena(seed: int, policy: str) -> tuple[Arena, Agent]:
                                   "wanting" if "_want" in policy else "drive")
         cfg.connection.surprise_gain = 1.0 if "_surprise" in policy else 0.0
         cfg.connection.confidence = "_conf" in policy
+        cfg.connection.need_features = "_need" in policy
         cfg.connection.cartan = policy == "clifford_pav_cartan"
         cfg.connection.actor = policy == "clifford_pav_cartan"
     ar = Arena(cfg)

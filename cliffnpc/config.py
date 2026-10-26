@@ -259,6 +259,11 @@ class ConnectionConfig:
     # c_f = n_f / (n_f + n0): an avoided, untested cue gradually loses its grip on
     # action, so it gets re-tested (extinction or re-confirmation).
     confidence: bool = False
+    # Credit need pain to the need: the critic also sees the agent's need levels
+    # (hunger max(C1,0), loneliness max(C2,0) -- what generates need pain), so
+    # chronic need is explained by the need, not by whatever is in view.  Needs
+    # never enter valence (only stimulus features do).
+    need_features: bool = False
     confidence_tau: float = 200.0       # s, evidence decay without fresh evidence
     confidence_n0: float = 3.0          # evidence at which confidence is 0.5
     reward_avg_tau: float = 60.0        # s, running average of the reward

@@ -47,6 +47,8 @@ FEATURES = ("food_near", "rival_near", "rival_closing", "allies", "rivals", "out
             "injured", "backed", "food_cue_a", "food_cue_b", "place_cue",
             "spare0", "spare1", "spare2", "spare3", "spare4")
 N_FEAT = len(FEATURES)
+N_NEED = 2                                   # critic-only inputs: hunger, loneliness
+N_CRIT = N_FEAT + N_NEED + 1                 # critic vector: features, needs, bias
 STIMULUS_IDX = sorted({FEATURES.index(f) for fs in STIMULI.values() for f in fs})
 DRIVES = ("hunger", "social", "explore", "fight")
 PLANE_NAMES = tuple(f"{DRIVES[i]}^{DRIVES[j]}" for i, j in PLANES)
@@ -92,14 +94,14 @@ class LearnedConnection:
     last_x: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT))
     # TD actor-critic state (rule == "td")
     rng: np.random.Generator | None = None
-    v: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))   # critic (features + bias)
+    v: np.ndarray = field(default_factory=lambda: np.zeros(N_CRIT))   # critic: features, needs, bias
     xi: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))       # exploration bivector
     e_actor: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))
-    e_critic: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))
+    e_critic: np.ndarray = field(default_factory=lambda: np.zeros(N_CRIT))
     prev_phi: np.ndarray | None = None
     delta_sd: float = 0.0                 # running spread of the TD error (surprise gate)
     reward_avg: float | None = None       # running average reward (differential TD)
-    evidence: np.ndarray = field(default_factory=lambda: np.zeros(N_FEAT + 1))   # confidence
+    evidence: np.ndarray = field(default_factory=lambda: np.zeros(N_CRIT))   # confidence
     gated_steps: list = field(default_factory=list)   # (delta, z, rate) when the gate opened
     S: np.ndarray = field(default_factory=lambda: np.zeros((N_FEAT, 4, 4)))   # p part (td + cartan), symmetric
     xs: np.ndarray = field(default_factory=lambda: np.zeros((4, 4)))          # exploration in p
@@ -206,11 +208,17 @@ class LearnedConnection:
         n = self.evidence[:N_FEAT]
         return n / (n + self.cfg.confidence_n0)
 
-    def td_update(self, x: np.ndarray, reward: float, h: float) -> float | None:
+    def phi(self, x: np.ndarray, need: np.ndarray | None = None) -> np.ndarray:
+        """Critic input: situation features, need levels (zero unless need_features), bias."""
+        nd = np.zeros(N_NEED) if need is None or not self.cfg.need_features else np.asarray(need, float)
+        return np.concatenate([x, nd, [1.0]])
+
+    def td_update(self, x: np.ndarray, reward: float, h: float,
+                  need: np.ndarray | None = None) -> float | None:
         """One actor-critic step.  `reward` was earned over the tick that just ended,
         under the previous situation and the exploration then applied.  Returns the TD error."""
         c = self.cfg
-        phi = np.append(x, 1.0)
+        phi = self.phi(x, need)
         gamma = np.exp(-h / c.td_horizon)
         if c.differential == "on" or (c.differential == "auto" and c.reward == "affect"):
             if self.reward_avg is None:
@@ -221,7 +229,7 @@ class LearnedConnection:
         delta = None
         if self.prev_phi is not None:
             delta = reward + gamma * self.v @ phi - self.v @ self.prev_phi
-            rate = np.full(N_FEAT + 1, c.critic_rate)
+            rate = np.full(N_CRIT, c.critic_rate)
             if c.surprise_gain > 0:                       # surprise-gated step (Pearce-Hall)
                 z = abs(delta) / self.delta_sd if self.delta_sd > 0 else 0.0
                 if z > c.surprise_z:

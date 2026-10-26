@@ -141,9 +141,9 @@ def test_surprise_gate_writes_a_rare_large_delta_in_one_step_without_overshoot()
         x[FEATURES.index("place_cue")] = 0.5
         for _ in range(500):                                  # quiet background: small rewards
             c.td_update(x, 0.001, 0.2)
-        v0 = c.v @ np.append(x, 1.0)
+        v0 = c.v @ c.phi(x)
         delta = c.td_update(x, -3.0, 0.2)                     # a witnessed death
-        dv = c.v @ np.append(x, 1.0) - v0
+        dv = c.v @ c.phi(x) - v0
         assert (dv < -1.0) == expect_big                      # gated: most of delta written at once
         assert dv >= delta - 1e-9                             # normalised: never more than delta
 

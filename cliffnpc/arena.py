@@ -477,7 +477,8 @@ class Arena:
             # tick's exploration -- so noise and the situation it acts in are paired
             r = (eat * h + 10.0 * (a.dealt - a.taken) if a.conn.cfg.reward == "objective"
                  else -a.affect.pain * h)
-            a.conn.td_update(a.ctx, r, h)
+            need = np.array([max(npc.C[0], 0.0), max(npc.C[1], 0.0)])
+            a.conn.td_update(a.ctx, r, h, need=need)
         if a.conn is not None:                       # learned tendencies (+ exploration under td)
             beta = beta + a.conn.act(a.ctx)
         if a.episodic is not None:
