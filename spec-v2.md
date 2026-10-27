@@ -161,7 +161,80 @@ runners, `algebra.py`, the frame law, the TD and perturbation machinery, the
 surprise gate, the interrogation tools, and every finding to date. The current
 agent becomes one hypothesis among several.
 
-## 8. Open questions
+## 8. Methodology for adding environment features
+
+Every feature is another geometric influence, so a feature is added the way a
+perturbation is measured, never all at once and never by design alone.
+
+**8.1 A feature is a dial.** Each feature f gets an intensity λ_f ∈ [0, 1], with
+λ_f = 0 meaning absent, so the base world is unchanged when the dial is off.
+Continuous where possible (threat probability, false-food fraction, forager skill
+as a probability of knowing real patches), so effects can be read as slopes, not
+only as on/off contrasts.
+
+**8.2 One geometric fingerprint, computed the same way for every world.**
+* *Extent:* the best attainable return per goal (how far the frontier reaches).
+* *Shape:* frontier correlations and utopia gaps per goal pair (where trade-offs
+  are), with the raw-vs-denoised agreement reported for every number.
+* *Local geometry:* the goal metric M (magnitudes and cosines) at a fixed panel of
+  reference policies (the five families), at 16/32/64 ticks.
+* *Record space:* the signature of the outcome-weighted record moment.
+* *Dimensions:* whether the feature needs a new goal axis, sense or primitive.
+
+**8.3 Paired, common-random-number comparisons.** The world with the dial up and
+the world with it down use the same seeds, the same sampled policies and the same
+episode starts. A feature's effect is the paired difference of fingerprints, with
+bootstrap intervals over policies and episodes. This is what makes small
+effects visible at modest cost.
+
+**8.4 Decompose every effect into four kinds:**
+1. *extent* — the frontier moves (a goal gets easier or harder);
+2. *shape* — trade-off structure changes (gaps, correlations, curvature);
+3. *local* — the tangent geometry at the reference policies changes, even if the
+   frontier does not;
+4. *new dimension* — the feature adds a goal, sense or primitive.
+E22 already shows why the split matters: forager skill moved the frontier
+(extent) without changing its shape.
+
+**8.5 Construct checks.** Before trusting an effect, ask whether the feature's
+*definition* forces it (E20's knowledge-by-visits made knowledge·food ≈ +0.9 by
+construction). Each feature lists the relations it is *meant* to change; an
+effect elsewhere is flagged and examined before it is accepted.
+
+**8.6 Interactions, pruned by overlap.** A new feature is tested together with an
+existing one (a 2×2 of dials) only when both change the same goal pair. Features
+whose effects touch disjoint relations are assumed additive, and that assumption
+is spot-checked once per rung.
+
+**8.7 A feature is absorbed when** (a) its fingerprint effect is measured and
+stable (interval excludes zero, or a confirmed null), and (b) the phase-C agent
+trained with the dial up reaches the new frontier as well as it reached the old
+one. If (b) fails, the agent's representation is the thing to fix before climbing
+further.
+
+## 9. Ladder back to the arena
+
+Each rung adds one dial to the world below it, measured by section 8.
+
+| Rung | Feature (dial) | Main relations it should touch |
+|---|---|---|
+| 0 | Commons as now | food·social, food·safety, knowledge |
+| 1 | Internal need: hunger that grows and is relieved by eating | food's value over time; food·safety by need |
+| 2 | Food depletion and respawn (scarcity as a rate) | food extent; food·social (competition with the forager) |
+| 3 | False-food fraction | food·knowledge |
+| 4 | Several allies of graded skill | social·food per ally; choice of whom to follow |
+| 5 | A rival tribe that also forages | food·safety, food·social (competition) |
+| 6 | Combat rule n/(n+m) with allies joining | safety·social (strength in numbers) |
+| 7 | Injury slows movement; death | safety extent; long-scale food·safety |
+| 8 | Several learners (others adapt too) | non-stationary geometry |
+| 9 | Births and inheritance | geometry across generations |
+| 10 | The full two-tribe arena | everything |
+
+Phase C runs alongside: at each rung the agent's Clifford representation (local
+metric at its current policy, the frontier as the environment's geometry, learning
+as movement toward it) is trained and checked against criterion 8.7(b).
+
+## 10. Open questions
 
 * Decided: knowledge is a goal whose value is agent-specific (section 2.1).
 * Decided: records at three scales, 16/32/64 ticks (section 2.2).
