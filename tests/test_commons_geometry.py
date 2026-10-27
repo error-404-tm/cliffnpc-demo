@@ -82,3 +82,20 @@ def test_return_curvature_finds_a_planted_saddle():
                r=np.repeat(np.stack([J / 2] + [rng.normal(size=E) * 0.01] * 3, 1), 2, axis=0))
     H = return_curvature(log, goal=0)
     assert H[0, 0] > 0 > H[1, 1]
+
+
+def test_frontier_tools_find_trade_offs_and_synergies():
+    from cliffnpc.geometry import frontier_report, pareto_mask, smooth_returns
+    J = np.array([[1, 0], [0, 1], [0.5, 0.5], [0.4, 0.4], [0.8, 0.6]], float)
+    assert list(pareto_mask(J)) == [True, True, False, False, True]
+    rng = np.random.default_rng(0)
+    t = rng.uniform(0, np.pi / 2, 300)
+    trade = np.stack([np.cos(t), np.sin(t)], 1) * rng.uniform(0.2, 1.0, (300, 1))   # quarter disc
+    r = frontier_report(np.hstack([trade, np.zeros((300, 2))]))
+    assert r["corr"][0, 1] < -0.5 and r["gaps"][0, 1] > 0.2                       # genuine trade-off
+    syn = rng.uniform(0, 1, 300)
+    r2 = frontier_report(np.stack([syn, syn, np.zeros(300), np.zeros(300)], 1))
+    assert r2["n_pareto"] == 1 and r2["gaps"][0, 1] < 1e-9                        # one policy wins both
+    th = rng.uniform(-1, 1, (80, 6))
+    Je = np.repeat((th[:, :1] ** 2)[:, None, :], 3, axis=1) + 0.01 * rng.normal(size=(80, 3, 1))
+    assert np.allclose(smooth_returns(th, np.repeat(Je, 4, axis=2))[:, 0], th[:, 0] ** 2, atol=0.05)

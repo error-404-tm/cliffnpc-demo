@@ -1,0 +1,57 @@
+E22 Attainable set and its frontier (spec-v2 phase B)
+====================================================
+384 policies x 6 episodes x 60 s per environment; expected returns denoised by a quadratic in theta; goals rescaled to [0,1] per environment.
+
+## skill1_thr0.3_shel1_cue1_scar0   frontier policies 78 of 384 (raw means: 31);  best policy's distance to the ideal point 0.60
+   best attainable per goal (per episode): food 1.48  safety 0.06  social 71.00  knowledge 3.22
+   frontier correlation: food·safety -0.88  food·social +0.97  food·knowledge +0.35  safety·social -0.86  safety·knowledge -0.55  social·knowledge +0.23   (raw: -0.06  +0.96  -0.74  +0.02  -0.15  -0.77)
+   utopia gap:            food·safety 0.44  food·social 0.00  food·knowledge 0.26  safety·social 0.45  safety·knowledge 0.21  social·knowledge 0.29
+   frontier curvature (food over safety, social, knowledge): eigenvalues [-14.78  -0.1    1.48]  signature (1, 1, 1)
+   frontier policies lean on: food -0.06  forager +0.94  shelter +0.39  flee +0.63  fight +0.12  wander +0.57
+
+## skill0_thr0.3_shel1_cue1_scar0   frontier policies 130 of 384 (raw means: 27);  best policy's distance to the ideal point 0.72
+   best attainable per goal (per episode): food 0.84  safety 0.04  social 77.76  knowledge 3.16
+   frontier correlation: food·safety -0.89  food·social +0.95  food·knowledge +0.06  safety·social -0.86  safety·knowledge -0.34  social·knowledge -0.06   (raw: -0.53  +0.85  -0.77  -0.43  +0.07  -0.63)
+   utopia gap:            food·safety 0.44  food·social 0.06  food·knowledge 0.33  safety·social 0.49  safety·knowledge 0.25  social·knowledge 0.35
+   frontier curvature (food over safety, social, knowledge): eigenvalues [-1.14  0.08  3.03]  signature (1, 1, 1)
+   frontier policies lean on: food +0.33  forager +0.73  shelter +0.46  flee +0.72  fight +0.14  wander +0.48
+
+## skill1_thr0.0_shel1_cue1_scar0   frontier policies 13 of 384 (raw means: 6);  best policy's distance to the ideal point 0.27
+   best attainable per goal (per episode): food 1.50  safety 0.00  social 68.87  knowledge 3.29
+   frontier correlation: food·safety +nan  food·social +0.98  food·knowledge -0.86  safety·social +nan  safety·knowledge +nan  social·knowledge -0.87   (raw: +nan  +0.09  -0.68  +nan  +nan  -0.74)
+   utopia gap:            food·safety nan  food·social 0.01  food·knowledge 0.24  safety·social nan  safety·knowledge nan  social·knowledge 0.25
+   frontier curvature (food over social, knowledge): eigenvalues [-0.62 10.4 ]  signature (1, 1, 0)
+   frontier policies lean on: food +0.25  forager +1.57  shelter -0.28  flee +0.62  fight -0.01  wander +1.04
+
+## skill1_thr0.7_shel1_cue1_scar0   frontier policies 50 of 384 (raw means: 29);  best policy's distance to the ideal point 0.58
+   best attainable per goal (per episode): food 1.45  safety 0.13  social 66.91  knowledge 3.22
+   frontier correlation: food·safety -0.89  food·social +0.96  food·knowledge +0.57  safety·social -0.83  safety·knowledge -0.58  social·knowledge +0.37   (raw: -0.62  +0.92  -0.38  -0.51  -0.04  -0.47)
+   utopia gap:            food·safety 0.50  food·social 0.00  food·knowledge 0.18  safety·social 0.48  safety·knowledge 0.21  social·knowledge 0.23
+   frontier curvature (food over safety, social, knowledge): eigenvalues [-0.84  0.37  0.8 ]  signature (2, 1, 0)
+   frontier policies lean on: food -0.41  forager +1.02  shelter +0.28  flee +0.96  fight +0.13  wander +0.62
+
+## skill1_thr0.3_shel0_cue1_scar0   frontier policies 67 of 384 (raw means: 25);  best policy's distance to the ideal point 0.63
+   best attainable per goal (per episode): food 1.42  safety 0.12  social 67.89  knowledge 3.23
+   frontier correlation: food·safety -0.89  food·social +0.97  food·knowledge +0.37  safety·social -0.84  safety·knowledge -0.53  social·knowledge +0.22   (raw: -0.50  +0.96  -0.68  -0.42  +0.14  -0.70)
+   utopia gap:            food·safety 0.48  food·social 0.00  food·knowledge 0.22  safety·social 0.48  safety·knowledge 0.31  social·knowledge 0.27
+   frontier curvature (food over safety, social, knowledge): eigenvalues [-0.9   0.25  1.62]  signature (2, 1, 0)
+   frontier policies lean on: food -0.12  forager +0.76  shelter +0.24  flee +0.59  fight +0.20  wander +0.78
+
+## skill1_thr0.3_shel1_cue0_scar0   frontier policies 35 of 384 (raw means: 17);  best policy's distance to the ideal point 0.62
+   best attainable per goal (per episode): food 1.70  safety 0.07  social 69.92  knowledge 1.41
+   frontier correlation: food·safety -0.96  food·social +0.98  food·knowledge +0.97  safety·social -0.94  safety·knowledge -0.97  social·knowledge +0.95   (raw: +0.14  +0.89  -0.56  +0.27  -0.70  -0.61)
+   utopia gap:            food·safety 0.58  food·social 0.00  food·knowledge 0.02  safety·social 0.48  safety·knowledge 0.53  social·knowledge 0.02
+   frontier curvature (food over safety, social, knowledge): eigenvalues [-9.3   0.29  6.66]  signature (1, 1, 1)
+   frontier policies lean on: food +0.28  forager +0.83  shelter +0.63  flee +0.82  fight -0.20  wander +0.47
+
+## skill1_thr0.3_shel1_cue1_scar1   frontier policies 32 of 384 (raw means: 11);  best policy's distance to the ideal point 0.54
+   best attainable per goal (per episode): food 1.33  safety 0.08  social 66.28  knowledge 3.02
+   frontier correlation: food·safety -0.94  food·social +0.90  food·knowledge +0.95  safety·social -0.83  safety·knowledge -0.91  social·knowledge +0.80   (raw: -0.44  -0.46  +0.53  +0.07  -0.54  -0.28)
+   utopia gap:            food·safety 0.50  food·social 0.01  food·knowledge 0.00  safety·social 0.35  safety·knowledge 0.38  social·knowledge 0.01
+   frontier curvature (food over safety, social, knowledge): eigenvalues [-1.13  0.79  1.8 ]  signature (2, 1, 0)
+   frontier policies lean on: food -0.17  forager +0.82  shelter +0.62  flee +0.72  fight -0.02  wander +0.35
+
+EXPECTATIONS (fixed before running)
+   food·safety by threat 0 / 0.3 / 0.7: corr +nan / -0.88 / -0.89;  gap nan / 0.44 / 0.50
+   food·safety shelter / none: corr -0.88 / -0.89;  gap 0.44 / 0.48
+   food·social skilled / unskilled forager: corr +0.97 / +0.95;  gap 0.00 / 0.06

@@ -129,6 +129,7 @@ class Commons:
     episode_len: float = 60.0
     policy: str = "broad"              # exploratory policy family (POLICIES)
     noise_tau: float = 1.0
+    noise_override: float | None = None  # fixed-policy runs: small noise so theta defines the policy
     ar: Arena = field(init=False)
     log: dict = field(init=False)
 
@@ -156,7 +157,8 @@ class Commons:
         pol = POLICIES[self.policy]
         self.theta_mean = np.asarray(pol["mean"], float)
         self.theta_spread = float(pol["spread"])
-        self.noise_sigma = float(pol["noise"])
+        self.noise_sigma = float(pol["noise"]) if self.noise_override is None else self.noise_override
+        self.theta_fixed: np.ndarray | None = None
         self.known: set = set()
         self.rivals: list[Agent] = []
         self.log = {k: [] for k in ("u", "xi", "s", "r", "theta", "episode", "t")}
@@ -310,7 +312,8 @@ class Commons:
         self.satiety = float(self.rng.uniform(0.0, 0.5))
         self.known = set()
         self.amb_patches = set()
-        self.theta = self.theta_mean + self.rng.uniform(-self.theta_spread, self.theta_spread, len(PRIMITIVES))
+        self.theta = (self.theta_fixed.copy() if self.theta_fixed is not None else
+                      self.theta_mean + self.rng.uniform(-self.theta_spread, self.theta_spread, len(PRIMITIVES)))
         self.xi[:] = 0.0
 
     def run_episode(self):
@@ -373,6 +376,21 @@ class Commons:
         L["theta"].append(self.theta.copy())
         L["episode"].append(self.episode)
         L["t"].append(self.ar.t)
+
+    def run_policies(self, thetas: np.ndarray, episodes_each: int) -> np.ndarray:
+        """Run each policy theta for episodes_each episodes; returns the episode goal
+        returns, shape (n_policies, episodes_each, n_goals)."""
+        out = np.zeros((len(thetas), episodes_each, len(GOALS)))
+        for i, th in enumerate(thetas):
+            self.theta_fixed = np.asarray(th, float)
+            for k in range(episodes_each):
+                n0 = len(self.log["r"])
+                self.run_episode()
+                out[i, k] = np.sum(self.log["r"][n0:], axis=0)
+                for key in self.log:                       # keep memory flat: drop the ticks
+                    del self.log[key][n0:]
+        self.theta_fixed = None
+        return out
 
     def run(self, n_episodes: int) -> dict:
         for _ in range(n_episodes):

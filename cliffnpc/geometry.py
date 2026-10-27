@@ -134,3 +134,68 @@ def merge(logs: list[dict]) -> dict:
 
 __all__ = ["GOALS", "PRIMITIVES", "action_gradients", "goal_metric", "record_features",
            "outcome_weight", "outcome_moment", "return_curvature", "signature", "bootstrap", "merge"]
+
+
+# ------------------------------------------------------------------ attainable set (policy-independent)
+def pareto_mask(J: np.ndarray) -> np.ndarray:
+    """Non-dominated rows of J (every goal: more is better)."""
+    n = len(J)
+    keep = np.ones(n, bool)
+    for i in range(n):
+        if not keep[i]:
+            continue
+        dom = np.all(J >= J[i], axis=1) & np.any(J > J[i], axis=1)
+        if dom.any():
+            keep[i] = False
+    return keep
+
+
+def quadratic_design(theta: np.ndarray) -> np.ndarray:
+    n = theta.shape[1]
+    iu = np.triu_indices(n)
+    quad = np.stack([theta[:, i] * theta[:, j] for i, j in zip(*iu)], axis=1)
+    return np.hstack([np.ones((len(theta), 1)), theta, quad])
+
+
+def smooth_returns(theta: np.ndarray, J_episodes: np.ndarray, ridge: float = 1e-3) -> np.ndarray:
+    """Denoised expected goal returns per policy: each goal's episode return regressed
+    on a quadratic in theta (ridge), evaluated at the sampled policies."""
+    X = quadratic_design(np.repeat(theta, J_episodes.shape[1], axis=0))
+    Y = J_episodes.reshape(-1, J_episodes.shape[-1])
+    coef = np.linalg.solve(X.T @ X + ridge * np.eye(X.shape[1]), X.T @ Y)
+    return quadratic_design(theta) @ coef
+
+
+def frontier_report(J: np.ndarray) -> dict:
+    """Invariants of the attainable set's frontier.  J: expected goal returns per policy.
+    Goals are rescaled to [0, 1] over the sampled policies (the Pareto set is invariant
+    to monotone rescaling; correlations and curvature only to affine)."""
+    lo, hi = J.min(0), J.max(0)
+    span = np.where(hi - lo > 1e-12, hi - lo, 1.0)
+    Z = (J - lo) / span
+    live = (hi - lo) > 1e-12
+    P = pareto_mask(Z[:, live])
+    F = Z[P]
+    k = J.shape[1]
+    corr = np.full((k, k), np.nan)
+    gaps = np.full((k, k), np.nan)
+    for i in range(k):
+        for j in range(k):
+            if live[i] and live[j] and P.sum() > 2:
+                a, b = F[:, i], F[:, j]
+                corr[i, j] = np.corrcoef(a, b)[0, 1] if a.std() > 0 and b.std() > 0 else np.nan
+            if live[i] and live[j]:
+                # utopia gap of the 2-D projection: distance from (1, 1) to the nearest policy
+                gaps[i, j] = float(np.min(np.hypot(1 - Z[:, i], 1 - Z[:, j])))
+    curv = None
+    if live[0] and P.sum() > 12:
+        others = [g for g in range(1, k) if live[g]]
+        X = quadratic_design(F[:, others])
+        coef, *_ = np.linalg.lstsq(X, F[:, 0], rcond=None)
+        m = len(others)
+        H = np.zeros((m, m))
+        for c, (i, j) in zip(coef[1 + m:], zip(*np.triu_indices(m))):
+            H[i, j] = H[j, i] = (2 * c if i == j else c)
+        curv = dict(goals=others, H=H)
+    return dict(pareto=P, n_pareto=int(P.sum()), corr=corr, gaps=gaps, Z=Z, live=live, curv=curv,
+                ideal_best=float(np.min(np.linalg.norm(1 - Z[:, live], axis=1))))

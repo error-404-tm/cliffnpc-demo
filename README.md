@@ -57,9 +57,21 @@ What we learned about the architecture:
   **phobias** — avoided cues are never re-tested, so a slightly negative value
   hardens into permanent avoidance.
 
-Open: re-testing avoided cues (confidence-weighted valence, curiosity), one-shot
-learning without the gate's flexibility cost, and bringing the gym's winning
-mechanisms back into the full two-tribe arena.
+**Change of direction (spec v2, `spec-v2.md`).** After the gym, attempts to fix
+the remaining problems (confidence-weighted valence, need features, bounded
+valence) moved the ball little. The diagnosis: the geometry was chosen first
+(named drives, a guessed signature, designed events) and learning was bolted on.
+But every choice of environment, faculties and measurements already *induces* a
+geometry on what an agent can do. Spec v2 measures that induced geometry first —
+with a goal *vector* (food, safety, social, knowledge) and *experience records*
+(controls, senses and goal progress over a window) as the basic unit — and uses
+the Clifford algebra to represent what is discovered. First findings
+([Induced geometry](#spec-v2-induced-geometry-commonspy-geometrypy-e20e22)):
+circumstance-induced trade-offs are real and scale-dependent (safety·food ≈ −0.8
+over 6–13 s under threat, zero without), but the local goal metric is mostly a
+property of the agent's own behaviour (policy explains 41–95% of the variance of
+each relation); the environment's own geometry is the frontier of the attainable
+set.
 
 ```
 cliffnpc/
@@ -81,17 +93,20 @@ cliffnpc/
   connection.py   learned connection, TD actor-critic, Cartan split, Pavlovian valence,
                   surprise-gated critic
   interrogate.py  read-only reports on what an agent learned and why
-  gym.py          learning gym: controlled tasks x policies (E12-E18)
+  gym.py          learning gym: controlled tasks x policies (E12-E19)
+  commons.py      spec v2: environment factors, exploratory controllers, experience records
+  geometry.py     spec v2: induced goal metric, record moments, return curvature, attainable-set frontier
   config.py       every tunable constant
-experiments/      e1..e6, e8..e18, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            121 tests
+experiments/      e1..e6, e8..e22, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            131 tests
+spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
 ## Running it
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 121 tests, ~80 s
+.venv/bin/python -m pytest -q          # 131 tests, ~2 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -485,17 +500,91 @@ exactly what the agent perceives.
 | E16 | Fear task redesigned (the 1-vs-1 ambush cost nothing) | Drive valence learns (0.01) and extinguishes (0.50) like the optimum. Felt-affect reward learns fastest but never extinguishes (avoidance paradox). |
 | E17 | Learning gated by the value delta? | One witnessed death: landmark preference 0.50 → 0.06 (paired −0.45 ± 0.08). Costs a little flexibility. |
 | E18 | Felt-affect reward for food | Differential TD + wanting channel: discrimination 1.00 → 0.10. Still phobic. |
+| E19 | Confidence-weighted valence | Objective reward + surprise gate + confidence: the best all-round agent (one-shot −0.46, fear learned in ~6.5 trials and extinguished 0.52, discrimination 0.04, reversal 0.06). The felt-affect phobia is untouched: the avoided cue stays in view, so confidence never fades. |
+
+Negative results kept in the code (off by default): **need features** for the critic
+(crediting need pain to the need) — no effect on the phobia, breaks extinction
+under objective reward; **bounded, normalised valence** — one valence channel
+cannot both beat hunger (skip false food) and be beatable by hunger (re-test a
+feared cue), whatever the scaling.
 
 Gym bugs found on the way and fixed: in E12–E16 the one-shot death never happened
 in 11 of 20 seeds; a 1-vs-1 ambush cost nothing under the objective reward; the
 actor's exploration was paired with the wrong situation; gated steps overshot
 along the eligibility trace.
 
+## Spec v2: induced geometry (`commons.py`, `geometry.py`, E20–E22)
+
+**Commons.** One controlled learner in a 100×100 world with a forager ally, a
+companion who wanders, ambushing rivals and food patches with looks. Five
+environment factors, each chosen for the goal relation it should induce: forager
+skill (social·food), threat at food (safety·food), a shelter rivals cannot enter,
+cue validity (knowledge), scarcity. The centre plus one-factor-at-a-time changes
+gives 7 environments.
+
+**Goals and records.** Per tick the learner logs its controls, the exploration
+noise, its senses (24) and a goal-progress vector: food (satiety gained), safety
+(minus injury), social (an ally in range), knowledge (bits resolved about patch
+types — by sight only if cues are valid, otherwise by probing). Records are windows
+of 16, 32 or 64 ticks (3.2–12.8 s), laid out in powers of two.
+
+**Exploratory controllers.** The learner moves by a weighted sum of six primitives
+(toward food, toward the forager, toward the shelter, away from / toward the
+nearest rival, wander), with episode weights θ and smooth noise ξ on them. Five
+policy families (broad, narrow, bold, cautious, social) set the range of θ.
+
+**Estimators.**
+* the **goal metric** M = A Aᵀ, where A[i,k] is how leaning on primitive k changes
+  goal i's progress over a record (noise regressed against outcomes, situation and
+  θ regressed out) — the circumstance-induced inner product of goals;
+* the **outcome-weighted record moment** S = E[w (x − x̄)(x − x̄)ᵀ] and its signature;
+* the **return curvature** in θ;
+* the **attainable-set frontier**: the Pareto set of expected goal returns over many
+  policies, its goal correlations, utopia gaps and curvature signature.
+
+**E20/E21 (local geometry; E21: 23 conditions × 1024 episodes).**
+* safety·food ≈ −0.8 at 32–64 ticks under threat, exactly 0 without threat, and
+  positive at 16 ticks: the cost of going out arrives later.
+* knowledge·food is higher with random cues (+0.89 to +0.93: you must go there to
+  learn) than with valid ones (+0.59 to +0.79).
+* The forager's skill shows in *magnitude*, not angle: the food gained by leaning
+  toward the forager is 1.2–4× larger with a skilled forager, while the social·food
+  cosine is ≈ +0.93 either way.
+* **Policy explains most of the variance of every relation** (41–95%; environment
+  1–37%): under a cautious policy safety·food is −0.94, under a bold one −0.13 to
+  +0.46. The local geometry is the agent's own: a tangent space at its current way of
+  behaving, which moves when it learns.
+* With threat, record space has few net-good directions (signature ≈ (1, 3)); without
+  threat it is balanced (≈ (6, 5)).
+* In E20, defining knowledge by patch visits and keeping an ally at home produced
+  spurious geometry (knowledge·food ≈ +0.9 everywhere; forager skill invisible): the
+  measurement choices induce geometry too.
+
+**E22 (the environment's own geometry: the attainable set).** 384 fixed policies × 6 episodes per environment;
+expected goal returns denoised by a quadratic in θ; the frontier is the Pareto set.
+* **food·social is cooperative in every environment:** the frontier correlation is
+  +0.90 to +0.98 (raw means agree), and the utopia gap ≈ 0 — one kind of policy,
+  following the forager, attains both maxima. Forager skill changes the frontier's
+  *extent*, not its shape: the best attainable food is 1.48 with a skilled forager
+  against 0.84 with an unskilled one.
+* **food·safety is a genuine trade-off whenever there is threat** (gap 0.44–0.58)
+  and none without threat. Against expectation, the shelter does not soften it
+  (gap 0.44 with, 0.48 without).
+* **Frontier policies lean on the forager and on fleeing, not on seeking food**
+  (forager +0.7 to +1.6, flee +0.6 to +1.0, food −0.4 to +0.3): in this world the
+  efficient way to eat is to follow the one who is good at it.
+* Caution: some frontier correlations (food·safety at the centre, everything about
+  knowledge) and the frontier's curvature signature depend on the denoising — the
+  raw-means frontier disagrees — so they are not reported as findings yet.
+
 ## Known limitations and next steps
 
+* **Spec v2 phase C is not started:** representing the discovered geometry in the
+  Clifford algebra (agent metric = the local goal metric at its current policy; the
+  frontier as the environment's geometry; learning as movement across it).
 * **Phobias.** Under the felt-affect reward, avoided cues are never re-tested, so
-  a slightly negative value becomes permanent avoidance. Next: confidence-weighted
-  valence, or curiosity overriding avoidance.
+  a slightly negative value becomes permanent avoidance. Confidence weighting, need
+  features and bounded valence did not fix it.
 * The surprise gate gives one-shot learning but slows extinction and reversal.
 * The gym's winning mechanisms (critic, valence, surprise gate) are not yet
   tested in the full two-tribe arena.
