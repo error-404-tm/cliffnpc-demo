@@ -1,0 +1,151 @@
+E21 Induced geometry, retest (spec-v2 phase B)
+==============================================
+8 seeds x 128 episodes x 60 s per condition. Cosines of M = A A^T [95% bootstrap CI over episodes].
+
+## skill1_thr0.3_shel1_cue1_scar0 | broad   mean return/episode: food 0.58  safety -0.07  social 33.83  knowledge 2.25
+   T=16  social·food +0.96 [+0.87,+0.98]  safety·food +0.44 [-0.51,+0.78]  knowledge·food +0.64 [+0.41,+0.79]  safety·social +0.49 [-0.46,+0.81]  safety·knowledge -0.34 [-0.71,+0.58]  social·knowledge +0.61 [+0.32,+0.76]
+   T=32  social·food +0.94 [+0.84,+0.97]  safety·food -0.83 [-0.92,-0.12]  knowledge·food +0.79 [+0.53,+0.92]  safety·social -0.71 [-0.88,+0.01]  safety·knowledge -0.91 [-0.92,-0.18]  social·knowledge +0.73 [+0.42,+0.87]
+   T=64  social·food +0.93 [+0.80,+0.96]  safety·food -0.79 [-0.91,-0.22]  knowledge·food +0.59 [+0.22,+0.79]  safety·social -0.76 [-0.93,-0.33]  safety·knowledge -0.42 [-0.75,+0.20]  social·knowledge +0.49 [+0.09,+0.74]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 3, 22) / (0, 3, 23);  return curvature (2, 4, 0)
+
+## skill0_thr0.3_shel1_cue1_scar0 | broad   mean return/episode: food 0.43  safety -0.07  social 41.29  knowledge 2.13
+   T=16  social·food +0.94 [+0.84,+0.98]  safety·food -0.08 [-0.52,+0.53]  knowledge·food +0.49 [+0.12,+0.75]  safety·social +0.17 [-0.39,+0.63]  safety·knowledge +0.10 [-0.44,+0.61]  social·knowledge +0.38 [+0.05,+0.63]
+   T=32  social·food +0.94 [+0.85,+0.97]  safety·food -0.73 [-0.88,-0.32]  knowledge·food +0.51 [-0.08,+0.78]  safety·social -0.49 [-0.74,-0.08]  safety·knowledge -0.47 [-0.81,+0.11]  social·knowledge +0.38 [-0.06,+0.65]
+   T=64  social·food +0.89 [+0.73,+0.96]  safety·food -0.85 [-0.96,-0.51]  knowledge·food +0.65 [-0.17,+0.89]  safety·social -0.67 [-0.86,-0.39]  safety·knowledge -0.59 [-0.79,+0.30]  social·knowledge +0.38 [-0.31,+0.75]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 3, 22) / (1, 3, 22);  return curvature (1, 4, 1)
+
+## skill1_thr0.0_shel1_cue1_scar0 | broad   mean return/episode: food 0.63  safety 0.00  social 35.49  knowledge 2.21
+   T=16  social·food +0.91 [+0.79,+0.97]  safety·food +0.00 [+0.00,+0.00]  knowledge·food +0.67 [+0.30,+0.85]  safety·social +0.00 [+0.00,+0.00]  safety·knowledge +0.00 [+0.00,+0.00]  social·knowledge +0.38 [+0.05,+0.61]
+   T=32  social·food +0.92 [+0.81,+0.97]  safety·food +0.00 [+0.00,+0.00]  knowledge·food +0.66 [+0.20,+0.87]  safety·social +0.00 [+0.00,+0.00]  safety·knowledge +0.00 [+0.00,+0.00]  social·knowledge +0.43 [-0.01,+0.70]
+   T=64  social·food +0.93 [+0.82,+0.97]  safety·food +0.00 [+0.00,+0.00]  knowledge·food +0.47 [-0.23,+0.72]  safety·social +0.00 [+0.00,+0.00]  safety·knowledge +0.00 [+0.00,+0.00]  social·knowledge +0.21 [-0.43,+0.54]
+   outcome-moment signature T=32 (knowledge 0 / 1): (6, 5, 7) / (7, 6, 5);  return curvature (2, 3, 1)
+
+## skill1_thr0.7_shel1_cue1_scar0 | broad   mean return/episode: food 0.60  safety -0.16  social 34.69  knowledge 2.18
+   T=16  social·food +0.95 [+0.83,+0.97]  safety·food +0.38 [-0.45,+0.72]  knowledge·food +0.40 [+0.07,+0.64]  safety·social +0.51 [-0.33,+0.77]  safety·knowledge +0.02 [-0.58,+0.61]  social·knowledge +0.26 [-0.07,+0.57]
+   T=32  social·food +0.92 [+0.81,+0.96]  safety·food -0.80 [-0.93,-0.40]  knowledge·food +0.39 [+0.04,+0.71]  safety·social -0.56 [-0.80,-0.08]  safety·knowledge -0.35 [-0.69,+0.33]  social·knowledge +0.17 [-0.16,+0.57]
+   T=64  social·food +0.91 [+0.78,+0.96]  safety·food -0.78 [-0.92,-0.52]  knowledge·food +0.16 [-0.45,+0.59]  safety·social -0.63 [-0.84,-0.31]  safety·knowledge -0.23 [-0.61,+0.43]  social·knowledge -0.10 [-0.62,+0.46]
+   outcome-moment signature T=32 (knowledge 0 / 1): (2, 4, 20) / (2, 4, 20);  return curvature (2, 3, 1)
+
+## skill1_thr0.3_shel0_cue1_scar0 | broad   mean return/episode: food 0.60  safety -0.09  social 34.29  knowledge 2.26
+   T=16  social·food +0.91 [+0.76,+0.96]  safety·food -0.02 [-0.58,+0.50]  knowledge·food +0.37 [+0.12,+0.58]  safety·social +0.31 [-0.32,+0.71]  safety·knowledge -0.04 [-0.52,+0.55]  social·knowledge +0.44 [+0.12,+0.62]
+   T=32  social·food +0.92 [+0.80,+0.97]  safety·food -0.63 [-0.86,-0.23]  knowledge·food +0.50 [+0.06,+0.75]  safety·social -0.55 [-0.82,-0.12]  safety·knowledge -0.67 [-0.87,-0.24]  social·knowledge +0.58 [+0.19,+0.80]
+   T=64  social·food +0.95 [+0.83,+0.99]  safety·food -0.67 [-0.84,-0.33]  knowledge·food +0.46 [+0.07,+0.76]  safety·social -0.63 [-0.83,-0.23]  safety·knowledge -0.66 [-0.91,-0.15]  social·knowledge +0.45 [-0.08,+0.75]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 3, 21) / (0, 3, 22);  return curvature (1, 4, 1)
+
+## skill1_thr0.3_shel1_cue0_scar0 | broad   mean return/episode: food 0.60  safety -0.07  social 34.72  knowledge 0.78
+   T=16  social·food +0.95 [+0.82,+0.97]  safety·food +0.28 [-0.55,+0.77]  knowledge·food +0.89 [+0.79,+0.95]  safety·social +0.14 [-0.59,+0.71]  safety·knowledge +0.18 [-0.59,+0.68]  social·knowledge +0.76 [+0.50,+0.90]
+   T=32  social·food +0.93 [+0.82,+0.96]  safety·food -0.59 [-0.87,+0.26]  knowledge·food +0.93 [+0.82,+0.97]  safety·social -0.39 [-0.69,+0.47]  safety·knowledge -0.79 [-0.91,+0.04]  social·knowledge +0.73 [+0.49,+0.88]
+   T=64  social·food +0.92 [+0.81,+0.96]  safety·food -0.71 [-0.93,-0.10]  knowledge·food +0.89 [+0.73,+0.94]  safety·social -0.57 [-0.77,+0.04]  safety·knowledge -0.85 [-0.97,-0.32]  social·knowledge +0.69 [+0.38,+0.83]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 3, 23) / (1, 4, 21);  return curvature (3, 3, 0)
+
+## skill1_thr0.3_shel1_cue1_scar1 | broad   mean return/episode: food 0.36  safety -0.07  social 32.67  knowledge 1.71
+   T=16  social·food +0.80 [+0.66,+0.90]  safety·food +0.58 [-0.08,+0.81]  knowledge·food +0.61 [+0.34,+0.82]  safety·social +0.18 [-0.46,+0.66]  safety·knowledge +0.04 [-0.52,+0.53]  social·knowledge +0.64 [+0.38,+0.84]
+   T=32  social·food +0.81 [+0.67,+0.91]  safety·food -0.40 [-0.78,+0.29]  knowledge·food +0.63 [+0.23,+0.84]  safety·social -0.43 [-0.78,+0.14]  safety·knowledge -0.37 [-0.76,+0.21]  social·knowledge +0.75 [+0.43,+0.93]
+   T=64  social·food +0.77 [+0.60,+0.88]  safety·food -0.71 [-0.89,-0.15]  knowledge·food +0.62 [+0.08,+0.86]  safety·social -0.48 [-0.69,-0.07]  safety·knowledge -0.20 [-0.59,+0.34]  social·knowledge +0.81 [+0.32,+0.91]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 3, 22) / (1, 3, 22);  return curvature (3, 3, 0)
+
+## skill1_thr0.3_shel1_cue1_scar0 | narrow   mean return/episode: food 0.74  safety -0.08  social 39.60  knowledge 2.21
+   T=16  social·food +0.84 [+0.65,+0.91]  safety·food +0.46 [-0.38,+0.83]  knowledge·food +0.52 [+0.17,+0.73]  safety·social +0.58 [-0.34,+0.88]  safety·knowledge +0.82 [-0.28,+0.87]  social·knowledge +0.82 [+0.53,+0.91]
+   T=32  social·food +0.86 [+0.73,+0.92]  safety·food -0.45 [-0.70,+0.46]  knowledge·food +0.44 [+0.06,+0.71]  safety·social -0.08 [-0.57,+0.62]  safety·knowledge +0.29 [-0.42,+0.84]  social·knowledge +0.67 [+0.28,+0.85]
+   T=64  social·food +0.93 [+0.82,+0.97]  safety·food -0.61 [-0.86,+0.03]  knowledge·food +0.51 [-0.14,+0.80]  safety·social -0.38 [-0.76,+0.39]  safety·knowledge +0.28 [-0.52,+0.77]  social·knowledge +0.67 [-0.00,+0.85]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 3, 23) / (0, 4, 22);  return curvature (1, 4, 1)
+
+## skill1_thr0.3_shel1_cue1_scar0 | bold   mean return/episode: food 0.78  safety -0.13  social 37.77  knowledge 2.17
+   T=16  social·food +0.81 [+0.29,+0.92]  safety·food +0.11 [-0.45,+0.69]  knowledge·food +0.21 [-0.23,+0.54]  safety·social +0.59 [-0.33,+0.86]  safety·knowledge -0.68 [-0.87,+0.12]  social·knowledge -0.14 [-0.67,+0.43]
+   T=32  social·food +0.89 [+0.55,+0.95]  safety·food -0.13 [-0.50,+0.41]  knowledge·food +0.20 [-0.29,+0.54]  safety·social +0.15 [-0.45,+0.64]  safety·knowledge +0.32 [-0.24,+0.74]  social·knowledge +0.09 [-0.52,+0.53]
+   T=64  social·food +0.76 [+0.47,+0.92]  safety·food +0.46 [-0.14,+0.78]  knowledge·food +0.23 [-0.45,+0.72]  safety·social +0.37 [-0.38,+0.74]  safety·knowledge +0.75 [-0.23,+0.91]  social·knowledge -0.11 [-0.71,+0.51]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 3, 22) / (1, 4, 21);  return curvature (3, 2, 1)
+
+## skill1_thr0.3_shel1_cue1_scar0 | cautious   mean return/episode: food 0.28  safety -0.02  social 28.01  knowledge 1.82
+   T=16  social·food +0.97 [+0.90,+0.99]  safety·food -0.44 [-0.77,+0.25]  knowledge·food +0.91 [+0.80,+0.96]  safety·social -0.59 [-0.87,+0.13]  safety·knowledge -0.27 [-0.64,+0.34]  social·knowledge +0.91 [+0.79,+0.95]
+   T=32  social·food +0.98 [+0.91,+0.99]  safety·food -0.94 [-0.97,-0.56]  knowledge·food +0.88 [+0.70,+0.95]  safety·social -0.95 [-0.98,-0.62]  safety·knowledge -0.73 [-0.90,-0.32]  social·knowledge +0.89 [+0.70,+0.96]
+   T=64  social·food +0.98 [+0.90,+0.99]  safety·food -0.94 [-0.97,-0.78]  knowledge·food +0.84 [+0.61,+0.95]  safety·social -0.93 [-0.97,-0.74]  safety·knowledge -0.72 [-0.89,-0.37]  social·knowledge +0.81 [+0.56,+0.92]
+   outcome-moment signature T=32 (knowledge 0 / 1): (2, 3, 21) / (2, 3, 21);  return curvature (4, 2, 0)
+
+## skill1_thr0.3_shel1_cue1_scar0 | social   mean return/episode: food 1.23  safety -0.08  social 56.46  knowledge 2.42
+   T=16  social·food +0.34 [+0.04,+0.59]  safety·food +0.85 [+0.13,+0.94]  knowledge·food +0.87 [+0.59,+0.94]  safety·social +0.36 [-0.20,+0.71]  safety·knowledge +0.79 [+0.13,+0.94]  social·knowledge +0.71 [+0.44,+0.88]
+   T=32  social·food +0.73 [+0.56,+0.84]  safety·food -0.12 [-0.65,+0.52]  knowledge·food +0.78 [+0.30,+0.87]  safety·social +0.06 [-0.52,+0.58]  safety·knowledge +0.19 [-0.40,+0.69]  social·knowledge +0.80 [+0.31,+0.90]
+   T=64  social·food +0.88 [+0.71,+0.93]  safety·food -0.71 [-0.89,-0.16]  knowledge·food +0.35 [-0.52,+0.83]  safety·social -0.53 [-0.81,+0.06]  safety·knowledge -0.34 [-0.70,+0.70]  social·knowledge +0.17 [-0.64,+0.77]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 3, 23) / (0, 3, 23);  return curvature (3, 3, 0)
+
+## skill1_thr0.7_shel1_cue1_scar0 | narrow   mean return/episode: food 0.69  safety -0.17  social 38.26  knowledge 2.15
+   T=16  social·food +0.82 [+0.58,+0.92]  safety·food +0.46 [-0.14,+0.81]  knowledge·food +0.65 [+0.35,+0.78]  safety·social +0.37 [-0.42,+0.75]  safety·knowledge -0.15 [-0.66,+0.51]  social·knowledge +0.77 [+0.37,+0.91]
+   T=32  social·food +0.90 [+0.70,+0.96]  safety·food -0.60 [-0.82,+0.13]  knowledge·food +0.49 [+0.01,+0.77]  safety·social -0.32 [-0.67,+0.27]  safety·knowledge -0.26 [-0.67,+0.39]  social·knowledge +0.50 [-0.06,+0.79]
+   T=64  social·food +0.94 [+0.79,+0.98]  safety·food -0.78 [-0.89,-0.30]  knowledge·food +0.37 [-0.23,+0.69]  safety·social -0.64 [-0.83,-0.16]  safety·knowledge -0.14 [-0.69,+0.48]  social·knowledge +0.31 [-0.31,+0.67]
+   outcome-moment signature T=32 (knowledge 0 / 1): (2, 3, 21) / (1, 4, 21);  return curvature (3, 3, 0)
+
+## skill1_thr0.7_shel1_cue1_scar0 | bold   mean return/episode: food 0.79  safety -0.30  social 39.27  knowledge 2.19
+   T=16  social·food +0.52 [+0.08,+0.79]  safety·food +0.31 [-0.34,+0.74]  knowledge·food +0.65 [+0.03,+0.80]  safety·social -0.11 [-0.55,+0.63]  safety·knowledge -0.20 [-0.54,+0.46]  social·knowledge +0.57 [-0.10,+0.80]
+   T=32  social·food +0.62 [+0.25,+0.85]  safety·food -0.36 [-0.73,+0.23]  knowledge·food +0.50 [-0.54,+0.76]  safety·social +0.17 [-0.38,+0.62]  safety·knowledge -0.26 [-0.71,+0.64]  social·knowledge +0.53 [-0.47,+0.88]
+   T=64  social·food +0.77 [+0.32,+0.91]  safety·food -0.11 [-0.57,+0.48]  knowledge·food -0.18 [-0.69,+0.70]  safety·social +0.32 [-0.33,+0.76]  safety·knowledge +0.21 [-0.67,+0.69]  social·knowledge +0.22 [-0.53,+0.75]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 4, 21) / (2, 4, 20);  return curvature (2, 4, 0)
+
+## skill1_thr0.7_shel1_cue1_scar0 | cautious   mean return/episode: food 0.27  safety -0.03  social 28.21  knowledge 1.84
+   T=16  social·food +0.98 [+0.91,+0.99]  safety·food -0.43 [-0.77,+0.37]  knowledge·food +0.87 [+0.74,+0.95]  safety·social -0.36 [-0.81,+0.41]  safety·knowledge -0.63 [-0.84,+0.37]  social·knowledge +0.79 [+0.56,+0.89]
+   T=32  social·food +0.97 [+0.88,+0.99]  safety·food -0.91 [-0.96,-0.67]  knowledge·food +0.87 [+0.69,+0.95]  safety·social -0.87 [-0.97,-0.51]  safety·knowledge -0.89 [-0.93,-0.63]  social·knowledge +0.78 [+0.52,+0.90]
+   T=64  social·food +0.96 [+0.83,+0.98]  safety·food -0.93 [-0.97,-0.78]  knowledge·food +0.85 [+0.62,+0.91]  safety·social -0.93 [-0.97,-0.69]  safety·knowledge -0.87 [-0.93,-0.57]  social·knowledge +0.78 [+0.47,+0.92]
+   outcome-moment signature T=32 (knowledge 0 / 1): (2, 2, 22) / (2, 3, 21);  return curvature (4, 2, 0)
+
+## skill1_thr0.7_shel1_cue1_scar0 | social   mean return/episode: food 1.21  safety -0.17  social 56.58  knowledge 2.39
+   T=16  social·food +0.37 [+0.01,+0.64]  safety·food +0.86 [+0.36,+0.95]  knowledge·food +0.85 [+0.44,+0.92]  safety·social +0.28 [-0.25,+0.66]  safety·knowledge +0.82 [+0.35,+0.94]  social·knowledge +0.72 [+0.11,+0.87]
+   T=32  social·food +0.72 [+0.48,+0.85]  safety·food -0.48 [-0.82,+0.09]  knowledge·food +0.48 [-0.07,+0.75]  safety·social -0.11 [-0.60,+0.53]  safety·knowledge -0.21 [-0.63,+0.53]  social·knowledge +0.77 [+0.20,+0.91]
+   T=64  social·food +0.86 [+0.65,+0.94]  safety·food -0.93 [-0.97,-0.68]  knowledge·food -0.02 [-0.41,+0.42]  safety·social -0.65 [-0.87,-0.20]  safety·knowledge +0.04 [-0.48,+0.47]  social·knowledge +0.24 [-0.28,+0.61]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 4, 21) / (2, 4, 20);  return curvature (2, 3, 1)
+
+## skill0_thr0.3_shel1_cue1_scar0 | narrow   mean return/episode: food 0.50  safety -0.06  social 49.43  knowledge 2.02
+   T=16  social·food +0.88 [+0.70,+0.94]  safety·food +0.32 [-0.48,+0.72]  knowledge·food +0.78 [+0.43,+0.90]  safety·social +0.39 [-0.42,+0.68]  safety·knowledge +0.02 [-0.68,+0.63]  social·knowledge +0.70 [+0.32,+0.90]
+   T=32  social·food +0.89 [+0.74,+0.95]  safety·food -0.77 [-0.92,-0.12]  knowledge·food +0.69 [+0.23,+0.88]  safety·social -0.73 [-0.86,-0.19]  safety·knowledge -0.82 [-0.95,+0.01]  social·knowledge +0.69 [+0.26,+0.88]
+   T=64  social·food +0.90 [+0.71,+0.95]  safety·food -0.80 [-0.92,-0.50]  knowledge·food +0.41 [-0.14,+0.75]  safety·social -0.84 [-0.94,-0.60]  safety·knowledge -0.76 [-0.91,+0.08]  social·knowledge +0.47 [-0.10,+0.85]
+   outcome-moment signature T=32 (knowledge 0 / 1): (1, 3, 22) / (0, 3, 23);  return curvature (2, 4, 0)
+
+## skill0_thr0.3_shel1_cue1_scar0 | bold   mean return/episode: food 0.69  safety -0.09  social 52.80  knowledge 2.04
+   T=16  social·food +0.04 [-0.53,+0.59]  safety·food +0.90 [+0.24,+0.95]  knowledge·food +0.34 [-0.24,+0.66]  safety·social +0.42 [-0.28,+0.84]  safety·knowledge +0.12 [-0.38,+0.58]  social·knowledge +0.01 [-0.48,+0.61]
+   T=32  social·food +0.66 [+0.27,+0.84]  safety·food +0.20 [-0.56,+0.72]  knowledge·food -0.21 [-0.58,+0.29]  safety·social +0.53 [-0.29,+0.74]  safety·knowledge -0.34 [-0.66,+0.37]  social·knowledge -0.22 [-0.60,+0.39]
+   T=64  social·food +0.75 [+0.24,+0.90]  safety·food +0.28 [-0.57,+0.62]  knowledge·food -0.42 [-0.67,+0.32]  safety·social +0.34 [-0.40,+0.75]  safety·knowledge -0.37 [-0.86,+0.43]  social·knowledge -0.60 [-0.83,+0.20]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 4, 22) / (0, 4, 22);  return curvature (3, 3, 0)
+
+## skill0_thr0.3_shel1_cue1_scar0 | cautious   mean return/episode: food 0.25  safety -0.02  social 35.93  knowledge 1.73
+   T=16  social·food +0.99 [+0.96,+0.99]  safety·food +0.35 [-0.38,+0.64]  knowledge·food +0.89 [+0.78,+0.95]  safety·social +0.41 [-0.29,+0.65]  safety·knowledge +0.29 [-0.48,+0.75]  social·knowledge +0.90 [+0.81,+0.96]
+   T=32  social·food +0.99 [+0.96,+1.00]  safety·food -0.73 [-0.88,-0.28]  knowledge·food +0.87 [+0.67,+0.96]  safety·social -0.72 [-0.88,-0.33]  safety·knowledge -0.72 [-0.89,-0.27]  social·knowledge +0.88 [+0.70,+0.96]
+   T=64  social·food +0.99 [+0.93,+1.00]  safety·food -0.93 [-0.97,-0.80]  knowledge·food +0.66 [+0.29,+0.85]  safety·social -0.92 [-0.97,-0.79]  safety·knowledge -0.63 [-0.87,-0.22]  social·knowledge +0.67 [+0.28,+0.90]
+   outcome-moment signature T=32 (knowledge 0 / 1): (2, 2, 22) / (2, 2, 22);  return curvature (3, 3, 0)
+
+## skill0_thr0.3_shel1_cue1_scar0 | social   mean return/episode: food 0.65  safety -0.06  social 59.14  knowledge 2.11
+   T=16  social·food +0.86 [-0.16,+0.90]  safety·food +0.52 [-0.32,+0.79]  knowledge·food +0.89 [+0.41,+0.97]  safety·social +0.53 [-0.43,+0.84]  safety·knowledge +0.35 [-0.38,+0.81]  social·knowledge +0.65 [-0.35,+0.83]
+   T=32  social·food +0.96 [+0.75,+0.98]  safety·food -0.71 [-0.87,-0.12]  knowledge·food +0.78 [-0.16,+0.87]  safety·social -0.53 [-0.84,+0.12]  safety·knowledge -0.41 [-0.83,+0.66]  social·knowledge +0.77 [-0.12,+0.88]
+   T=64  social·food +0.92 [+0.42,+0.98]  safety·food -0.70 [-0.88,+0.04]  knowledge·food +0.25 [-0.35,+0.72]  safety·social -0.57 [-0.85,-0.03]  safety·knowledge -0.05 [-0.71,+0.66]  social·knowledge +0.26 [-0.36,+0.65]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 3, 23) / (0, 3, 23);  return curvature (1, 4, 1)
+
+## skill1_thr0.3_shel1_cue0_scar0 | narrow   mean return/episode: food 0.70  safety -0.07  social 39.04  knowledge 0.83
+   T=16  social·food +0.95 [+0.79,+0.98]  safety·food +0.73 [+0.13,+0.90]  knowledge·food +0.85 [+0.73,+0.91]  safety·social +0.80 [+0.20,+0.95]  safety·knowledge +0.48 [-0.07,+0.75]  social·knowledge +0.78 [+0.51,+0.88]
+   T=32  social·food +0.94 [+0.82,+0.97]  safety·food -0.20 [-0.73,+0.51]  knowledge·food +0.94 [+0.85,+0.97]  safety·social -0.19 [-0.78,+0.52]  safety·knowledge -0.32 [-0.74,+0.42]  social·knowledge +0.88 [+0.71,+0.94]
+   T=64  social·food +0.96 [+0.85,+0.99]  safety·food -0.86 [-0.91,-0.28]  knowledge·food +0.96 [+0.80,+0.98]  safety·social -0.82 [-0.87,-0.21]  safety·knowledge -0.88 [-0.96,-0.40]  social·knowledge +0.93 [+0.72,+0.97]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 3, 23) / (1, 4, 21);  return curvature (3, 3, 0)
+
+## skill1_thr0.3_shel1_cue0_scar0 | bold   mean return/episode: food 0.80  safety -0.12  social 39.27  knowledge 1.13
+   T=16  social·food +0.73 [+0.28,+0.91]  safety·food +0.77 [+0.36,+0.88]  knowledge·food +0.70 [+0.42,+0.86]  safety·social +0.65 [+0.10,+0.90]  safety·knowledge +0.15 [-0.38,+0.49]  social·knowledge +0.49 [+0.03,+0.78]
+   T=32  social·food +0.87 [+0.55,+0.96]  safety·food +0.28 [-0.49,+0.70]  knowledge·food +0.81 [+0.48,+0.93]  safety·social +0.51 [-0.33,+0.84]  safety·knowledge -0.27 [-0.75,+0.32]  social·knowledge +0.64 [+0.16,+0.86]
+   T=64  social·food +0.95 [+0.68,+0.97]  safety·food -0.06 [-0.79,+0.68]  knowledge·food +0.52 [-0.16,+0.86]  safety·social +0.20 [-0.70,+0.69]  safety·knowledge -0.36 [-0.79,+0.42]  social·knowledge +0.48 [-0.25,+0.83]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 3, 23) / (1, 4, 21);  return curvature (3, 3, 0)
+
+## skill1_thr0.3_shel1_cue0_scar0 | cautious   mean return/episode: food 0.29  safety -0.01  social 27.53  knowledge 0.44
+   T=16  social·food +0.97 [+0.88,+0.99]  safety·food -0.73 [-0.87,-0.21]  knowledge·food +0.94 [+0.89,+0.97]  safety·social -0.59 [-0.85,+0.00]  safety·knowledge -0.72 [-0.89,-0.26]  social·knowledge +0.92 [+0.83,+0.98]
+   T=32  social·food +0.97 [+0.88,+0.99]  safety·food -0.89 [-0.94,-0.71]  knowledge·food +0.96 [+0.92,+0.98]  safety·social -0.78 [-0.89,-0.44]  safety·knowledge -0.86 [-0.94,-0.62]  social·knowledge +0.93 [+0.83,+0.97]
+   T=64  social·food +0.98 [+0.90,+0.99]  safety·food -0.92 [-0.96,-0.76]  knowledge·food +0.97 [+0.92,+0.99]  safety·social -0.85 [-0.92,-0.60]  safety·knowledge -0.92 [-0.96,-0.77]  social·knowledge +0.95 [+0.81,+0.98]
+   outcome-moment signature T=32 (knowledge 0 / 1): (2, 3, 21) / (2, 2, 22);  return curvature (1, 4, 1)
+
+## skill1_thr0.3_shel1_cue0_scar0 | social   mean return/episode: food 1.22  safety -0.07  social 56.10  knowledge 1.06
+   T=16  social·food +0.35 [-0.09,+0.63]  safety·food +0.78 [+0.27,+0.92]  knowledge·food +0.97 [+0.86,+0.99]  safety·social +0.28 [-0.36,+0.63]  safety·knowledge +0.71 [+0.18,+0.91]  social·knowledge +0.38 [-0.13,+0.70]
+   T=32  social·food +0.78 [+0.60,+0.89]  safety·food +0.03 [-0.57,+0.54]  knowledge·food +0.93 [+0.81,+0.98]  safety·social +0.31 [-0.52,+0.77]  safety·knowledge -0.11 [-0.76,+0.64]  social·knowledge +0.78 [+0.48,+0.93]
+   T=64  social·food +0.93 [+0.77,+0.98]  safety·food -0.69 [-0.87,-0.01]  knowledge·food +0.83 [+0.63,+0.93]  safety·social -0.47 [-0.80,+0.22]  safety·knowledge -0.88 [-0.94,-0.14]  social·knowledge +0.69 [+0.30,+0.86]
+   outcome-moment signature T=32 (knowledge 0 / 1): (0, 3, 23) / (2, 4, 20);  return curvature (2, 3, 1)
+
+EXPECTATIONS (fixed before running), policy broad
+   T=16: knowledge·food random cues +0.89 vs valid +0.64;  social·food skilled +0.96 vs unskilled +0.94;  safety·food threat 0/0.3/0.7 +0.00/+0.44/+0.38, no shelter -0.02
+   T=32: knowledge·food random cues +0.93 vs valid +0.79;  social·food skilled +0.94 vs unskilled +0.94;  safety·food threat 0/0.3/0.7 +0.00/-0.83/-0.80, no shelter -0.63
+   T=64: knowledge·food random cues +0.89 vs valid +0.59;  social·food skilled +0.93 vs unskilled +0.89;  safety·food threat 0/0.3/0.7 +0.00/-0.79/-0.78, no shelter -0.67
+
+ENVIRONMENT vs POLICY (4 environments x 5 policies): share of the variance of each cosine
+   T=16: social·food env 0.01 / policy 0.62 / interaction 0.37;  safety·food env 0.01 / policy 0.66 / interaction 0.33;  knowledge·food env 0.18 / policy 0.59 / interaction 0.23;  safety·social env 0.05 / policy 0.55 / interaction 0.40;  safety·knowledge env 0.03 / policy 0.56 / interaction 0.41;  social·knowledge env 0.03 / policy 0.62 / interaction 0.35
+   T=32: social·food env 0.06 / policy 0.57 / interaction 0.36;  safety·food env 0.13 / policy 0.69 / interaction 0.18;  knowledge·food env 0.28 / policy 0.41 / interaction 0.31;  safety·social env 0.06 / policy 0.79 / interaction 0.15;  safety·knowledge env 0.15 / policy 0.53 / interaction 0.33;  social·knowledge env 0.14 / policy 0.54 / interaction 0.32
+   T=64: social·food env 0.12 / policy 0.66 / interaction 0.22;  safety·food env 0.03 / policy 0.91 / interaction 0.07;  knowledge·food env 0.37 / policy 0.49 / interaction 0.13;  safety·social env 0.01 / policy 0.95 / interaction 0.05;  safety·knowledge env 0.35 / policy 0.37 / interaction 0.27;  social·knowledge env 0.28 / policy 0.51 / interaction 0.21

@@ -13,8 +13,15 @@ induce (spec-v2 section 4):
 Goal progress per tick (0.2 s), a vector over GOALS:
     food       satiety gained (eating real food; satiety saturates and decays)
     safety     minus injury taken
-    social     tick fraction with an ally within peer range
-    knowledge  newly seen area (grid cells) + learning a patch's true type on first visit
+    social     tick fraction with an ally within peer range (the forager, or a
+               companion who wanders the world)
+    knowledge  bits resolved about patch types: each patch is one unknown bit,
+               resolved by seeing its look (only if cues are valid) or by probing
+               it at the patch (always)
+
+Exploratory policies (POLICIES) draw episode weights theta = mean + U(-spread,
+spread) per primitive; varying them separates the environment's share of the
+induced geometry from the policy's.
 
 The learner is driven by an exploratory controller: a weighted sum of six
 PRIMITIVES (unit vectors) with episode weights theta and smooth OU noise xi on
@@ -53,6 +60,15 @@ class Env:
         return (f"skill{self.ally_skill}_thr{self.threat}_shel{int(self.shelter)}"
                 f"_cue{self.cue_validity}_scar{self.scarcity}")
 
+
+# exploratory policy families: per-primitive mean and spread of theta, OU noise sigma
+POLICIES = {
+    "broad":    dict(mean=(0.5,) * 6, spread=1.0, noise=0.5),
+    "narrow":   dict(mean=(0.5,) * 6, spread=0.5, noise=0.3),
+    "bold":     dict(mean=(1.2, 0.3, -0.2, 0.0, 0.8, 0.5), spread=0.4, noise=0.5),
+    "cautious": dict(mean=(0.4, 0.3, 1.0, 1.2, -0.2, 0.2), spread=0.4, noise=0.5),
+    "social":   dict(mean=(0.4, 1.2, 0.3, 0.6, 0.2, 0.2), spread=0.4, noise=0.5),
+}
 
 CENTRE = Env()
 SWEEP = {                            # one-factor-at-a-time around the centre (spec-v2 section 4)
@@ -111,10 +127,8 @@ class Commons:
     env: Env
     seed: int = 0
     episode_len: float = 60.0
-    noise_sigma: float = 0.5           # OU noise on primitive weights
+    policy: str = "broad"              # exploratory policy family (POLICIES)
     noise_tau: float = 1.0
-    theta_low: float = -0.5            # episode weights ~ U(low, high) per primitive
-    theta_high: float = 1.5
     ar: Arena = field(init=False)
     log: dict = field(init=False)
 
@@ -128,15 +142,22 @@ class Commons:
         cfg.base.world.size = 100.0
         cfg.learning = False
         ar = self.ar = Arena(cfg)
+        ar._log = lambda: None                       # commons keeps its own compact log (memory)
         used = {x.slot for x in ar.agents}
-        ar.capacity = 8                              # learner, two allies, ambushers
+        ar.capacity = 16                             # learner, two allies, ambushers
         ar._free = [i for i in range(ar.capacity) if i not in used]
         self.learner = ar.agents[0]
         for b in list(ar.agents[1:]):
             self._remove(b)
         self.learner.controller = self._control
         self.forager = self._add("A", HOME + np.array([3.0, 0.0]), self._forager_control)
-        self.homebody = self._add("A", HOME + np.array([0.0, 3.0]), self._homebody_control)
+        self.companion = self._add("A", HOME + np.array([0.0, 3.0]), self._companion_control)
+        self.comp_heading = 0.0
+        pol = POLICIES[self.policy]
+        self.theta_mean = np.asarray(pol["mean"], float)
+        self.theta_spread = float(pol["spread"])
+        self.noise_sigma = float(pol["noise"])
+        self.known: set = set()
         self.rivals: list[Agent] = []
         self.log = {k: [] for k in ("u", "xi", "s", "r", "theta", "episode", "t")}
         self.episode = -1
@@ -145,8 +166,6 @@ class Commons:
         self.heading = 0.0
         self.u = np.zeros(3)
         self.satiety = 0.0
-        self.seen = np.zeros((10, 10), bool)
-        self.visited: set = set()
         self.amb_patches: set = set()
         self.ambush_until = -1.0
         self.forager_target = None
@@ -197,10 +216,15 @@ class Commons:
         d = tgt["pos"] - me.pos
         return _unit(d) * min(4.0, np.linalg.norm(d) / ar.wcfg.dt)
 
-    def _homebody_control(self, ar, me, p):
+    def _companion_control(self, ar, me, p):
+        """Wanders the world (company is available anywhere, sometimes)."""
         me.npc.C[3] = 1.0
-        d = HOME - me.pos
-        return _unit(d) * min(3.0, max(0.0, np.linalg.norm(d) - 2.0))
+        self.comp_heading += 0.5 * np.sqrt(ar.wcfg.dt) * self.rng.normal()
+        d = np.array([np.cos(self.comp_heading), np.sin(self.comp_heading)])
+        if np.any(me.pos < 8) or np.any(me.pos > 92):          # turn back from the walls
+            d = _unit(CENTER - me.pos)
+            self.comp_heading = float(np.arctan2(d[1], d[0]))
+        return d * 3.0
 
     def _rival_control(self, ar, me, p):
         me.npc.C[3] = 1.0
@@ -254,18 +278,21 @@ class Commons:
             a.health,
             float(len(self.rivals) > 0),
             float(self.env.shelter),
-            0.0,
+            max(0.0, 1 - np.linalg.norm(self.companion.pos - a.pos) / R),
         ])
         return np.concatenate([x, extra])
 
-    def _see(self):
-        a = self.learner
-        ij = np.indices((10, 10)).reshape(2, -1).T
-        centres = ij * 10.0 + 5.0
-        near = np.linalg.norm(centres - a.pos, axis=1) <= self.ar.wcfg.sensor_radius
-        new = near & ~self.seen.reshape(-1)
-        self.seen.reshape(-1)[near] = True
-        return new.sum() / 100.0
+    def _resolve_by_sight(self):
+        """Bits resolved by seeing patches' looks -- informative only if cues are valid."""
+        if not self.env.cue_validity:
+            return 0.0
+        a, R = self.learner, self.ar.wcfg.sensor_radius
+        bits = 0.0
+        for q in self.ar.patches:
+            if q["id"] not in self.known and np.linalg.norm(q["pos"] - a.pos) <= R:
+                self.known.add(q["id"])
+                bits += 1.0
+        return bits
 
     # -- episodes
     def new_episode(self):
@@ -278,12 +305,12 @@ class Commons:
         a = self.learner
         a.pos, a.vel, a.health, a.mobile = HOME.copy(), np.zeros(2), 1.0, True
         self.forager.pos = HOME + np.array([3.0, 0.0])
-        self.homebody.pos = HOME + np.array([0.0, 3.0])
+        self.companion.pos = self.rng.uniform(15, 85, 2)
+        self.comp_heading = float(self.rng.uniform(0, 2 * np.pi))
         self.satiety = float(self.rng.uniform(0.0, 0.5))
-        self.seen[:] = False
-        self.visited = set()
+        self.known = set()
         self.amb_patches = set()
-        self.theta = self.rng.uniform(self.theta_low, self.theta_high, len(PRIMITIVES))
+        self.theta = self.theta_mean + self.rng.uniform(-self.theta_spread, self.theta_spread, len(PRIMITIVES))
         self.xi[:] = 0.0
 
     def run_episode(self):
@@ -307,9 +334,9 @@ class Commons:
                 self.satiety = max(0.0, self.satiety - 0.01 * ar.wcfg.dt)
                 for q in ar.patches:
                     if np.linalg.norm(a.pos - q["pos"]) < r_eat:
-                        if q["id"] not in self.visited:
-                            self.visited.add(q["id"])
-                            know += 1.0                     # learned this patch's true type
+                        if q["id"] not in self.known:       # probing at the patch resolves it
+                            self.known.add(q["id"])
+                            know += 1.0
                         if q["id"] not in self.amb_patches:
                             self.amb_patches.add(q["id"])
                             if self.rng.random() < self.env.threat:
@@ -319,7 +346,7 @@ class Commons:
                         self._remove(b)
                     self.rivals = []
                 self._keep_food()
-            know += self._see()
+            know += self._resolve_by_sight()
             social = float(ar.allies_near(a) > 0) * TICK
             safety = -(a.taken_total - taken0)
             self._record(u0, xi0, s, np.array([food, safety, social, know]))
@@ -327,6 +354,9 @@ class Commons:
                 break
 
     def _ambush(self):
+        for b in self.rivals:                        # a new ambush replaces one still running
+            self._remove(b)
+        self.rivals = []
         th = self.rng.uniform(0, 2 * np.pi)
         for j in range(2):
             ang = th + np.pi * j

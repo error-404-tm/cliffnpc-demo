@@ -28,6 +28,21 @@ def test_commons_logs_controls_senses_and_goal_progress():
     assert W["G"].shape[1] == len(GOALS) and W["xi"].shape[1] == 32
 
 
+def test_knowledge_comes_from_sight_only_when_cues_are_valid():
+    valid = Commons(Env(threat=0.0, cue_validity=1), seed=0).run(1)
+    random_cues = Commons(Env(threat=0.0, cue_validity=0), seed=0).run(1)
+    assert valid["r"][0, 3] >= 1.0                 # patches in view are resolved at once
+    assert random_cues["r"][0, 3] == 0.0            # only probing at a patch resolves them
+
+
+def test_policy_families_set_theta_ranges():
+    from cliffnpc.commons import POLICIES
+    c = Commons(Env(), seed=0, policy="cautious")
+    c.new_episode()
+    m = np.asarray(POLICIES["cautious"]["mean"])
+    assert np.all(np.abs(c.theta - m) <= POLICIES["cautious"]["spread"] + 1e-12)
+
+
 def test_action_gradients_recover_a_planted_effect():
     rng = np.random.default_rng(0)
     n, T = 2000, 16
