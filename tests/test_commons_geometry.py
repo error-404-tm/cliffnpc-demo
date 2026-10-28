@@ -112,3 +112,21 @@ def test_harness_pairs_worlds_and_flags_untargeted_effects():
     r = compare(a, b, sz, n_boot=8, targets=("food·safety",))
     assert r["live_a"][1] and not r["live_b"][1]                         # safety dimension vanishes
     assert set(r["flags"]) <= set(r["touched"])
+
+
+def test_phase_c_rules_ascend_a_known_gradient_and_report_geometry():
+    from cliffnpc.commons import Dials
+    from cliffnpc.phase_c import GoalGeometryAgent
+    A = np.array([[1.0, 0, 0, 0, 0, 0], [-1.0, 1.0, 0, 0, 0, 0], [0, 0, 1.0, 0, 0, 0], [0, 0, 0, 0, 0, 1.0]])
+    w = np.array([1.0, 1.0, 0.0, 0.0])
+    for rule in ("pg", "ng", "pareto"):
+        ag = GoalGeometryAgent(Dials(threat=0.0), w, rule=rule, seed=0)
+        ag.A = A
+        d = ag.direction()
+        assert w @ (A @ d) > 0                                   # the preferred combination improves
+        if rule == "pareto":
+            assert np.all((A @ d)[:2] >= -1e-9)                  # no valued goal gets worse
+    ag = GoalGeometryAgent(Dials(threat=0.0), w, rule="ng", seed=0, warmup=1)
+    ag.run(3)
+    rep = ag.report()
+    assert len(ag.history) == 3 and "food^safety" in rep["planes"] and len(rep["modes"]) == 4

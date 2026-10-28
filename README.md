@@ -96,9 +96,11 @@ cliffnpc/
   gym.py          learning gym: controlled tasks x policies (E12-E19)
   commons.py      spec v2: environment factors, exploratory controllers, experience records
   geometry.py     spec v2: induced goal metric, record moments, return curvature, attainable-set frontier
+  harness.py      spec v2: environment dials, fingerprints, paired CRN comparisons
+  phase_c.py      spec v2: agent that learns its own induced geometry and moves to the frontier
   config.py       every tunable constant
-experiments/      e1..e6, e8..e22, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            131 tests
+experiments/      e1..e6, e8..e24, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            133 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
@@ -106,7 +108,7 @@ spec-v2.md        the v2 plan: discover the induced geometry instead of imposing
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 131 tests, ~2 min
+.venv/bin/python -m pytest -q          # 133 tests, ~2.5 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -577,11 +579,62 @@ expected goal returns denoised by a quadratic in θ; the frontier is the Pareto 
   knowledge) and the frontier's curvature signature depend on the denoising — the
   raw-means frontier disagrees — so they are not reported as findings yet.
 
+## Feature harness and the ladder (`harness.py`, E23)
+
+Every environment feature is another geometric influence, so features are added
+one at a time as **dials** (intensity 0–1, 0 = absent) and measured, following
+`spec-v2.md` section 8:
+
+* **Fingerprint**, computed the same way for every world: *extent* (best and average
+  attainable return per goal), *shape* (frontier correlations and utopia gaps,
+  smoothed and raw, compared on the goals live in both worlds), *local geometry*
+  (the goal metric at five reference policies and three time scales), the record
+  signature, and *live dimensions*.
+* **Paired comparisons with common random numbers:** per-episode random streams for
+  food, ambushes, noise and the companion consume the same draws whatever the dials,
+  so two worlds differing in one dial see the same patches and draws. Paired
+  intervals are ~0.72× the width of unpaired ones (up to ~2× narrower for shape).
+* **Four kinds of effect:** extent, shape, local, new dimension; **construct checks**
+  flag effects on relations a dial was not meant to touch.
+
+**E23 (validation against the known factors): all 9 pre-registered checks pass.**
+Most dials move the frontier rather than reshape it; only cue validity (and extreme
+scarcity) change the trade-off structure. The construct checks caught a flaw in the
+harness itself (comparing frontiers over different live goals) and two real
+cross-effects (an unskilled forager also changes food·safety; scarcity's knowledge
+effects are partly by construction).
+
+## Phase C (`phase_c.py`)
+
+The phase-C agent acts like the frontier panel's policies (weights θ on the six
+primitives) so its result can be placed against the measured frontier. Its state is
+the geometry it induces: it learns the vector action gradient A (how each control lean
+moves each goal) from its own exploration against vector TD errors, and its local goal
+metric M = A Aᵀ. Preferences ω (agent-specific weights on normalised goals) pick a point
+on the frontier. Three rules move θ: plain gradient Aᵀω, natural gradient (the
+smallest control change for the desired goal change, using the pullback metric), and
+Pareto-first (improve every valued goal at once, then trade off by ω). Interrogation:
+goal modes (eigenvectors of M), trade-off planes aᵢ∧aⱼ (area = independent
+controllability, cosine = aligned/opposed), and the connection (how M turns as the
+agent moves).
+
+**Rung 0 (E24; 3 rules × 4 preferences × 8 seeds × 200 episodes).**
+* Every rule learns (+1 to +2 normalised units), and final policies are almost never
+  dominated by any of the 192 panel policies (0–4%): agents land on the frontier,
+  reaching 0.85–1.00 of the panel's best for three preferences. All converge on
+  "follow the forager", the efficient strategy E22 found.
+* Safety-weighted agents struggle (0.54 of best): safety is driven by rare ambushes,
+  so its gradient is very noisy.
+* Preferences barely differentiate, and the geometry rules do not beat the plain
+  gradient (natural − plain +0.07 ± 0.48, Pareto − plain +0.25 ± 0.46): at rung 0 one
+  strategy dominates and six well-conditioned controls leave nothing for the geometry
+  to correct. The local metric's turning is mostly estimation noise.
+
 ## Known limitations and next steps
 
-* **Spec v2 phase C is not started:** representing the discovered geometry in the
-  Clifford algebra (agent metric = the local goal metric at its current policy; the
-  frontier as the environment's geometry; learning as movement across it).
+* **Phase C** works at rung 0 (agents reach the frontier) but its geometric parts do
+  not yet pay off; the ladder (`spec-v2.md` section 9) adds the trade-offs that should
+  make them matter, one measured dial at a time.
 * **Phobias.** Under the felt-affect reward, avoided cues are never re-tested, so
   a slightly negative value becomes permanent avoidance. Confidence weighting, need
   features and bounded valence did not fix it.

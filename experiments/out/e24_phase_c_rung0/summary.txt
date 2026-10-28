@@ -1,0 +1,52 @@
+E24 Phase C on rung 0 (spec-v2)
+===============================
+8 seeds x 200 learning episodes per (rule, preference); final theta evaluated over 16 episodes; scores in normalised goal units (omega . J / scale).
+
+## preference forager  omega [1.  0.5 0.2 0. ]   panel: mean 1.04, best raw 3.70, best smoothed 3.21 (theta [ 0.97  1.74 -0.8   1.5   0.15 -0.02])
+   pg      start +1.64 ± 0.26  final +2.87 ± 0.17  gain +1.23 ± 0.37  fraction of panel best +0.85 ± 0.08  panel policies dominating it +0.00 ± 0.00
+           final theta {'food': np.float64(0.93), 'forager': np.float64(2.45), 'shelter': np.float64(-0.1), 'flee': np.float64(0.04), 'fight': np.float64(-0.57), 'wander': np.float64(0.27)}   final J/scale {'food': np.float64(2.65), 'safety': np.float64(-0.83), 'social': np.float64(3.18), 'knowledge': np.float64(3.87)}
+   ng      start +1.64 ± 0.26  final +2.69 ± 0.47  gain +1.05 ± 0.55  fraction of panel best +0.76 ± 0.22  panel policies dominating it +0.02 ± 0.05
+           final theta {'food': np.float64(1.19), 'forager': np.float64(1.98), 'shelter': np.float64(-0.31), 'flee': np.float64(0.1), 'fight': np.float64(-0.18), 'wander': np.float64(0.29)}   final J/scale {'food': np.float64(2.56), 'safety': np.float64(-0.95), 'social': np.float64(3.05), 'knowledge': np.float64(3.83)}
+   pareto  start +1.64 ± 0.26  final +2.77 ± 0.37  gain +1.13 ± 0.33  fraction of panel best +0.80 ± 0.17  panel policies dominating it +0.00 ± 0.01
+           final theta {'food': np.float64(1.36), 'forager': np.float64(2.44), 'shelter': np.float64(-0.42), 'flee': np.float64(0.75), 'fight': np.float64(0.19), 'wander': np.float64(0.33)}   final J/scale {'food': np.float64(2.6), 'safety': np.float64(-0.89), 'social': np.float64(3.08), 'knowledge': np.float64(3.79)}
+
+## preference balanced  omega [1.  1.  0.5 0. ]   panel: mean 1.18, best raw 4.64, best smoothed 3.65 (theta [ 0.97  1.74 -0.8   1.5   0.15 -0.02])
+   pg      start +1.82 ± 0.41  final +3.49 ± 0.32  gain +1.67 ± 0.48  fraction of panel best +0.93 ± 0.13  panel policies dominating it +0.00 ± 0.00
+           final theta {'food': np.float64(0.85), 'forager': np.float64(2.46), 'shelter': np.float64(-0.18), 'flee': np.float64(0.31), 'fight': np.float64(0.64), 'wander': np.float64(0.3)}   final J/scale {'food': np.float64(2.74), 'safety': np.float64(-0.88), 'social': np.float64(3.27), 'knowledge': np.float64(3.89)}
+   ng      start +1.82 ± 0.41  final +3.35 ± 0.38  gain +1.53 ± 0.47  fraction of panel best +0.88 ± 0.15  panel policies dominating it +0.00 ± 0.00
+           final theta {'food': np.float64(1.02), 'forager': np.float64(2.4), 'shelter': np.float64(-0.05), 'flee': np.float64(0.56), 'fight': np.float64(0.84), 'wander': np.float64(0.14)}   final J/scale {'food': np.float64(2.62), 'safety': np.float64(-0.81), 'social': np.float64(3.08), 'knowledge': np.float64(3.84)}
+   pareto  start +1.82 ± 0.41  final +3.26 ± 0.81  gain +1.44 ± 0.74  fraction of panel best +0.84 ± 0.33  panel policies dominating it +0.00 ± 0.00
+           final theta {'food': np.float64(0.67), 'forager': np.float64(1.99), 'shelter': np.float64(-0.37), 'flee': np.float64(0.68), 'fight': np.float64(0.01), 'wander': np.float64(0.42)}   final J/scale {'food': np.float64(2.39), 'safety': np.float64(-0.63), 'social': np.float64(2.98), 'knowledge': np.float64(3.77)}
+
+## preference cautious  omega [0.5 2.  0.5 0. ]   panel: mean -0.15, best raw 3.10, best smoothed 1.85 (theta [1.64 1.44 1.   1.88 1.78 1.24])
+   pg      start +0.01 ± 0.85  final +0.62 ± 0.62  gain +0.60 ± 0.91  fraction of panel best +0.38 ± 0.31  panel policies dominating it +0.01 ± 0.01
+           final theta {'food': np.float64(0.47), 'forager': np.float64(1.01), 'shelter': np.float64(0.19), 'flee': np.float64(-0.25), 'fight': np.float64(0.32), 'wander': np.float64(1.05)}   final J/scale {'food': np.float64(1.24), 'safety': np.float64(-0.45), 'social': np.float64(1.77), 'knowledge': np.float64(3.49)}
+   ng      start +0.01 ± 0.85  final +0.71 ± 0.98  gain +0.70 ± 0.74  fraction of panel best +0.43 ± 0.49  panel policies dominating it +0.04 ± 0.06
+           final theta {'food': np.float64(1.23), 'forager': np.float64(1.58), 'shelter': np.float64(1.16), 'flee': np.float64(0.95), 'fight': np.float64(-0.33), 'wander': np.float64(0.35)}   final J/scale {'food': np.float64(2.08), 'safety': np.float64(-0.79), 'social': np.float64(2.52), 'knowledge': np.float64(3.69)}
+   pareto  start +0.01 ± 0.85  final +0.93 ± 0.73  gain +0.92 ± 0.52  fraction of panel best +0.54 ± 0.36  panel policies dominating it +0.03 ± 0.05
+           final theta {'food': np.float64(0.67), 'forager': np.float64(2.21), 'shelter': np.float64(0.49), 'flee': np.float64(0.97), 'fight': np.float64(0.94), 'wander': np.float64(-0.07)}   final J/scale {'food': np.float64(2.44), 'safety': np.float64(-0.87), 'social': np.float64(2.92), 'knowledge': np.float64(3.75)}
+
+## preference curious  omega [1.  1.  0.5 1. ]   panel: mean 4.36, best raw 8.83, best smoothed 7.36 (theta [ 1.78  1.9  -0.96  1.59  1.94  1.87])
+   pg      start +5.35 ± 0.68  final +6.34 ± 1.22  gain +0.99 ± 1.50  fraction of panel best +0.66 ± 0.41  panel policies dominating it +0.01 ± 0.02
+           final theta {'food': np.float64(0.47), 'forager': np.float64(2.01), 'shelter': np.float64(0.01), 'flee': np.float64(0.23), 'fight': np.float64(0.23), 'wander': np.float64(0.02)}   final J/scale {'food': np.float64(2.28), 'safety': np.float64(-0.94), 'social': np.float64(2.76), 'knowledge': np.float64(3.61)}
+   ng      start +5.35 ± 0.68  final +6.87 ± 1.04  gain +1.51 ± 0.95  fraction of panel best +0.83 ± 0.35  panel policies dominating it +0.02 ± 0.05
+           final theta {'food': np.float64(0.7), 'forager': np.float64(2.19), 'shelter': np.float64(0.42), 'flee': np.float64(0.25), 'fight': np.float64(-0.07), 'wander': np.float64(0.44)}   final J/scale {'food': np.float64(2.47), 'safety': np.float64(-0.79), 'social': np.float64(2.92), 'knowledge': np.float64(3.73)}
+   pareto  start +5.35 ± 0.68  final +7.38 ± 0.50  gain +2.02 ± 0.64  fraction of panel best +1.00 ± 0.17  panel policies dominating it +0.00 ± 0.00
+           final theta {'food': np.float64(0.79), 'forager': np.float64(2.5), 'shelter': np.float64(0.31), 'flee': np.float64(0.24), 'fight': np.float64(-0.23), 'wander': np.float64(0.06)}   final J/scale {'food': np.float64(2.74), 'safety': np.float64(-0.87), 'social': np.float64(3.23), 'knowledge': np.float64(3.89)}
+
+LOCAL GEOMETRY AT THE END (rule ng, mean over seeds): plane cosines and areas (a_i ^ a_j)
+   forager   food^safety cos +0.19 area 0.55  food^social cos +0.43 area 0.05  food^knowledge cos +0.04 area 0.91  safety^social cos +0.13 area 0.07  safety^knowledge cos +0.07 area 1.07  social^knowledge cos +0.19 area 0.11
+   balanced  food^safety cos -0.14 area 0.49  food^social cos +0.38 area 0.06  food^knowledge cos +0.35 area 1.13  safety^social cos -0.00 area 0.06  safety^knowledge cos -0.04 area 1.36  social^knowledge cos +0.31 area 0.19
+   cautious  food^safety cos -0.21 area 0.67  food^social cos +0.29 area 0.16  food^knowledge cos +0.04 area 1.84  safety^social cos -0.17 area 0.13  safety^knowledge cos -0.21 area 1.46  social^knowledge cos +0.23 area 0.45
+   curious   food^safety cos -0.05 area 0.77  food^social cos +0.58 area 0.08  food^knowledge cos +0.30 area 1.30  safety^social cos +0.03 area 0.09  safety^knowledge cos +0.01 area 1.30  social^knowledge cos +0.29 area 0.22
+CONNECTION (rule ng): change of the normalised local metric per 20 episodes, and theta moved
+   forager   dM 0.90 0.64 0.40 0.65 0.46 0.50 0.51 0.49 0.50   dtheta 2.24 2.02 1.29 1.55 1.34 1.36 1.20 1.08 1.01
+   balanced  dM 0.88 0.68 0.59 0.69 0.66 0.47 0.56 0.53 0.62   dtheta 2.23 1.77 1.82 1.45 1.42 1.25 1.08 1.14 0.82
+   cautious  dM 0.91 0.54 0.60 0.67 0.74 0.59 0.70 0.46 0.45   dtheta 2.14 2.10 1.57 1.07 1.34 1.29 1.18 1.12 0.78
+   curious   dM 0.93 0.67 0.40 0.46 0.54 0.45 0.56 0.46 0.48   dtheta 2.24 1.87 1.81 1.45 1.33 1.28 0.98 1.20 0.95
+
+CRITERIA (fixed before running)
+   FAIL  P1 rule ng beats its starting theta for every preference
+   FAIL  P2 some rule reaches >= 0.8 of the panel's best for its preference: forager 0.85, balanced 0.93, cautious 0.54, curious 1.00
+   FAIL  P3 preferences differentiate (cautious safer True, forager more fed True, curious more knowledgeable False)
+   FAIL  P4 a geometry rule beats pg (ng - pg +0.07 ± 0.48; pareto - pg +0.25 ± 0.46)
