@@ -1,0 +1,124 @@
+E23 Feature harness validation (spec-v2 section 8)
+==================================================
+Paired CRN comparisons against the base world; frontier panel 192 policies x 4 episodes; 64 episodes per reference family; 95% paired-bootstrap intervals.
+
+## base -> skill=0   (meant to touch: food·social)
+   extent, best:    food -0.082 [-0.336,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.250 [-0.013,+0.500]
+   extent, average: food -0.114 [-0.150,-0.074]  safety +0.010 [+0.001,+0.017]  social +5.271 [+3.957,+6.672]  knowledge -0.052 [-0.096,+0.005]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety -0.09/+0.19  food·social +0.00/-0.02  food·knowledge +0.08/+0.13  safety·social -0.02/+0.00  safety·knowledge -0.02/+0.00  social·knowledge +0.06/+0.03
+   frontier corr (smoothed / raw): food·safety +0.21/+0.40*  food·social -0.01/-0.16  food·knowledge -0.26/-0.19  safety·social +0.23/+0.49  safety·knowledge -0.01/-0.18  social·knowledge -0.23/-0.08
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 1  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food,safety,social); shape (food·safety)
+   construct-check flags (touched but not targeted): food·safety
+   interval width paired / unpaired: extent 0.212/0.239, frontier corr 0.586/0.760
+
+## base -> skill=0.5   (meant to touch: food·social)
+   extent, best:    food +0.000 [-0.117,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [-0.250,+0.250]
+   extent, average: food -0.071 [-0.103,-0.044]  safety +0.004 [-0.002,+0.009]  social +2.222 [+0.855,+3.320]  knowledge -0.036 [-0.068,-0.001]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety +0.03/+0.19  food·social +0.03/+0.00  food·knowledge -0.02/+0.10  safety·social +0.10/+0.00  safety·knowledge +0.06/+0.08  social·knowledge -0.01/-0.12
+   frontier corr (smoothed / raw): food·safety +0.08/+0.44  food·social +0.01/-0.12  food·knowledge -0.06/-0.02  safety·social +0.07/+0.46  safety·knowledge -0.02/+0.03  social·knowledge -0.02/+0.03
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food,social,knowledge)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.154/0.176, frontier corr 0.364/0.645
+
+## base -> threat=0   (meant to touch: food·safety, safety·social, safety·knowledge)
+   extent, best:    food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [-0.000,+0.000]
+   extent, average: food +0.001 [-0.013,+0.012]  safety +0.062 [+0.052,+0.072]  social -0.175 [-0.436,+0.096]  knowledge -0.005 [-0.022,+0.012]
+   live dimensions: base food,safety,social,knowledge -> food,social,knowledge
+   frontier gap (smoothed / raw): food·safety +nan/+nan  food·social +0.00/-0.00  food·knowledge +0.01/+0.00  safety·social +nan/+nan  safety·knowledge +nan/+nan  social·knowledge +0.01/-0.00
+   frontier corr (smoothed / raw): food·safety +nan/+nan  food·social -0.02/+0.02  food·knowledge -0.04/-0.04  safety·social +nan/+nan  safety·knowledge +nan/+nan  social·knowledge -0.06/-0.00
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 1  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (safety); new dimension (safety)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.000/0.163, frontier corr 0.575/1.066
+
+## base -> threat=0.7   (meant to touch: food·safety, safety·social, safety·knowledge)
+   extent, best:    food +0.000 [+0.000,+0.067]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.250 [+0.000,+0.500]
+   extent, average: food -0.006 [-0.020,+0.008]  safety -0.065 [-0.077,-0.053]  social +0.132 [-0.332,+0.637]  knowledge +0.018 [-0.001,+0.038]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety +0.01/+0.08  food·social +0.00/-0.01  food·knowledge +0.00/+0.06  safety·social +0.05/+0.00  safety·knowledge -0.01/+0.00  social·knowledge +0.01/+0.05
+   frontier corr (smoothed / raw): food·safety +0.06/-0.18  food·social +0.01/+0.03  food·knowledge -0.11/-0.12  safety·social +0.06/-0.13  safety·knowledge +0.07/+0.09  social·knowledge -0.10/-0.08
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 1  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (safety)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.142/0.212, frontier corr 0.448/0.697
+
+## base -> shelter=0   (meant to touch: food·safety, safety·social)
+   extent, best:    food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.250 [+0.000,+0.500]
+   extent, average: food +0.007 [-0.004,+0.019]  safety -0.014 [-0.021,-0.007]  social +0.171 [-0.351,+0.660]  knowledge +0.009 [-0.018,+0.036]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety -0.07/+0.00  food·social +0.00/-0.00  food·knowledge -0.04/+0.00  safety·social -0.00/+0.00  safety·knowledge -0.08/+0.08  social·knowledge -0.04/+0.07
+   frontier corr (smoothed / raw): food·safety +0.00/+0.04  food·social -0.01/-0.02  food·knowledge +0.05/-0.03  safety·social -0.03/+0.05  safety·knowledge +0.09/+0.01  social·knowledge +0.00/-0.08
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (safety)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.125/0.164, frontier corr 0.339/0.634
+
+## base -> shelter=0.5   (meant to touch: food·safety, safety·social)
+   extent, best:    food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.250 [+0.000,+0.500]
+   extent, average: food +0.004 [-0.005,+0.014]  safety -0.006 [-0.011,-0.001]  social +0.008 [-0.283,+0.262]  knowledge +0.001 [-0.014,+0.015]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety +0.01/+0.00  food·social +0.00/-0.01  food·knowledge -0.00/-0.02  safety·social +0.02/+0.00  safety·knowledge -0.02/+0.00  social·knowledge -0.01/+0.05
+   frontier corr (smoothed / raw): food·safety -0.02/+0.07  food·social -0.01/-0.09  food·knowledge +0.02/-0.07  safety·social -0.01/+0.14  safety·knowledge +0.03/-0.04  social·knowledge +0.01/-0.10
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (safety)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.125/0.226, frontier corr 0.279/0.610
+
+## base -> cue=0   (meant to touch: food·knowledge, safety·knowledge, social·knowledge)
+   extent, best:    food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge -2.000 [-2.250,-1.750]
+   extent, average: food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge -1.341 [-1.422,-1.252]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety +0.00/+0.00  food·social +0.00/+0.00  food·knowledge -0.08/-0.07*  safety·social +0.00/+0.00  safety·knowledge +0.20/+0.17  social·knowledge -0.07/-0.13*
+   frontier corr (smoothed / raw): food·safety -0.03/+0.81  food·social +0.02/-0.07  food·knowledge +0.47/+0.04*  safety·social -0.05/+0.66  safety·knowledge -0.28/-0.76*  social·knowledge +0.58/+0.06*
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 1  food·knowledge 3  safety·social 1  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (knowledge); shape (food·knowledge,safety·knowledge,social·knowledge); local (food·knowledge)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.125/0.163, frontier corr 0.412/0.452
+
+## base -> cue=0.5   (meant to touch: food·knowledge, safety·knowledge, social·knowledge)
+   extent, best:    food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge -1.764 [-1.920,-1.514]
+   extent, average: food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge -1.088 [-1.154,-1.016]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety +0.00/+0.00  food·social +0.00/+0.00  food·knowledge -0.08/-0.07  safety·social +0.00/+0.00  safety·knowledge +0.18/+0.12  social·knowledge -0.04/-0.12*
+   frontier corr (smoothed / raw): food·safety -0.03/+0.77  food·social +0.02/-0.12  food·knowledge +0.44/+0.00*  safety·social -0.04/+0.56  safety·knowledge -0.27/-0.59*  social·knowledge +0.52/+0.07*
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 1  food·knowledge 4  safety·social 1  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (knowledge); shape (food·knowledge,safety·knowledge,social·knowledge); local (food·knowledge)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.101/0.140, frontier corr 0.397/0.442
+
+## base -> scarcity=0.5   (meant to touch: food·safety, food·social, food·knowledge)
+   extent, best:    food -0.001 [-0.022,+0.054]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge -0.750 [-1.000,-0.500]
+   extent, average: food -0.042 [-0.063,-0.020]  safety +0.006 [+0.001,+0.011]  social -0.171 [-1.013,+0.748]  knowledge -0.441 [-0.481,-0.398]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety +0.14/+0.01  food·social +0.00/-0.00  food·knowledge -0.09/-0.00  safety·social +0.19/+0.00  safety·knowledge +0.13/+0.00  social·knowledge -0.02/-0.03
+   frontier corr (smoothed / raw): food·safety +0.09/+0.07  food·social -0.01/-0.02  food·knowledge +0.05/-0.05  safety·social +0.09/+0.01  safety·knowledge -0.13/-0.18  social·knowledge +0.06/+0.04
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food,safety,knowledge)
+   construct-check flags (touched but not targeted): none
+   interval width paired / unpaired: extent 0.144/0.153, frontier corr 0.408/0.560
+
+## base -> scarcity=1   (meant to touch: food·safety, food·social, food·knowledge)
+   extent, best:    food -0.094 [-0.211,-0.012]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.250 [+0.000,+0.500]
+   extent, average: food -0.178 [-0.215,-0.150]  safety -0.011 [-0.021,-0.000]  social -1.601 [-2.879,-0.217]  knowledge -0.458 [-0.546,-0.389]
+   live dimensions: base food,safety,social,knowledge -> food,safety,social,knowledge
+   frontier gap (smoothed / raw): food·safety +0.12/+0.13  food·social +0.09/+0.06  food·knowledge -0.18/-0.20*  safety·social +0.02/+0.00  safety·knowledge +0.22/+0.27  social·knowledge +0.02/-0.07
+   frontier corr (smoothed / raw): food·safety -0.04/-0.35  food·social -0.09/-0.21*  food·knowledge +0.37/+1.03*  safety·social +0.05/-0.12  safety·knowledge -0.20/-0.74*  social·knowledge +0.41/+0.72*
+   local: families (of 5) with a significant cosine change: food·safety 1  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food,safety,social,knowledge); shape (food·social,food·knowledge,safety·knowledge,social·knowledge)
+   construct-check flags (touched but not targeted): safety·knowledge, social·knowledge
+   interval width paired / unpaired: extent 0.175/0.170, frontier corr 0.472/0.515
+
+VALIDATION (fixed before running)
+   PASS  V1a threat 0: safety no longer a live dimension
+   PASS  V1b threat 0.7: average safety falls
+   PASS  V2a skill 0: food extent falls
+   PASS  V2b skill 0: food·social shape unchanged
+   PASS  V3a cue 0: knowledge·food local cosine rises (broad, any scale)
+   PASS  V3b cue 0: knowledge extent falls
+   PASS  V4 shelter 0: no food·safety shape change
+   PASS  V5 scarcity 1: average food falls
+   PASS  V6 paired intervals narrower than unpaired (extent width ratio 0.72)

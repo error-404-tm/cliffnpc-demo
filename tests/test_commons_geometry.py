@@ -29,10 +29,12 @@ def test_commons_logs_controls_senses_and_goal_progress():
 
 
 def test_knowledge_comes_from_sight_only_when_cues_are_valid():
-    valid = Commons(Env(threat=0.0, cue_validity=1), seed=0).run(1)
-    random_cues = Commons(Env(threat=0.0, cue_validity=0), seed=0).run(1)
-    assert valid["r"][0, 3] >= 1.0                 # patches in view are resolved at once
-    assert random_cues["r"][0, 3] == 0.0            # only probing at a patch resolves them
+    at_patch = lambda log: log["s"][:, 0] > 0.9                # food_near: within ~eat radius  # noqa: E731
+    valid = Commons(Env(threat=0.0, cue_validity=1), seed=0).run(3)
+    random_cues = Commons(Env(threat=0.0, cue_validity=0), seed=0).run(3)
+    gain_v, gain_r = valid["r"][:, 3] > 0, random_cues["r"][:, 3] > 0
+    assert np.any(gain_v & ~at_patch(valid))                   # valid cues: learned from a distance
+    assert gain_r.any() and np.all(at_patch(random_cues)[gain_r] | np.roll(at_patch(random_cues), 1)[gain_r])
 
 
 def test_policy_families_set_theta_ranges():
@@ -99,3 +101,14 @@ def test_frontier_tools_find_trade_offs_and_synergies():
     th = rng.uniform(-1, 1, (80, 6))
     Je = np.repeat((th[:, :1] ** 2)[:, None, :], 3, axis=1) + 0.01 * rng.normal(size=(80, 3, 1))
     assert np.allclose(smooth_returns(th, np.repeat(Je, 4, axis=2))[:, 0], th[:, 0] ** 2, atol=0.05)
+
+
+def test_harness_pairs_worlds_and_flags_untargeted_effects():
+    from cliffnpc.harness import BASE, Sizes, compare, world_for, world_run
+    sz = Sizes(n_frontier=12, eps_frontier=2, eps_local=4, families=("broad",))
+    a = world_run(BASE, 0, sz)
+    b = world_run(world_for("threat", 0.0), 0, sz)
+    assert np.allclose(a["J"][:, :, 0], b["J"][:, :, 0], atol=0.3)     # CRN: food barely moves
+    r = compare(a, b, sz, n_boot=8, targets=("food·safety",))
+    assert r["live_a"][1] and not r["live_b"][1]                         # safety dimension vanishes
+    assert set(r["flags"]) <= set(r["touched"])

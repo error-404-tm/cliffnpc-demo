@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 experiments/out/*/run.log
+
+# raw run data (large; regenerate with the experiment, or keep locally)
+experiments/out/**/runs.pkl

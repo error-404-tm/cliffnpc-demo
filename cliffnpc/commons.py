@@ -48,8 +48,32 @@ HOME = np.array([20.0, 50.0])
 
 
 @dataclass
+class Dials:
+    """Continuous environment dials (spec-v2 section 8.1), each in [0, 1].
+        skill     probability the forager knows a patch's true type
+        threat    probability that reaching a patch brings an ambush
+        shelter   shelter radius as a fraction of 10 (0: no shelter)
+        cue       cue validity: a patch's look tells its type with probability (1 + cue) / 2
+        scarcity  0: 4 patches with effectively unlimited stock; 1: 2 patches of stock 3
+    Env's on/off settings are the end points, so E20-E22 are reproduced exactly."""
+    skill: float = 1.0
+    threat: float = 0.3
+    shelter: float = 1.0
+    cue: float = 1.0
+    scarcity: float = 0.0
+
+    def name(self) -> str:
+        return "_".join(f"{k}{v:g}" for k, v in self.__dict__.items())
+
+
+def _h2(p: float) -> float:
+    p = min(max(p, 1e-12), 1 - 1e-12)
+    return float(-(p * np.log2(p) + (1 - p) * np.log2(1 - p)))
+
+
+@dataclass
 class Env:
-    """One point in environment space."""
+    """One point in environment space (on/off factors; see Dials for the continuous form)."""
     ally_skill: int = 1
     threat: float = 0.3
     shelter: bool = True
@@ -59,6 +83,10 @@ class Env:
     def name(self) -> str:
         return (f"skill{self.ally_skill}_thr{self.threat}_shel{int(self.shelter)}"
                 f"_cue{self.cue_validity}_scar{self.scarcity}")
+
+    def dials(self) -> Dials:
+        return Dials(skill=float(self.ally_skill), threat=float(self.threat), shelter=float(self.shelter),
+                     cue=float(self.cue_validity), scarcity=float(self.scarcity))
 
 
 # exploratory policy families: per-primitive mean and spread of theta, OU noise sigma
@@ -124,7 +152,7 @@ def _unit(v):
 
 @dataclass
 class Commons:
-    env: Env
+    env: Env | Dials
     seed: int = 0
     episode_len: float = 60.0
     policy: str = "broad"              # exploratory policy family (POLICIES)
@@ -134,7 +162,9 @@ class Commons:
     log: dict = field(init=False)
 
     def __post_init__(self):
+        self.d: Dials = self.env.dials() if isinstance(self.env, Env) else self.env
         self.rng = np.random.default_rng(self.seed + 5003)
+        self._streams(0)
         cfg = ArenaConfig(seed=self.seed, tribes=True, n_npcs=1, home=tuple(HOME), lair=(95.0, 95.0),
                           food=((50.0, 50.0),),
                           food_dynamics=FoodConfig(initial_patches=0, max_patches=0, spawn_rate=0.0,
@@ -159,7 +189,7 @@ class Commons:
         self.theta_spread = float(pol["spread"])
         self.noise_sigma = float(pol["noise"]) if self.noise_override is None else self.noise_override
         self.theta_fixed: np.ndarray | None = None
-        self.known: set = set()
+        self.known: dict = {}
         self.rivals: list[Agent] = []
         self.log = {k: [] for k in ("u", "xi", "s", "r", "theta", "episode", "t")}
         self.episode = -1
@@ -186,19 +216,29 @@ class Commons:
         return a
 
     # -- food
+    def _streams(self, episode: int):
+        """Common random numbers: one stream per purpose, seeded by (seed, episode), and
+        each consumes the same draws whatever the dials -- so two worlds differing in
+        one dial see the same patches, noise and ambush draws."""
+        ss = np.random.SeedSequence([self.seed, episode, 7])
+        self.r_food, self.r_amb, self.r_noise, self.r_comp, self.r_start = (
+            np.random.default_rng(s) for s in ss.spawn(5))
+
     def _patch_spec(self):
-        rich = self.env.scarcity == 0
-        return (4, 1e9) if rich else (2, 3.0)        # number of patches, stock (scarce: ~30 meal-s)
+        lam = self.d.scarcity
+        n = int(round(4 - 2 * lam))
+        stock = 1e9 if lam <= 0 else min(1e9, 3.0 / lam ** 2)     # 0: unlimited; 1: 3 (~30 meal-s)
+        return n, stock
 
     def _spawn_patch(self):
         n, stock = self._patch_spec()
-        pos = self.rng.uniform(10, 90, 2)
-        real = self.rng.random() < 0.5
-        if self.env.cue_validity:
-            cue = 1 if real else 2                   # look A real, look B false
-        else:
-            cue = int(self.rng.integers(1, 3))
+        pos = self.r_food.uniform(10, 90, 2)
+        u_real, u_cue, u_know = self.r_food.random(3)              # always drawn (CRN)
+        real = u_real < 0.5
+        truthful = u_cue < (1 + self.d.cue) / 2                    # look matches type
+        cue = (1 if real else 2) if truthful else (2 if real else 1)
         self.ar._spawn(pos, stock, false=not real, cue=cue)
+        self.ar.patches[-1]["forager_knows"] = bool(u_know < self.d.skill)
 
     def _keep_food(self):
         n, _ = self._patch_spec()
@@ -207,11 +247,11 @@ class Commons:
 
     # -- scripted agents
     def _in_shelter(self, pos):
-        return self.env.shelter and np.linalg.norm(pos - HOME) < 10.0
+        return self.d.shelter > 0 and np.linalg.norm(pos - HOME) < 10.0 * self.d.shelter
 
     def _forager_control(self, ar, me, p):
         me.npc.C[3] = 1.0
-        pool = [q for q in ar.patches if (not q["false"]) or not self.env.ally_skill]
+        pool = [q for q in ar.patches if not (q["false"] and q.get("forager_knows", False))]
         if not pool:
             return np.zeros(2)
         tgt = min(pool, key=lambda q: np.linalg.norm(q["pos"] - me.pos))
@@ -221,7 +261,7 @@ class Commons:
     def _companion_control(self, ar, me, p):
         """Wanders the world (company is available anywhere, sometimes)."""
         me.npc.C[3] = 1.0
-        self.comp_heading += 0.5 * np.sqrt(ar.wcfg.dt) * self.rng.normal()
+        self.comp_heading += 0.5 * np.sqrt(ar.wcfg.dt) * self.r_comp.normal()
         d = np.array([np.cos(self.comp_heading), np.sin(self.comp_heading)])
         if np.any(me.pos < 8) or np.any(me.pos > 92):          # turn back from the walls
             d = _unit(CENTER - me.pos)
@@ -255,8 +295,8 @@ class Commons:
     def _control(self, ar, a, p):
         dt = ar.wcfg.dt
         k = np.exp(-dt / self.noise_tau)
-        self.xi = k * self.xi + np.sqrt(1 - k * k) * self.noise_sigma * self.rng.normal(size=len(PRIMITIVES))
-        self.heading += 0.6 * np.sqrt(dt) * self.rng.normal()
+        self.xi = k * self.xi + np.sqrt(1 - k * k) * self.noise_sigma * self.r_noise.normal(size=len(PRIMITIVES))
+        self.heading += 0.6 * np.sqrt(dt) * self.r_noise.normal()
         w = self.theta + self.xi
         P = self._primitive_vectors(ar, a)
         v = w @ P
@@ -279,26 +319,30 @@ class Commons:
             self.satiety,
             a.health,
             float(len(self.rivals) > 0),
-            float(self.env.shelter),
+            float(self.d.shelter),
             max(0.0, 1 - np.linalg.norm(self.companion.pos - a.pos) / R),
         ])
         return np.concatenate([x, extra])
 
     def _resolve_by_sight(self):
         """Bits resolved by seeing patches' looks -- informative only if cues are valid."""
-        if not self.env.cue_validity:
+        sight = 1.0 - _h2((1 + self.d.cue) / 2)          # bits a look carries about the type
+        if sight <= 1e-9:
             return 0.0
         a, R = self.learner, self.ar.wcfg.sensor_radius
         bits = 0.0
         for q in self.ar.patches:
-            if q["id"] not in self.known and np.linalg.norm(q["pos"] - a.pos) <= R:
-                self.known.add(q["id"])
-                bits += 1.0
+            if q["id"] not in self.seen_ids and np.linalg.norm(q["pos"] - a.pos) <= R:
+                self.seen_ids.add(q["id"])
+                add = max(0.0, min(sight, 1.0 - self.known.get(q["id"], 0.0)))
+                self.known[q["id"]] = self.known.get(q["id"], 0.0) + add
+                bits += add
         return bits
 
     # -- episodes
     def new_episode(self):
         self.episode += 1
+        self._streams(self.episode)
         for b in self.rivals:
             self._remove(b)
         self.rivals = []
@@ -307,13 +351,14 @@ class Commons:
         a = self.learner
         a.pos, a.vel, a.health, a.mobile = HOME.copy(), np.zeros(2), 1.0, True
         self.forager.pos = HOME + np.array([3.0, 0.0])
-        self.companion.pos = self.rng.uniform(15, 85, 2)
-        self.comp_heading = float(self.rng.uniform(0, 2 * np.pi))
-        self.satiety = float(self.rng.uniform(0.0, 0.5))
-        self.known = set()
+        self.companion.pos = self.r_start.uniform(15, 85, 2)
+        self.comp_heading = float(self.r_start.uniform(0, 2 * np.pi))
+        self.satiety = float(self.r_start.uniform(0.0, 0.5))
+        self.known: dict = {}                     # patch id -> bits known about its type
+        self.seen_ids = set()
         self.amb_patches = set()
         self.theta = (self.theta_fixed.copy() if self.theta_fixed is not None else
-                      self.theta_mean + self.rng.uniform(-self.theta_spread, self.theta_spread, len(PRIMITIVES)))
+                      self.theta_mean + self.r_start.uniform(-self.theta_spread, self.theta_spread, len(PRIMITIVES)))
         self.xi[:] = 0.0
 
     def run_episode(self):
@@ -337,13 +382,15 @@ class Commons:
                 self.satiety = max(0.0, self.satiety - 0.01 * ar.wcfg.dt)
                 for q in ar.patches:
                     if np.linalg.norm(a.pos - q["pos"]) < r_eat:
-                        if q["id"] not in self.known:       # probing at the patch resolves it
-                            self.known.add(q["id"])
-                            know += 1.0
+                        got = self.known.get(q["id"], 0.0)  # probing resolves the rest of the bit
+                        if got < 1.0:
+                            know += 1.0 - got
+                            self.known[q["id"]] = 1.0
                         if q["id"] not in self.amb_patches:
                             self.amb_patches.add(q["id"])
-                            if self.rng.random() < self.env.threat:
-                                self._ambush()
+                            u, ang = self.r_amb.random(), self.r_amb.uniform(0, 2 * np.pi)   # CRN
+                            if u < self.d.threat:
+                                self._ambush(ang)
                 if ar.t > self.ambush_until and self.rivals:
                     for b in self.rivals:
                         self._remove(b)
@@ -356,11 +403,10 @@ class Commons:
             if a.health < 0.15:                             # beaten: end the episode
                 break
 
-    def _ambush(self):
+    def _ambush(self, th: float):
         for b in self.rivals:                        # a new ambush replaces one still running
             self._remove(b)
         self.rivals = []
-        th = self.rng.uniform(0, 2 * np.pi)
         for j in range(2):
             ang = th + np.pi * j
             pos = np.clip(self.learner.pos + 8.0 * np.array([np.cos(ang), np.sin(ang)]), 1, 99)
