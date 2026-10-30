@@ -40,13 +40,18 @@ EVAL = 16
 SIZES = Sizes()
 
 # ---- the base world's frontier panel (from E23 if saved locally, else recomputed)
+def base_part(part):
+    return world_run(BASE, 0, SIZES, part)
+
+
+
 pk = OUT.parent / "e23_harness_validation" / "runs.pkl"
 if pk.exists():
     with open(pk, "rb") as fh:
         J_panel = pickle.load(fh)["base"]["J"]
 else:
     parts = [p for p in world_parts(SIZES) if p.startswith("frontier")]
-    J_panel = merge_parts(pmap(lambda part: world_run(BASE, 0, SIZES, part), parts), SIZES)["J"]
+    J_panel = merge_parts(pmap(base_part, parts), SIZES)["J"]
 THETA_PANEL = frontier_panel(SIZES.n_frontier)
 Jp_raw = J_panel.mean(1) / GOAL_SCALE
 Jp_s = smooth_returns(THETA_PANEL, J_panel) / GOAL_SCALE

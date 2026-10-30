@@ -55,12 +55,16 @@ class Dials:
         shelter   shelter radius as a fraction of 10 (0: no shelter)
         cue       cue validity: a patch's look tells its type with probability (1 + cue) / 2
         scarcity  0: 4 patches with effectively unlimited stock; 1: 2 patches of stock 3
+        need      internal need (ladder rung 1): satiety decays at 0.01 + 0.04 need per s,
+                  and below satiety 0.3 starving is a setback on the food axis
+                  (-0.05 need (0.3 - satiety) per s); 0 = rung 0 exactly
     Env's on/off settings are the end points, so E20-E22 are reproduced exactly."""
     skill: float = 1.0
     threat: float = 0.3
     shelter: float = 1.0
     cue: float = 1.0
     scarcity: float = 0.0
+    need: float = 0.0
 
     def name(self) -> str:
         return "_".join(f"{k}{v:g}" for k, v in self.__dict__.items())
@@ -379,7 +383,9 @@ class Commons:
                     gain = min(1.0 - self.satiety, 0.2 * ar.wcfg.dt)
                     self.satiety += gain
                     food += gain
-                self.satiety = max(0.0, self.satiety - 0.01 * ar.wcfg.dt)
+                self.satiety = max(0.0, self.satiety - (0.01 + 0.04 * self.d.need) * ar.wcfg.dt)
+                if self.d.need > 0 and self.satiety < 0.3:            # starving: a food setback
+                    food -= 0.05 * self.d.need * (0.3 - self.satiety) * ar.wcfg.dt
                 for q in ar.patches:
                     if np.linalg.norm(a.pos - q["pos"]) < r_eat:
                         got = self.known.get(q["id"], 0.0)  # probing resolves the rest of the bit

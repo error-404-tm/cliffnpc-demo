@@ -99,7 +99,7 @@ cliffnpc/
   harness.py      spec v2: environment dials, fingerprints, paired CRN comparisons
   phase_c.py      spec v2: agent that learns its own induced geometry and moves to the frontier
   config.py       every tunable constant
-experiments/      e1..e6, e8..e24, each writes experiments/out/<name>/{*.png, summary.txt}
+experiments/      e1..e6, e8..e25, each writes experiments/out/<name>/{*.png, summary.txt}
 tests/            133 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
@@ -629,6 +629,29 @@ agent moves).
   gradient (natural − plain +0.07 ± 0.48, Pareto − plain +0.25 ± 0.46): at rung 0 one
   strategy dominates and six well-conditioned controls leave nothing for the geometry
   to correct. The local metric's turning is mostly estimation noise.
+
+**Agent fixes tested at rung 0 (E24b), both rejected.** Slower forgetting (0.98)
+changes nothing; a per-tick TD critic with bootstrapped advantages and a surprise gate
+makes the local metric ~3× steadier (late change per 20 episodes 0.51 → 0.14–0.16) but
+lowers performance (−0.11 cautious, −0.15 balanced): its value errors steer the policy.
+Both stay in the code as options, off by default.
+
+**Rung 1: internal need (E25).** The `need` dial makes hunger grow faster and starving
+a setback on the food axis (0 = rung 0).
+* *Environment (harness):* need is a pure **extent** dial. The best attainable food
+  more than doubles at need 1 (+2.2 normalised units, +1.1 at 0.5); no shape, local
+  or new-dimension effect, and no construct flags. It stretches the food axis without
+  changing any trade-off, and the frontier's best policy is the same for every
+  preference.
+* *Agents:* they absorb the rung reasonably well, reaching 0.74–0.86 of the panel's best
+  (just below the 0.8 criterion for foragers). Safety-weighted agents now do much better
+  (0.82 against 0.54 at rung 0), because food now matters to them too. Pareto-first is
+  the best and steadiest rule (0.85–0.86, interval ±0.04 for balanced agents); the
+  natural gradient is unstable (one cautious run set falls to −0.08). Preferences still
+  cannot differentiate — by construction, since one strategy remains best for all.
+* Lesson for the ladder: a dial that only moves the frontier gives the agent nothing
+  new to *choose*. The geometry rules should only start to matter on rungs that change
+  the frontier's shape (cue validity did; competition and combat should).
 
 ## Known limitations and next steps
 

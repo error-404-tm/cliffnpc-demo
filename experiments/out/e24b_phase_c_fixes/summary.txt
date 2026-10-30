@@ -1,0 +1,26 @@
+E24b Phase-C agent fixes on rung 0
+==================================
+fraction of the panel's best (mean ± 95% CI over seeds x rules); late dM = change of the normalised local metric per 20 episodes over the last 80.
+
+## cautious
+   old     fraction 0.45 ± 0.22  (pg 0.38  ng 0.43  pareto 0.54)   late dM 0.51
+   memory  fraction 0.41 ± 0.22  (pg 0.30  ng 0.50  pareto 0.42)   late dM 0.43
+   critic  fraction 0.34 ± 0.23  (pg 0.20  ng 0.28  pareto 0.52)   late dM 0.16
+   both    fraction 0.26 ± 0.27  (pg 0.33  ng 0.26  pareto 0.19)   late dM 0.14
+   memory - old: -0.04 ± 0.17
+   critic - old: -0.11 ± 0.23
+   both - old: -0.19 ± 0.28
+
+## balanced
+   old     fraction 0.88 ± 0.12  (pg 0.93  ng 0.88  pareto 0.84)   late dM 0.48
+   memory  fraction 0.86 ± 0.09  (pg 0.88  ng 0.83  pareto 0.86)   late dM 0.42
+   critic  fraction 0.73 ± 0.15  (pg 0.73  ng 0.86  pareto 0.60)   late dM 0.20
+   both    fraction 0.76 ± 0.15  (pg 0.60  ng 0.83  pareto 0.84)   late dM 0.20
+   memory - old: -0.03 ± 0.10
+   critic - old: -0.15 ± 0.16
+   both - old: -0.13 ± 0.17
+
+ACCEPTANCE (fixed before running)
+   reject  memory: cautious -0.04 ± 0.17, balanced -0.03 ± 0.10
+   reject  critic: cautious -0.11 ± 0.23, balanced -0.15 ± 0.16
+   reject  both: cautious -0.19 ± 0.28, balanced -0.13 ± 0.17

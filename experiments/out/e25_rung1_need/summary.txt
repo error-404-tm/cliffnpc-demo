@@ -1,0 +1,50 @@
+E25 Ladder rung 1: internal need
+================================
+agent: critic mc, forget 0.95
+
+PART A: what need does to the geometry (paired against the base world)
+## base -> need=0.5
+   extent, best:    food +1.090 [+1.047,+1.172]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [+0.000,+0.000]
+   extent, average: food +0.071 [-0.000,+0.137]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [+0.000,+0.000]
+   frontier gap (smoothed/raw): food·safety +0.01/+0.02  food·social +0.00/-0.02  food·knowledge +0.04/+0.04  safety·social +0.00/+0.00  safety·knowledge +0.00/+0.00  social·knowledge +0.00/+0.00
+   frontier corr (smoothed/raw): food·safety +0.03/-0.13  food·social +0.00/+0.01  food·knowledge -0.05/-0.01  safety·social +0.01/-0.13  safety·knowledge -0.00/+0.43  social·knowledge -0.00/-0.01
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food)
+   construct-check flags: none
+
+## base -> need=1
+   extent, best:    food +2.209 [+2.121,+2.291]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [+0.000,+0.000]
+   extent, average: food +0.076 [-0.066,+0.211]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [+0.000,+0.000]
+   frontier gap (smoothed/raw): food·safety +0.02/-0.01  food·social +0.00/-0.02  food·knowledge +0.04/+0.05  safety·social +0.00/+0.00  safety·knowledge +0.00/+0.00  social·knowledge +0.00/+0.00
+   frontier corr (smoothed/raw): food·safety +0.05/-0.08  food·social -0.00/+0.00  food·knowledge -0.08/+0.05  safety·social +0.00/-0.14  safety·knowledge +0.00/+0.43  social·knowledge -0.01/+0.07
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food)
+   construct-check flags: none
+
+PART B: phase-C agents in the rung-1 world (need 1)
+## forager  panel mean 1.20, best smoothed 8.42 (theta [ 0.97  1.74 -0.8   1.5   0.15 -0.02])
+   pg      start +2.78 ± 0.78  final +6.58 ± 0.81  fraction of best +0.74 ± 0.11  dominated by +0.00 ± 0.00 of panel   J/scale food +6.37 safety -0.81 social +3.08 knowledge +3.84
+   ng      start +2.78 ± 0.78  final +6.53 ± 1.09  fraction of best +0.74 ± 0.15  dominated by +0.00 ± 0.00 of panel   J/scale food +6.34 safety -0.83 social +3.04 knowledge +3.87
+   pareto  start +2.78 ± 0.78  final +6.48 ± 0.98  fraction of best +0.73 ± 0.14  dominated by +0.00 ± 0.00 of panel   J/scale food +6.30 safety -0.85 social +3.06 knowledge +3.78
+
+## balanced  panel mean 1.34, best smoothed 8.87 (theta [ 0.97  1.74 -0.8   1.5   0.15 -0.02])
+   pg      start +2.96 ± 0.79  final +7.37 ± 0.90  fraction of best +0.80 ± 0.12  dominated by +0.00 ± 0.00 of panel   J/scale food +6.60 safety -0.80 social +3.14 knowledge +3.80
+   ng      start +2.96 ± 0.79  final +6.74 ± 2.26  fraction of best +0.72 ± 0.30  dominated by +0.00 ± 0.00 of panel   J/scale food +6.04 safety -0.81 social +3.02 knowledge +3.74
+   pareto  start +2.96 ± 0.79  final +7.81 ± 0.33  fraction of best +0.86 ± 0.04  dominated by +0.00 ± 0.00 of panel   J/scale food +7.03 safety -0.86 social +3.28 knowledge +3.90
+
+## cautious  panel mean -0.06, best smoothed 3.11 (theta [ 0.97  1.74 -0.8   1.5   0.15 -0.02])
+   pg      start +0.58 ± 0.78  final +2.55 ± 1.24  fraction of best +0.82 ± 0.39  dominated by +0.02 ± 0.03 of panel   J/scale food +5.36 safety -0.76 social +2.78 knowledge +3.69
+   ng      start +0.58 ± 0.78  final -0.30 ± 1.64  fraction of best -0.08 ± 0.52  dominated by +0.11 ± 0.12 of panel   J/scale food +2.10 safety -1.14 social +1.86 knowledge +3.71
+   pareto  start +0.58 ± 0.78  final +2.42 ± 1.12  fraction of best +0.78 ± 0.35  dominated by +0.00 ± 0.00 of panel   J/scale food +5.58 safety -0.87 social +2.75 knowledge +3.82
+
+## curious  panel mean 4.52, best smoothed 12.29 (theta [ 0.97  1.74 -0.8   1.5   0.15 -0.02])
+   pg      start +6.49 ± 0.97  final +10.37 ± 1.67  fraction of best +0.75 ± 0.21  dominated by +0.01 ± 0.01 of panel   J/scale food +6.03 safety -0.84 social +2.93 knowledge +3.71
+   ng      start +6.49 ± 0.97  final +10.55 ± 1.40  fraction of best +0.78 ± 0.18  dominated by +0.02 ± 0.03 of panel   J/scale food +6.21 safety -0.97 social +3.03 knowledge +3.80
+   pareto  start +6.49 ± 0.97  final +11.12 ± 1.29  fraction of best +0.85 ± 0.17  dominated by +0.00 ± 0.00 of panel   J/scale food +6.62 safety -0.83 social +3.13 knowledge +3.78
+
+CRITERIA (fixed before running)
+   PASS  A1 need moves the food extent, not the others
+   PASS  A2 construct flags (effects on pairs not involving food): none
+   FAIL  B1 absorption, fraction of best per preference: forager 0.74, balanced 0.86, cautious 0.82, curious 0.85
+   FAIL  B2 geometry rule beats pg (ng - pg -0.84 ± 0.90; pareto - pg +0.24 ± 0.44)
+   FAIL  B3 preferences differentiate (cautious safer, forager more fed)

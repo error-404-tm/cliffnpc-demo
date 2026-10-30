@@ -44,6 +44,7 @@ DIALS = {
     "shelter": DialSpec((0.0, 0.5, 1.0), ("food·safety", "safety·social"), "rival-free disc at home"),
     "cue": DialSpec((0.0, 0.5, 1.0), ("food·knowledge", "safety·knowledge", "social·knowledge"), "looks tell types"),
     "scarcity": DialSpec((0.0, 0.5, 1.0), ("food·safety", "food·social", "food·knowledge"), "fewer, smaller patches"),
+    "need": DialSpec((0.0, 0.5, 1.0), ("food·safety", "food·social", "food·knowledge"), "rung 1: hunger grows, starving hurts"),
 }
 
 
