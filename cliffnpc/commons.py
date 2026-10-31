@@ -42,6 +42,9 @@ GOALS = ("food", "safety", "social", "knowledge")
 PRIMITIVES = ("food", "forager", "shelter", "flee", "fight", "wander")
 N_SENSE = 24                         # 16 situation features + 8 commons senses
 SCALES = (16, 32, 64)                # record lengths in ticks
+PHI_NAMES = ("bias", "hunger", "rival_in_view", "forager_near", "food_in_view")
+N_PHI = len(PHI_NAMES)
+EXTRA_SKILLS = (0.5, 0.0)            # skills of the extra foragers (rung 4)
 TICK = 0.2                           # s per record tick (= cognitive tick)
 CENTER = np.array([50.0, 50.0])
 HOME = np.array([20.0, 50.0])
@@ -58,6 +61,13 @@ class Dials:
         need      internal need (ladder rung 1): satiety decays at 0.01 + 0.04 need per s,
                   and below satiety 0.3 starving is a setback on the food axis
                   (-0.05 need (0.3 - satiety) per s); 0 = rung 0 exactly
+        depletion rung 2: patches hold stock 2 + 30 (1 - depletion) and respawn elsewhere
+                  when eaten out (0: unlimited)
+        false_frac rung 3: fraction of false patches (base 0.5)
+        allies    rung 4: extra foragers of graded skill: round(2 allies) of them, with
+                  skills 0.5 and 0 (they share company and eat the same stock)
+        rivals    rung 5: rival foragers (the other tribe): round(2 rivals) of them; they
+                  know the real patches, eat the same stock, and contact is combat
     Env's on/off settings are the end points, so E20-E22 are reproduced exactly."""
     skill: float = 1.0
     threat: float = 0.3
@@ -65,6 +75,10 @@ class Dials:
     cue: float = 1.0
     scarcity: float = 0.0
     need: float = 0.0
+    depletion: float = 0.0
+    false_frac: float = 0.5
+    allies: float = 0.0
+    rivals: float = 0.0
 
     def name(self) -> str:
         return "_".join(f"{k}{v:g}" for k, v in self.__dict__.items())
@@ -142,7 +156,8 @@ def record_windows(log: dict, T: int, stride: int | None = None) -> dict:
     stride = stride or T // 2
     n = len(log["r"])
     starts = np.arange(0, n - T + 1, stride)
-    out = {k: np.stack([log[k][i:i + T] for i in starts]) for k in ("u", "xi", "s", "r", "theta")}
+    keys = ("u", "xi", "s", "r", "theta") + (("phi",) if "phi" in log and len(log["phi"]) == n else ())
+    out = {k: np.stack([log[k][i:i + T] for i in starts]) for k in keys}
     out["G"] = out["r"].sum(axis=1)                 # vector outcome of the record
     out["episode"] = np.array([log["episode"][i] for i in starts])
     return out
@@ -187,6 +202,11 @@ class Commons:
         self.learner.controller = self._control
         self.forager = self._add("A", HOME + np.array([3.0, 0.0]), self._forager_control)
         self.companion = self._add("A", HOME + np.array([0.0, 3.0]), self._companion_control)
+        self.extra = [self._add("A", HOME + np.array([-3.0, 2.0 * i]), self._extra_control(i))
+                      for i in range(int(round(2 * self.d.allies)))]
+        self.rival_foragers = [self._add("B", np.array([90.0, 90.0 - 4.0 * i]), self._rival_forager_control)
+                               for i in range(int(round(2 * self.d.rivals)))]
+        self.Theta: np.ndarray | None = None             # situation-dependent policy (6 x N_PHI); None: theta
         self.comp_heading = 0.0
         pol = POLICIES[self.policy]
         self.theta_mean = np.asarray(pol["mean"], float)
@@ -195,7 +215,7 @@ class Commons:
         self.theta_fixed: np.ndarray | None = None
         self.known: dict = {}
         self.rivals: list[Agent] = []
-        self.log = {k: [] for k in ("u", "xi", "s", "r", "theta", "episode", "t")}
+        self.log = {k: [] for k in ("u", "xi", "s", "r", "theta", "episode", "t", "phi")}
         self.episode = -1
         self.theta = np.zeros(len(PRIMITIVES))
         self.xi = np.zeros(len(PRIMITIVES))
@@ -225,24 +245,28 @@ class Commons:
         each consumes the same draws whatever the dials -- so two worlds differing in
         one dial see the same patches, noise and ambush draws."""
         ss = np.random.SeedSequence([self.seed, episode, 7])
-        self.r_food, self.r_amb, self.r_noise, self.r_comp, self.r_start = (
-            np.random.default_rng(s) for s in ss.spawn(5))
+        self.r_food, self.r_amb, self.r_noise, self.r_comp, self.r_start, self.r_ally = (
+            np.random.default_rng(s) for s in ss.spawn(6))       # first five as before (CRN with E23-E25)
 
     def _patch_spec(self):
         lam = self.d.scarcity
         n = int(round(4 - 2 * lam))
         stock = 1e9 if lam <= 0 else min(1e9, 3.0 / lam ** 2)     # 0: unlimited; 1: 3 (~30 meal-s)
+        if self.d.depletion > 0:
+            stock = min(stock, 2.0 + 30.0 * (1.0 - self.d.depletion))
         return n, stock
 
     def _spawn_patch(self):
         n, stock = self._patch_spec()
         pos = self.r_food.uniform(10, 90, 2)
         u_real, u_cue, u_know = self.r_food.random(3)              # always drawn (CRN)
-        real = u_real < 0.5
+        real = u_real < 1.0 - self.d.false_frac
         truthful = u_cue < (1 + self.d.cue) / 2                    # look matches type
         cue = (1 if real else 2) if truthful else (2 if real else 1)
         self.ar._spawn(pos, stock, false=not real, cue=cue)
         self.ar.patches[-1]["forager_knows"] = bool(u_know < self.d.skill)
+        u_extra = self.r_ally.random(2)                            # extra allies' knowledge (own stream)
+        self.ar.patches[-1]["extra_knows"] = [bool(u_extra[i] < s) for i, s in enumerate(EXTRA_SKILLS)]
 
     def _keep_food(self):
         n, _ = self._patch_spec()
@@ -261,6 +285,29 @@ class Commons:
         tgt = min(pool, key=lambda q: np.linalg.norm(q["pos"] - me.pos))
         d = tgt["pos"] - me.pos
         return _unit(d) * min(4.0, np.linalg.norm(d) / ar.wcfg.dt)
+
+    def _extra_control(self, i: int):
+        """Extra forager i: goes to the nearest patch it does not know to be false."""
+        def f(ar, me, p):
+            me.npc.C[3] = 1.0
+            pool = [q for q in ar.patches if not (q["false"] and q.get("extra_knows", [False, False])[i])]
+            if not pool:
+                return np.zeros(2)
+            d = min(pool, key=lambda q: np.linalg.norm(q["pos"] - me.pos))["pos"] - me.pos
+            return _unit(d) * min(3.5, np.linalg.norm(d) / ar.wcfg.dt)
+        return f
+
+    def _rival_forager_control(self, ar, me, p):
+        """A forager of the other tribe: knows the real patches, eats, fights on contact."""
+        me.npc.C[3] = 1.0
+        pool = [q for q in ar.patches if not q["false"]]
+        if not pool:
+            return np.zeros(2)
+        d = min(pool, key=lambda q: np.linalg.norm(q["pos"] - me.pos))["pos"] - me.pos
+        v = _unit(d) * min(3.5, np.linalg.norm(d) / ar.wcfg.dt)
+        if self._in_shelter(me.pos + v * ar.wcfg.dt):
+            return np.zeros(2)
+        return v
 
     def _companion_control(self, ar, me, p):
         """Wanders the world (company is available anywhere, sometimes)."""
@@ -301,7 +348,7 @@ class Commons:
         k = np.exp(-dt / self.noise_tau)
         self.xi = k * self.xi + np.sqrt(1 - k * k) * self.noise_sigma * self.r_noise.normal(size=len(PRIMITIVES))
         self.heading += 0.6 * np.sqrt(dt) * self.r_noise.normal()
-        w = self.theta + self.xi
+        w = (self.theta if self.Theta is None else self.Theta @ self.phi()) + self.xi
         P = self._primitive_vectors(ar, a)
         v = w @ P
         speed = ar.steer_cfg.max_speed * np.tanh(np.linalg.norm(v))
@@ -310,6 +357,14 @@ class Commons:
         vel = speed * _unit(v)
         self.u = np.array([vel[0], vel[1], fight])
         return vel
+
+    def phi(self) -> np.ndarray:
+        """Situation features for situation-dependent policies (PHI_NAMES)."""
+        a, ar = self.learner, self.ar
+        R = ar.wcfg.sensor_radius
+        food = any(np.linalg.norm(q["pos"] - a.pos) <= R for q in ar.patches)
+        return np.array([1.0, 1.0 - self.satiety, float(ar._rival_of(a) is not None),
+                         float(np.linalg.norm(self.forager.pos - a.pos) <= ar.wcfg.peer_radius), float(food)])
 
     # -- senses and goal progress
     def senses(self) -> np.ndarray:
@@ -355,6 +410,10 @@ class Commons:
         a = self.learner
         a.pos, a.vel, a.health, a.mobile = HOME.copy(), np.zeros(2), 1.0, True
         self.forager.pos = HOME + np.array([3.0, 0.0])
+        for i, b in enumerate(self.extra):
+            b.pos, b.health, b.mobile = HOME + np.array([-3.0, 2.0 * i]), 1.0, True
+        for i, b in enumerate(self.rival_foragers):
+            b.pos, b.health, b.mobile = np.array([90.0, 90.0 - 4.0 * i]), 1.0, True
         self.companion.pos = self.r_start.uniform(15, 85, 2)
         self.comp_heading = float(self.r_start.uniform(0, 2 * np.pi))
         self.satiety = float(self.r_start.uniform(0.0, 0.5))
@@ -373,6 +432,7 @@ class Commons:
         r_eat = ar.cfg.npc_cog.eat_radius
         for _ in range(n_ticks):
             s = self.senses()
+            phi0 = self.phi()
             xi0, u0 = self.xi.copy(), None
             taken0 = a.taken_total
             food = social = know = 0.0
@@ -405,7 +465,7 @@ class Commons:
             know += self._resolve_by_sight()
             social = float(ar.allies_near(a) > 0) * TICK
             safety = -(a.taken_total - taken0)
-            self._record(u0, xi0, s, np.array([food, safety, social, know]))
+            self._record(u0, xi0, s, np.array([food, safety, social, know]), phi0)
             if a.health < 0.15:                             # beaten: end the episode
                 break
 
@@ -419,8 +479,9 @@ class Commons:
             self.rivals.append(self._add("B", pos, self._rival_control))
         self.ambush_until = self.ar.t + 8.0
 
-    def _record(self, u, xi, s, r):
+    def _record(self, u, xi, s, r, phi=None):
         L = self.log
+        L["phi"].append(phi if phi is not None else np.zeros(N_PHI))
         L["u"].append(u)
         L["xi"].append(xi)
         L["s"].append(s)
@@ -441,6 +502,22 @@ class Commons:
                 out[i, k] = np.sum(self.log["r"][n0:], axis=0)
                 for key in self.log:                       # keep memory flat: drop the ticks
                     del self.log[key][n0:]
+        self.theta_fixed = None
+        return out
+
+    def run_ctx_policies(self, Thetas: np.ndarray, episodes_each: int) -> np.ndarray:
+        """As run_policies, for situation-dependent policies Theta (n, 6, N_PHI)."""
+        out = np.zeros((len(Thetas), episodes_each, len(GOALS)))
+        for i, Th in enumerate(Thetas):
+            self.Theta = np.asarray(Th, float)
+            self.theta_fixed = Th[:, 0].copy()
+            for k in range(episodes_each):
+                n0 = len(self.log["r"])
+                self.run_episode()
+                out[i, k] = np.sum(self.log["r"][n0:], axis=0)
+                for key in self.log:
+                    del self.log[key][n0:]
+        self.Theta = None
         self.theta_fixed = None
         return out
 

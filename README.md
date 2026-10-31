@@ -99,8 +99,8 @@ cliffnpc/
   harness.py      spec v2: environment dials, fingerprints, paired CRN comparisons
   phase_c.py      spec v2: agent that learns its own induced geometry and moves to the frontier
   config.py       every tunable constant
-experiments/      e1..e6, e8..e25, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            133 tests
+experiments/      e1..e6, e8..e27, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            135 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
@@ -108,7 +108,7 @@ spec-v2.md        the v2 plan: discover the induced geometry instead of imposing
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 133 tests, ~2.5 min
+.venv/bin/python -m pytest -q          # 135 tests, ~2.5 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -653,11 +653,60 @@ a setback on the food axis (0 = rung 0).
   new to *choose*. The geometry rules should only start to matter on rungs that change
   the frontier's shape (cue validity did; competition and combat should).
 
+**Before climbing further, three changes (E26–E27):**
+1. *Situation-dependent policies:* θ(s) = Θφ(s) with φ = (bias, hunger, rival in view,
+   forager near, food in view), 6 × 5 parameters; the agent learns its action gradient
+   with respect to Θ from noise × situation. With no situation terms it reduces exactly
+   to the fixed-θ agent (tested).
+2. *Stabilised natural gradient:* written in goal space it is Aᵀ(M + λI)⁻¹ω, which
+   inverts the local goal metric and so over-weights goals the agent can barely move
+   (safety), amplifying their noise. Now damped with λ = tr(M)/k and with a fallback to
+   the plain gradient whenever the step would not ascend (tested).
+3. *Reordered ladder:* rungs 2–4 screened environment-side only, then competition
+   (rung 5) as the first full agent rung, to test the geometric thesis where the
+   frontier should bend.
+
+**Rungs 2–4, screened against the rung-1 world (E26).** New dials: depletion (finite
+patches that respawn elsewhere), false-food fraction (around the base 50%), extra
+allies of graded skill. Each leaves the world unchanged when absent (tested).
+* *Extra allies* only move the frontier: better safety and more company (strength in
+  numbers), no change to any trade-off.
+* *90% false food* bends it in the social relations — sticking with the skilled
+  forager becomes far more valuable — a real effect the construct check flagged only
+  because social pairs were not listed as targets.
+* *Full depletion* bends it only in the knowledge relations, largely by construction
+  (patch turnover creates more patches to learn about), like scarcity in E23.
+
+**Rung 5: competition (E27).** Rival foragers of the other tribe know the real
+patches, eat the same stock, and contact is combat (n/(n+m), allies join). World:
+rung 1 + depletion 0.5 + rivals. Agents: two policy classes × three rules × four
+preferences × 6 seeds; the frontier's best re-evaluated with fresh episodes.
+* *Environment:* competition lowers food, safety and company, and bends the local
+  geometry (food·social and social·knowledge change in 2 of 5 reference policies):
+  criterion passed.
+* *Preferences now differentiate* for the first time: situation-dependent cautious
+  agents are safer than foragers, and foragers better fed.
+* *The stabilised natural gradient no longer collapses* (worst cell +0.22 of best,
+  against −0.08 before), but is not better than the plain gradient (−0.08 ± 0.11).
+* *Situation-dependent policies help only a little* (+0.08 ± 0.10 of best; clearly
+  better for forager and cautious agents, worse for curious ones). Their learned table
+  is sensible — e.g. food weighted up with hunger and with food in view, following the
+  forager weighted down when already near it, wandering up when a rival is in view.
+* *Absorption failed:* agents reach 0.51–0.66 of the best — this world is harder, and
+  200 episodes with 30 parameters is little.
+* **Thesis test: negative so far.** Even where the geometry bends, the geometry-aware
+  rules do not beat the plain gradient (natural −0.08 ± 0.11, Pareto −0.05 ± 0.12).
+  The induced geometry works as a *representation* — measurable, interrogable, and it
+  explains which relations each feature changes — but using it to *steer learning* has
+  not paid off on rungs 0, 1 or 5. The bend from competition is mild (local, not a
+  frontier-shape change), and noise in the agent's own estimates still dominates.
+
 ## Known limitations and next steps
 
-* **Phase C** works at rung 0 (agents reach the frontier) but its geometric parts do
-  not yet pay off; the ladder (`spec-v2.md` section 9) adds the trade-offs that should
-  make them matter, one measured dial at a time.
+* **Phase C:** agents reach the frontier on simple rungs (0.74–1.00 of the best) but
+  only 0.51–0.66 under competition; the geometry-aware update rules have not beaten
+  the plain gradient on any rung tested (0, 1, 5). Open: whether they help where the
+  frontier's *shape* changes strongly, with more episodes and less estimation noise.
 * **Phobias.** Under the felt-affect reward, avoided cues are never re-tested, so
   a slightly negative value becomes permanent avoidance. Confidence weighting, need
   features and bounded valence did not fix it.

@@ -22,7 +22,7 @@ from dataclasses import dataclass, field, replace
 
 import numpy as np
 
-from .commons import GOALS, POLICIES, PRIMITIVES, SCALES, Commons, Dials, record_windows
+from .commons import GOALS, N_PHI, POLICIES, PRIMITIVES, SCALES, Commons, Dials, record_windows
 from .geometry import (action_gradients, frontier_report, goal_metric, outcome_moment, outcome_weight,
                        signature, smooth_returns)
 
@@ -45,6 +45,10 @@ DIALS = {
     "cue": DialSpec((0.0, 0.5, 1.0), ("food·knowledge", "safety·knowledge", "social·knowledge"), "looks tell types"),
     "scarcity": DialSpec((0.0, 0.5, 1.0), ("food·safety", "food·social", "food·knowledge"), "fewer, smaller patches"),
     "need": DialSpec((0.0, 0.5, 1.0), ("food·safety", "food·social", "food·knowledge"), "rung 1: hunger grows, starving hurts"),
+    "depletion": DialSpec((0.0, 0.5, 1.0), ("food·safety", "food·social", "food·knowledge"), "rung 2: finite patches respawn"),
+    "false_frac": DialSpec((0.1, 0.5, 0.9), ("food·knowledge", "food·safety", "food·social"), "rung 3: share of false patches"),
+    "allies": DialSpec((0.0, 0.5, 1.0), ("food·social", "safety·social"), "rung 4: extra foragers of graded skill"),
+    "rivals": DialSpec((0.0, 0.5, 1.0), ("food·safety", "food·social", "safety·social"), "rung 5: rival foragers compete"),
 }
 
 
@@ -60,6 +64,19 @@ def frontier_panel(n: int, seed: int = 0) -> np.ndarray:
     rng = np.random.default_rng(seed)
     fam = np.array([POLICIES[p]["mean"] for p in POLICIES], float)
     return np.vstack([fam, rng.uniform(-1.0, 2.0, (n - len(fam), len(PRIMITIVES)))])
+
+
+def ctx_panel(n: int, seed: int = 1) -> np.ndarray:
+    """Situation-dependent policies Theta (n, 6, N_PHI): the fixed-theta panel's first n//3
+    (no situation terms) plus random Theta (bias column U(-1, 2), situation columns
+    U(-1.5, 1.5))."""
+    rng = np.random.default_rng(seed)
+    k = n // 3
+    out = np.zeros((n, len(PRIMITIVES), N_PHI))
+    out[:k, :, 0] = frontier_panel(n)[:k]
+    out[k:, :, 0] = rng.uniform(-1.0, 2.0, (n - k, len(PRIMITIVES)))
+    out[k:, :, 1:] = rng.uniform(-1.5, 1.5, (n - k, len(PRIMITIVES), N_PHI - 1))
+    return out
 
 
 def world_parts(sizes: Sizes = Sizes(), chunks: int = 4) -> list[str]:

@@ -1,0 +1,61 @@
+E26 Ladder rungs 2-4, screened against the rung-1 world
+=======================================================
+
+## rung1 -> depletion=0.5   (meant to touch: food·safety, food·social, food·knowledge)
+   extent, best:    food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [+0.000,+0.000]
+   extent, average: food +0.000 [+0.000,+0.000]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [+0.000,+0.000]
+   frontier gap (smoothed/raw): food·safety +0.00/+0.00  food·social +0.00/+0.00  food·knowledge +0.00/+0.00  safety·social +0.00/+0.00  safety·knowledge +0.00/+0.00  social·knowledge +0.00/+0.00
+   frontier corr (smoothed/raw): food·safety +0.00/+0.00  food·social +0.00/+0.00  food·knowledge +0.00/+0.00  safety·social +0.00/+0.00  safety·knowledge +0.00/+0.00  social·knowledge +0.00/+0.00
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: none
+   construct-check flags: none
+
+## rung1 -> depletion=1   (meant to touch: food·safety, food·social, food·knowledge)
+   extent, best:    food -0.214 [-0.709,-0.150]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +2.500 [+2.000,+2.750]
+   extent, average: food -0.533 [-0.617,-0.455]  safety -0.049 [-0.063,-0.034]  social -5.815 [-6.981,-4.853]  knowledge +1.129 [+0.994,+1.223]
+   frontier gap (smoothed/raw): food·safety +0.13/+0.13  food·social +0.00/+0.00  food·knowledge -0.12/-0.15*  safety·social +0.15/+0.02  safety·knowledge +0.05/+0.16  social·knowledge -0.10/-0.15
+   frontier corr (smoothed/raw): food·safety -0.08/-0.17  food·social -0.01/-0.32  food·knowledge +0.38/+1.12*  safety·social -0.04/+0.13  safety·knowledge -0.19/-1.17*  social·knowledge +0.48/+0.73*
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food,safety,social,knowledge); shape (food·knowledge,safety·knowledge,social·knowledge)
+   construct-check flags: safety·knowledge, social·knowledge
+
+## rung1 -> false_frac=0.1   (meant to touch: food·knowledge, food·safety, food·social)
+   extent, best:    food +0.094 [+0.056,+0.160]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.250 [-0.250,+0.500]
+   extent, average: food +0.596 [+0.499,+0.702]  safety +0.008 [+0.000,+0.014]  social +3.986 [+3.018,+5.004]  knowledge -0.043 [-0.089,+0.005]
+   frontier gap (smoothed/raw): food·safety +0.03/+0.01  food·social +0.00/+0.00  food·knowledge -0.01/-0.08  safety·social +0.03/+0.00  safety·knowledge -0.07/+0.00  social·knowledge -0.02/-0.05
+   frontier corr (smoothed/raw): food·safety +0.17/+0.53  food·social +0.02/+0.00  food·knowledge -0.27/-0.09  safety·social +0.19/+0.52  safety·knowledge +0.08/-0.63  social·knowledge -0.27/-0.10
+   local: families (of 5) with a significant cosine change: food·safety 1  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food,safety,social)
+   construct-check flags: none
+
+## rung1 -> false_frac=0.9   (meant to touch: food·knowledge, food·safety, food·social)
+   extent, best:    food -1.269 [-2.234,-1.268]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge -0.250 [-0.250,+0.000]
+   extent, average: food -1.018 [-1.146,-0.859]  safety +0.014 [+0.005,+0.022]  social +6.952 [+4.971,+9.331]  knowledge -0.138 [-0.193,-0.076]
+   frontier gap (smoothed/raw): food·safety -0.09/-0.00  food·social +0.00/+0.00  food·knowledge +0.01/-0.08  safety·social -0.17/+0.00  safety·knowledge -0.04/+0.00  social·knowledge +0.02/-0.04
+   frontier corr (smoothed/raw): food·safety +0.12/+0.18  food·social -0.40/-0.35*  food·knowledge -0.25/+0.04  safety·social +0.54/+0.20*  safety·knowledge +0.19/-0.22  social·knowledge -0.79/-0.27*
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 1  food·knowledge 0  safety·social 1  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (food,safety,social,knowledge); shape (food·social,safety·social,social·knowledge)
+   construct-check flags: safety·social, social·knowledge
+
+## rung1 -> allies=0.5   (meant to touch: food·social, safety·social)
+   extent, best:    food +0.000 [+0.000,+0.003]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [+0.000,+0.000]
+   extent, average: food -0.003 [-0.013,+0.006]  safety +0.017 [+0.012,+0.021]  social +4.444 [+3.608,+5.468]  knowledge +0.001 [-0.007,+0.010]
+   frontier gap (smoothed/raw): food·safety -0.04/+0.00  food·social +0.00/+0.00  food·knowledge +0.02/+0.00  safety·social -0.02/+0.00  safety·knowledge -0.01/+0.00  social·knowledge -0.00/-0.03
+   frontier corr (smoothed/raw): food·safety +0.01/+0.01  food·social +0.01/-0.00  food·knowledge -0.16/-0.07  safety·social -0.00/-0.07  safety·knowledge +0.13/-0.13  social·knowledge -0.12/+0.03
+   local: families (of 5) with a significant cosine change: food·safety 1  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 1
+   KINDS: extent (safety,social)
+   construct-check flags: none
+
+## rung1 -> allies=1   (meant to touch: food·social, safety·social)
+   extent, best:    food +0.000 [+0.000,+0.003]  safety +0.000 [+0.000,+0.000]  social +0.000 [+0.000,+0.000]  knowledge +0.000 [-0.250,+0.000]
+   extent, average: food -0.007 [-0.031,+0.016]  safety +0.024 [+0.017,+0.029]  social +7.234 [+5.917,+8.606]  knowledge +0.001 [-0.011,+0.014]
+   frontier gap (smoothed/raw): food·safety -0.07/+0.00  food·social +0.01/+0.00  food·knowledge -0.01/+0.00  safety·social -0.05/+0.00  safety·knowledge -0.00/+0.00  social·knowledge -0.03/-0.04
+   frontier corr (smoothed/raw): food·safety +0.05/-0.01  food·social -0.01/-0.26  food·knowledge -0.22/+0.01  safety·social +0.09/+0.16  safety·knowledge +0.10/-0.23  social·knowledge -0.26/+0.06
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: extent (safety,social)
+   construct-check flags: none
+
+VERDICT: does the dial bend the frontier (shape or robust local change at either level)?
+   depletion  bends
+   false_frac bends
+   allies     extent only

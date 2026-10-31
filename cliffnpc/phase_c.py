@@ -15,12 +15,21 @@ Preferences omega (agent-specific weights on normalised goals) pick a point on t
 frontier.  Update rules for theta (the movement toward the frontier):
 
     "pg"      d = A^T omega                          (Euclidean in control space)
-    "ng"      d = (A^T A + lam I)^-1 A^T omega       (natural gradient: the control change
-                                                      of least size for the desired goal
-                                                      change -- uses the pullback metric)
+    "ng"      d = A^T (M + lam I)^-1 omega           (natural gradient, written in goal space:
+                                                      omega is raised with the inverse local
+                                                      goal metric -- goals that are hard to move
+                                                      get more weight; damping lam = tr(M)/k
+                                                      keeps noise in barely-controllable goals
+                                                      from dominating, and if the step would
+                                                      not ascend omega it falls back to pg)
     "pareto"  min-norm point of the convex hull of {omega_i a_i}: first improve every
               valued goal at once; when that is impossible (on the frontier), trade off
               along omega slowly
+
+Policy classes: "global" -- one theta for the whole episode (the frontier panel's
+class); "ctx" -- situation-dependent theta(s) = Theta phi(s), phi = (bias, hunger,
+rival in view, forager near, food in view), 6 x 5 parameters; the action gradient is
+then taken with respect to Theta, from the noise times the situation.
 
 Interrogation (report): goal modes (eigenvectors of M), trade-off planes a_i ^ a_j (area
 = how independently two goals can be controlled; cosine = aligned or opposed), and the
@@ -33,7 +42,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .commons import GOALS, PRIMITIVES, Commons, Dials, record_windows
+from .commons import GOALS, N_PHI, PRIMITIVES, Commons, Dials, record_windows
 
 # per-episode goal scales: spread of the base world's frontier panel (E23), so that
 # omega means the same thing in every experiment
@@ -64,6 +73,8 @@ class GoalGeometryAgent:
     #         surprise gate, and bootstrapped advantages
     #         sum_t gamma^t r_t + gamma^T V(s_T) - V(s_0): a rare setback's value shows
     #         up when its predictor (rivals appearing) does, not only when it lands
+    policy: str = "global"             # "global" theta or situation-dependent "ctx" Theta
+    ng_damping: float = 1.0            # lam = ng_damping * tr(M) / k
     critic: str = "mc"
     td_tau: float = 10.0               # s, discount horizon of the TD critic
     td_rate: float = 0.05
@@ -74,7 +85,10 @@ class GoalGeometryAgent:
     def __post_init__(self):
         self.omega = np.asarray(self.omega, float)
         self.env = Commons(self.dials, seed=self.seed, noise_override=self.noise_sigma)
-        k, n = len(GOALS), len(PRIMITIVES)
+        k, n = len(GOALS), len(PRIMITIVES) * (N_PHI if self.policy == "ctx" else 1)
+        if self.policy == "ctx":
+            self.Theta = np.zeros((len(PRIMITIVES), N_PHI))
+            self.Theta[:, 0] = self.theta                    # start: the same policy as "global"
         n_s = 25                                            # senses + bias
         self._SS = np.eye(n_s) * 1e-3                       # critic: sum s s^T
         self._SG = np.zeros((n_s, k))                       #         sum s G^T
@@ -90,6 +104,7 @@ class GoalGeometryAgent:
     def step_episode(self) -> dict:
         c = self.env
         c.theta_fixed = self.theta.copy()
+        c.Theta = self.Theta.copy() if self.policy == "ctx" else None
         n0 = len(c.log["r"])
         c.run_episode()
         log = {k: np.asarray(v[n0:]) for k, v in c.log.items()}
@@ -102,7 +117,7 @@ class GoalGeometryAgent:
         if len(W["G"]):
             G = W["G"] / GOAL_SCALE * (300 / self.record_T)     # per-episode units, normalised
             s0 = np.hstack([W["s"][:, 0, :], np.ones((len(G), 1))])
-            lean = W["xi"][:, : self.record_T // 2, : len(PRIMITIVES)].mean(axis=1)
+            lean = self._lean(W)
             f = self.forget
             if self.critic == "td":
                 delta = self._bootstrapped_advantage(log) * (300 / self.record_T)
@@ -114,16 +129,30 @@ class GoalGeometryAgent:
             self._LL = f * self._LL + lean.T @ lean
             self._DL = f * self._DL + delta.T @ lean
             self.A = self._DL @ np.linalg.inv(self._LL)       # d goal / d theta
-        d = self.direction() if self.episode >= self.warmup else np.zeros_like(self.theta)
+        d = self.direction() if self.episode >= self.warmup else np.zeros(self.A.shape[1])
         lr = self.lr0 / (1 + self.episode / self.lr_tau)
         nd = np.linalg.norm(d)
         if nd > 1e-12:
-            self.theta = np.clip(self.theta + lr * d / nd, *THETA_BOUNDS)
+            if self.policy == "ctx":
+                self.Theta = np.clip(self.Theta + lr * (d / nd).reshape(self.Theta.shape), *THETA_BOUNDS)
+                self.theta = self.Theta[:, 0].copy()
+            else:
+                self.theta = np.clip(self.theta + lr * d / nd, *THETA_BOUNDS)
         rec = dict(episode=self.episode, theta=self.theta.copy(), J=J, Jn=J / GOAL_SCALE,
                    score=float(self.omega @ (J / GOAL_SCALE)), A=self.A.copy(), step=float(lr * (nd > 1e-12)))
         self.history.append(rec)
         self.episode += 1
         return rec
+
+    def _lean(self, W):
+        """Per record: the exploration noise over the first half (global), or the noise
+        times the situation features, flattened as Theta is (ctx)."""
+        h = self.record_T // 2
+        xi = W["xi"][:, :h, :len(PRIMITIVES)]
+        if self.policy != "ctx":
+            return xi.mean(axis=1)
+        ph = W["phi"][:, :h, :]
+        return np.einsum("nti,ntj->nij", xi, ph).reshape(len(xi), -1) / h
 
     def _phi(self, s):
         return np.hstack([s, np.ones((len(s), 1))])
@@ -166,9 +195,11 @@ class GoalGeometryAgent:
         if self.rule == "pg":
             return A.T @ w
         if self.rule == "ng":
-            P = A.T @ A
-            lam = 0.1 * np.trace(P) / len(P) + 1e-9
-            return np.linalg.solve(P + lam * np.eye(len(P)), A.T @ w)
+            M = A @ A.T
+            lam = self.ng_damping * np.trace(M) / len(M) + 1e-12
+            d = A.T @ np.linalg.solve(M + lam * np.eye(len(M)), w)
+            g = A.T @ w
+            return d if d @ g > 0 else g                       # never step against the estimated ascent
         if self.rule == "pareto":
             g = np.array([w[i] * A[i] for i in range(len(w)) if w[i] > 0])
             lam = np.full(len(g), 1.0 / len(g))
@@ -188,6 +219,8 @@ class GoalGeometryAgent:
     def evaluate(self, n_episodes: int = 16, noise: float = 0.2) -> np.ndarray:
         """Goal returns of the current theta, with the frontier panel's noise level."""
         ev = Commons(self.dials, seed=self.seed + 10_000, noise_override=noise)
+        if self.policy == "ctx":
+            return ev.run_ctx_policies(self.Theta[None], n_episodes)[0]
         return ev.run_policies(self.theta[None, :], n_episodes)[0]
 
     def report(self) -> dict:

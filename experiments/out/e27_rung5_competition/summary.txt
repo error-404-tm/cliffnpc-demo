@@ -1,0 +1,52 @@
+E27 Ladder rung 5: competition
+==============================
+
+PART A: what rival foragers do to the geometry (vs rivals 0)
+## rivals=0 -> rivals=0.5
+   extent, average: food -0.053 [-0.108,-0.006]  safety -0.040 [-0.054,-0.027]  social -2.379 [-3.274,-1.380]  knowledge +0.021 [-0.010,+0.059]
+   frontier gap (smoothed/raw): food·safety -0.03/-0.00  food·social +0.00/+0.00  food·knowledge +0.02/+0.05  safety·social +0.03/+0.00  safety·knowledge -0.04/+0.08  social·knowledge +0.03/+0.07
+   frontier corr (smoothed/raw): food·safety +0.02/+0.12  food·social +0.00/+0.02  food·knowledge -0.01/+0.06  safety·social +0.06/+0.26  safety·knowledge +0.09/-0.78  social·knowledge -0.08/-0.05
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 1  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 2
+   KINDS: extent (food,safety,social); local (social·knowledge)   flags: social·knowledge
+## rivals=0 -> rivals=1
+   extent, average: food -0.201 [-0.283,-0.108]  safety -0.086 [-0.109,-0.065]  social -5.987 [-7.091,-4.748]  knowledge +0.023 [-0.012,+0.068]
+   frontier gap (smoothed/raw): food·safety -0.10/-0.00  food·social +0.06/+0.04  food·knowledge -0.02/-0.00  safety·social -0.08/+0.04  safety·knowledge -0.11/+0.00  social·knowledge -0.02/+0.05
+   frontier corr (smoothed/raw): food·safety -0.00/-0.09  food·social -0.00/-0.01  food·knowledge +0.01/-0.01  safety·social +0.06/+0.13  safety·knowledge +0.31/-0.38  social·knowledge -0.11/-0.10
+   local: families (of 5) with a significant cosine change: food·safety 0  food·social 2  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 2
+   KINDS: extent (food,safety,social); local (food·social,social·knowledge)   flags: social·knowledge
+
+PART B: best policies in the rivals=1 world (top 10 per panel re-evaluated, 16 episodes)
+   forager   best +5.95 (ctx #181)   best fixed-theta +5.57   best situation-dependent +5.95   panel mean +0.16
+   balanced  best +5.63 (global #36)   best fixed-theta +5.63   best situation-dependent +5.49   panel mean -0.35
+   cautious  best +2.61 (global #96)   best fixed-theta +2.61   best situation-dependent +2.48   panel mean -2.62
+   curious   best +9.37 (global #36)   best fixed-theta +9.37   best situation-dependent +8.92   panel mean +2.87
+
+PART C: agents in the rivals=1 world (fraction of the re-evaluated best)
+## forager
+   global  pg +0.28 ± 0.37   ng +0.36 ± 0.33   pareto +0.43 ± 0.17   J/scale food +3.12 safety -2.59 social +1.96 knowledge +3.39
+   ctx     pg +0.54 ± 0.24   ng +0.49 ± 0.28   pareto +0.52 ± 0.19   J/scale food +3.69 safety -1.91 social +2.13 knowledge +3.58
+## balanced
+   global  pg +0.56 ± 0.26   ng +0.44 ± 0.22   pareto +0.52 ± 0.28   J/scale food +3.64 safety -2.03 social +2.10 knowledge +3.64
+   ctx     pg +0.49 ± 0.18   ng +0.43 ± 0.23   pareto +0.41 ± 0.21   J/scale food +3.25 safety -1.97 social +2.04 knowledge +3.60
+## cautious
+   global  pg +0.55 ± 0.17   ng +0.22 ± 0.32   pareto +0.08 ± 0.65   J/scale food +0.23 safety -0.91 social +1.13 knowledge +3.68
+   ctx     pg +0.66 ± 0.14   ng +0.51 ± 0.30   pareto +0.62 ± 0.21   J/scale food +1.79 safety -0.64 social +1.77 knowledge +3.64
+## curious
+   global  pg +0.51 ± 0.37   ng +0.22 ± 0.30   pareto +0.49 ± 0.30   J/scale food +3.23 safety -2.38 social +1.89 knowledge +3.74
+   ctx     pg +0.19 ± 0.29   ng +0.45 ± 0.27   pareto +0.29 ± 0.29   J/scale food +1.59 safety -1.17 social +1.66 knowledge +3.64
+
+Learned situation-dependent policy (ctx, pareto, balanced; mean over seeds): rows primitives, columns bias, hunger, rival_in_view, forager_near, food_in_view
+   food     +0.23 +0.69 +0.29 +0.67 +0.92
+   forager  +1.97 +0.51 -0.12 -0.74 +0.39
+   shelter  +0.59 -0.41 -0.01 +0.05 -0.26
+   flee     +1.25 -0.31 -0.14 +0.26 +0.08
+   fight    +0.73 -0.37 -0.19 +0.02 +0.26
+   wander   +0.98 -0.04 +0.59 +0.38 -0.20
+
+CRITERIA (fixed before running)
+   PASS  C1 rivals bend the frontier
+   FAIL  C2 ctx beats global (+0.08 ± 0.10)
+   PASS  C3 stabilised ng: worst cell +0.22, ng - pg -0.08 ± 0.11
+   FAIL  C4 geometry rule beats pg (ng - pg -0.08 ± 0.11; pareto - pg -0.05 ± 0.12)
+   FAIL  C5 absorption: forager 0.54, balanced 0.56, cautious 0.66, curious 0.51
+   PASS  C6 preferences differentiate (ctx: cautious safer, forager more fed)

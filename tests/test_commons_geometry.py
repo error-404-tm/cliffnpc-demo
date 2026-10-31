@@ -130,3 +130,27 @@ def test_phase_c_rules_ascend_a_known_gradient_and_report_geometry():
     ag.run(3)
     rep = ag.report()
     assert len(ag.history) == 3 and "food^safety" in rep["planes"] and len(rep["modes"]) == 4
+
+
+def test_new_dials_absent_leave_the_world_unchanged_and_ctx_reduces_to_global():
+    from cliffnpc.commons import N_PHI, Commons, Dials
+    th = np.array([[0.8, 1.5, 0.2, 0.6, 0.1, 0.4]])
+    a = Commons(Dials(need=1.0), seed=2, noise_override=0.2).run_policies(th, 2)
+    b = Commons(Dials(need=1.0, depletion=0.0, allies=0.0, rivals=0.0, false_frac=0.5), seed=2,
+                noise_override=0.2).run_policies(th, 2)
+    assert np.allclose(a, b)
+    Th = np.zeros((1, 6, N_PHI))
+    Th[0, :, 0] = th[0]                                        # no situation terms
+    c = Commons(Dials(need=1.0), seed=2, noise_override=0.2).run_ctx_policies(Th, 2)
+    assert np.allclose(a, c)
+
+
+def test_stabilised_natural_gradient_always_ascends():
+    from cliffnpc.commons import Dials
+    from cliffnpc.phase_c import GoalGeometryAgent
+    rng = np.random.default_rng(0)
+    for policy in ("global", "ctx"):
+        ag = GoalGeometryAgent(Dials(threat=0.0), np.array([1.0, 2.0, 0.5, 0.0]), rule="ng", policy=policy)
+        for _ in range(20):
+            ag.A = rng.normal(size=ag.A.shape) * rng.uniform(0.01, 1.0, (4, 1))   # some goals barely movable
+            assert ag.omega @ (ag.A @ ag.direction()) > 0
