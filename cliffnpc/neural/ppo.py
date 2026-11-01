@@ -78,13 +78,13 @@ def sample_preferences(L: Layout, gen: torch.Generator) -> torch.Tensor:
 
 
 class Trainer:
-    def __init__(self, L: Layout, cfg: PPOConfig = PPOConfig(), seed: int = 0):
+    def __init__(self, L: Layout, cfg: PPOConfig = PPOConfig(), seed: int = 0, world_cfg=None):
         self.L, self.cfg = L, cfg
         torch.manual_seed(seed)
         self.gen = torch.Generator().manual_seed(seed + 1)
         self.brain = Brain(L)
         self.opt = torch.optim.Adam(self.brain.parameters(), lr=cfg.lr, eps=1e-5)
-        self.world = VecWorld(L, seed=seed + 2)
+        self.world = VecWorld(L, world_cfg, seed=seed + 2) if world_cfg is not None else VecWorld(L, seed=seed + 2)
         self.state = NPCState.zeros(L.n, L.hidden)
         self.acts = ActBuffers.zeros(L.n, L.goals)
         self.buf = Rollout(L)

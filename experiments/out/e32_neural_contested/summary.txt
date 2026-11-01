@@ -1,0 +1,23 @@
+E32 Neural NPCs: pretraining in a contested world
+================================================
+128 worlds x 8 agents = 1024 NPCs; 300 iterations x 256 ticks; brain 27529 parameters (108 KB); persistent state 952 bytes per NPC.
+throughput: collection (world + brain inference) 128k NPC-steps/s; training 33k NPC-steps/s; 79M NPC-steps in 49.6 min.
+
+Per profile: score (omega . returns), and returns per goal (food, safety, social, knowledge)
+   forager   random   score  +10.44 ± 0.07   food -0.73 safety +0.00 social +48.03 knowledge +0.76
+   forager   start    score  +11.19 ± 0.00   food -0.73 safety +0.00 social +51.20 knowledge +0.45
+   forager   trained  score  +13.31 ± 0.05   food +1.16 safety -0.01 social +50.78 knowledge +4.88
+   balanced  random   score  +18.63 ± 0.12   food -0.73 safety +0.00 social +48.02 knowledge +0.75
+   balanced  start    score  +19.90 ± 0.00   food -0.73 safety +0.00 social +51.20 knowledge +0.42
+   balanced  trained  score  +21.32 ± 0.05   food +1.21 safety -0.01 social +50.89 knowledge +4.90
+   cautious  random   score  +15.77 ± 0.10   food -0.73 safety +0.00 social +48.04 knowledge +0.75
+   cautious  start    score  +16.82 ± 0.00   food -0.73 safety +0.00 social +51.20 knowledge +0.44
+   cautious  trained  score  +17.28 ± 0.05   food +1.15 safety -0.00 social +50.71 knowledge +4.65
+   curious   random   score  +13.74 ± 0.08   food -0.73 safety +0.00 social +48.04 knowledge +0.75
+   curious   start    score  +14.46 ± 0.01   food -0.73 safety +0.00 social +51.20 knowledge +0.43
+   curious   trained  score  +18.01 ± 0.06   food +1.12 safety -0.01 social +50.85 knowledge +4.98
+
+CRITERIA (fixed before running)
+   PASS  P1 learns: final score above the start for every profile
+   PASS  P2 beats a random policy for every profile
+   PASS  P3 preferences differentiate (forager food 1.16 vs cautious 1.15; cautious safety -0.00 vs forager -0.01; curious knowledge 4.98 vs balanced 4.90)

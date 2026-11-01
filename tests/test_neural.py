@@ -98,3 +98,24 @@ def test_one_ppo_iteration_runs_and_moves_the_weights():
     tr.update()
     assert info["per_npc"].shape == (SMALL.n, SMALL.goals)
     assert any(not torch.allclose(a, b) for a, b in zip(before, tr.brain.parameters()))
+
+
+def test_online_adapter_updates_only_adapters_and_stays_bounded():
+    from cliffnpc.neural.adapt import AdaptConfig, OnlineAdapter
+    tr = Trainer(SMALL, PPOConfig(block=8, epochs=1), seed=0)
+    shared = [p.clone() for p in tr.brain.parameters()]
+    ad = OnlineAdapter(tr.brain, SMALL, torch.ones(SMALL.goals), AdaptConfig(window=4, max_norm=0.5))
+    st, buf = NPCState.zeros(SMALL.n, SMALL.hidden), ActBuffers.zeros(SMALL.n, SMALL.goals)
+    pref = torch.full((SMALL.n, SMALL.goals), 0.5)
+    obs = tr.world.reset(pref.view(4, 8, 4)).view(SMALL.n, -1)
+    for _ in range(12):
+        ad.begin_window(st)
+        tr.brain.act(obs, st, buf)
+        o, r = tr.world.step(torch.tanh(buf.u).view(4, 8, 2), buf.fight.view(4, 8))
+        ad.record(obs, buf.u, buf.fight, r.view(SMALL.n, -1))
+        obs = o.view(SMALL.n, -1)
+        if ad.ready():
+            ad.update(st, obs, pref)
+    assert ad.updates == 3
+    assert all(torch.equal(a, b) for a, b in zip(shared, tr.brain.parameters()))        # shared frozen
+    assert float(st.shift.abs().sum()) > 0 and float(st.shift.norm(dim=-1).max()) <= 0.5 + 1e-5

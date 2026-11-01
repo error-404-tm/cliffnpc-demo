@@ -1,0 +1,27 @@
+E33 Online per-NPC adaptation (shared brain frozen)
+===================================================
+1024 NPCs, lives of 8 episodes; brain from E32.
+
+## fragile
+   fragile NPCs  frozen    score by episode +9.73 +9.83 +9.61 +9.86 +9.75 +9.66 +9.79 +9.92   returns (eps 5-8) food +1.22 safety -0.07 social +50.56 knowledge +4.89
+   fragile NPCs  adapt     score by episode +9.75 +9.88 +9.67 +9.85 +9.82 +9.76 +9.86 +9.69   returns (eps 5-8) food +1.28 safety -0.06 social +50.34 knowledge +4.93
+   fragile NPCs  finetune  score by episode +9.70 +9.75 +9.76 +9.85 +9.95 +9.83 +9.73 +10.01   returns (eps 5-8) food +1.31 safety -0.06 social +50.65 knowledge +5.06
+   fragile NPCs  adapt - frozen (eps 5-8, paired by NPC): +0.004 ± 0.089
+   robust NPCs   frozen    score by episode +9.31 +9.24 +9.19 +9.53 +9.25 +9.27 +9.27 +9.45   returns (eps 5-8) food +1.21 safety -0.02 social +50.58 knowledge +4.90
+   robust NPCs   adapt     score by episode +9.29 +9.39 +9.26 +9.42 +9.26 +9.34 +9.33 +9.42   returns (eps 5-8) food +1.27 safety -0.02 social +50.59 knowledge +4.94
+   robust NPCs   finetune  score by episode +9.33 +9.36 +9.20 +9.50 +9.42 +9.41 +9.41 +9.50   returns (eps 5-8) food +1.35 safety -0.02 social +50.54 knowledge +5.11
+   robust NPCs   adapt - frozen (eps 5-8, paired by NPC): +0.028 ± 0.068
+
+## cue_flip
+   all NPCs      frozen    score by episode +8.57 +8.64 +8.58 +8.75 +8.65 +8.62 +8.67 +8.83   returns (eps 5-8) food +1.17 safety -0.02 social +50.63 knowledge +4.82
+   all NPCs      adapt     score by episode +8.58 +8.64 +8.52 +8.64 +8.70 +8.54 +8.57 +8.63   returns (eps 5-8) food +1.10 safety -0.02 social +50.56 knowledge +4.77
+   all NPCs      finetune  score by episode +8.69 +8.68 +8.62 +8.84 +8.70 +8.60 +8.69 +8.75   returns (eps 5-8) food +1.12 safety -0.02 social +50.61 knowledge +4.77
+   all NPCs      adapt - frozen (eps 5-8, paired by NPC): -0.081 ± 0.053
+
+cost: adapter updates 2.70 ms per tick for 1024 NPCs (2.63 ms per tick per 1000 NPCs; one update every 16 ticks); adapter norms at the end: scale 0.13, shift 0.22 (cap 2.0); adapter memory 512 bytes per NPC
+
+CRITERIA (fixed before running)
+   FAIL  A1 fragile NPCs: adapt beats frozen (+0.004 ± 0.089)
+   PASS  A2 robust NPCs not harmed (+0.028 ± 0.068)
+   FAIL  A3 cue flip: adapt beats frozen (-0.081 ± 0.053)
+   PASS  A4 cost and adapter sizes reported

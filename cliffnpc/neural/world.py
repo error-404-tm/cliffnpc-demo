@@ -61,6 +61,13 @@ class WorldConfig:
     starve_below: float = 0.3
     starve_rate: float = 0.05
     death_setback: float = 1.0         # safety progress at death
+    patch_box: tuple = (10.0, 90.0, 10.0, 90.0)   # where patches spawn: x0, x1, y0, y1
+    # per-NPC fragility (damage multiplier) is a world property set via VecWorld.fragility
+
+
+def contested() -> "WorldConfig":
+    """Patches few, small and central, between the two homes: the tribes meet at food."""
+    return WorldConfig(patch_box=(40.0, 60.0, 30.0, 70.0), stock=3.0)
 
 
 def _h2(p: torch.Tensor) -> torch.Tensor:
@@ -85,6 +92,7 @@ class VecWorld:
         self.seen = torch.zeros(W, K, P, dtype=torch.bool)
         self.hit = torch.zeros(W, K, **f32)
         self.pref = torch.zeros(W, K, layout.goals, **f32)
+        self.fragility = torch.ones(W, K, **f32)         # per-NPC damage multiplier (unobserved)
         tribe = torch.zeros(K, dtype=torch.bool)
         tribe[K // 2:] = True
         self.tribe = tribe                                 # False: A, True: B (static)
@@ -112,7 +120,9 @@ class VecWorld:
         if n == 0:
             return
         c = self.c
-        self.ppos[mask] = self._rand(n, 2) * (c.size - 20) + 10
+        x0, x1, y0, y1 = c.patch_box
+        xy = self._rand(n, 2)
+        self.ppos[mask] = torch.stack([xy[:, 0] * (x1 - x0) + x0, xy[:, 1] * (y1 - y0) + y0], -1)
         real = self._rand(n) >= c.false_frac
         truthful = self._rand(n) < (1 + c.cue) / 2
         self.real[mask] = real
@@ -184,7 +194,7 @@ class VecWorld:
         n_side = 1.0 + ((near & self.same & ~self.eye) & engaged_flag[:, None, :]).float().sum(-1)
         m_side = ((near & enemy) & engaged_flag[:, None, :]).float().sum(-1)
         engaged = (in_contact | (fight & (m_side > 0))) & ~home_safe
-        dmg = c.damage_rate * dt * m_side / (n_side + m_side).clamp_min(1e-6) / n_side * engaged
+        dmg = c.damage_rate * dt * m_side / (n_side + m_side).clamp_min(1e-6) / n_side * engaged * self.fragility
         self.health.sub_(dmg)
         self.hit.copy_(dmg)
         r[..., 1].sub_(dmg)

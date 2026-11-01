@@ -167,10 +167,11 @@ cliffnpc/
   geometry.py     spec v2: induced goal metric, record moments, return curvature, attainable-set frontier
   harness.py      spec v2: environment dials, fingerprints, paired CRN comparisons
   phase_c.py      spec v2: agent that learns its own induced geometry and moves to the frontier
-  neural/         PyTorch NPCs: memory layout, batched world, shared recurrent brain, PPO
+  neural/         PyTorch NPCs: memory layout, batched world, shared recurrent brain, PPO,
+                  online per-NPC adapters
   config.py       every tunable constant
-experiments/      e1..e6, e8..e31, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            145 tests
+experiments/      e1..e6, e8..e33, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            146 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
@@ -178,7 +179,7 @@ spec-v2.md        the v2 plan: discover the induced geometry instead of imposing
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 145 tests, ~3 min
+.venv/bin/python -m pytest -q          # 146 tests, ~3 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -866,6 +867,40 @@ knowledge — and beats a random policy for every personality. But personalities
 differentiate: this world has no real trade-off (the tribes never fight — safety is
 exactly 0 — and company comes free), so one strategy is best for everyone, the same
 lesson as ladder rungs 0–1.
+
+**A contested world.** `world.contested()` puts few, small patches (4 per world, stock 3)
+in the centre between the two homes. Scripted policies show it creates a real
+food·safety trade-off that the E31 world lacked: foraging costs safety (food +0.33,
+safety −0.18) and avoiding rivals costs food (food +0.21, safety 0).
+
+**E32 (pretraining in the contested world, 300 iterations, 79 M NPC-steps in 50 min;
+128k NPC-steps/s collection, 33k training).** It learns more than in E31 (food
+−0.73 → +1.16, knowledge 0.44 → 4.9 per episode) and beats random for every personality.
+Personalities now differ in the expected directions (foragers slightly better fed,
+cautious NPCs slightly safer, curious ones slightly more knowledgeable), but only
+slightly: the trained network eats well *while taking almost no injury* (safety ≈ −0.01
+for everyone, far better than any scripted policy), so it largely dissolves the
+trade-off instead of choosing a side of it.
+
+**Online per-NPC adaptation (`adapt.py`).** The shared brain is frozen; each NPC learns
+only its own adapter row (a scale and shift on its 64 hidden units, 512 bytes) from its
+own play. Every 16 ticks the window is replayed through one fused GRU pass, advantages
+come from the NPC's own value heads (TD(λ) per goal, weighted by its preferences), and
+one batched backward pass updates every NPC's adapter; a pull back toward the pretrained
+behaviour and a size cap guard against drift. Cost: 2.6 ms per tick per 1000 NPCs.
+
+**E33 (online adaptation, lives of 8 episodes, two changes the brain never saw).**
+* *Fragility* (half the NPCs secretly take 3× damage): adapters make no difference
+  (+0.004 ± 0.089 for fragile NPCs, +0.028 ± 0.068 for robust ones — not harmed).
+* *Cue flip* (food looks mean the opposite): adapters are slightly worse than frozen
+  (−0.081 ± 0.053).
+* The reason is in the frozen baseline: neither change hurt the pretrained brain much
+  (it avoids fights, so fragility rarely bites; it does not rely on food looks, so the
+  flip barely matters), and fine-tuning the whole shared network on everyone's data
+  barely improves either. The mechanism works, is cheap and stays bounded (adapter norms
+  ~0.1–0.2 against a cap of 2), but these tests gave it nothing to fix. A fair test
+  needs a change that breaks the pretrained behaviour for some NPCs — e.g. food that is
+  poisonous for some individuals only.
 
 ## Known limitations and next steps
 
