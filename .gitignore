@@ -1,5 +1,6 @@
 
 experiments/out/**/agents.pkl
+experiments/out/**/*.pt
 experiments/out/*/run.log
 experiments/out/**/runs.pkl
 *.pyc

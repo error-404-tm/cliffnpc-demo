@@ -167,9 +167,10 @@ cliffnpc/
   geometry.py     spec v2: induced goal metric, record moments, return curvature, attainable-set frontier
   harness.py      spec v2: environment dials, fingerprints, paired CRN comparisons
   phase_c.py      spec v2: agent that learns its own induced geometry and moves to the frontier
+  neural/         PyTorch NPCs: memory layout, batched world, shared recurrent brain, PPO
   config.py       every tunable constant
-experiments/      e1..e6, e8..e30, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            137 tests
+experiments/      e1..e6, e8..e31, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            145 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
@@ -177,7 +178,7 @@ spec-v2.md        the v2 plan: discover the induced geometry instead of imposing
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 137 tests, ~2.5 min
+.venv/bin/python -m pytest -q          # 145 tests, ~3 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -194,7 +195,9 @@ to serial ones; checked for E3, E6 and E8. Set `CLIFFNPC_WORKERS=1` to run seria
 `experiments/out/<name>/run.log`.
 
 The venv was created with `python3 -m venv .venv && .venv/bin/pip install numpy
-scipy matplotlib pytest` (Python 3.14, NumPy 2.5, SciPy 1.18).
+scipy matplotlib pytest` (Python 3.14, NumPy 2.5, SciPy 1.18), plus CPU-only PyTorch
+(`pip install torch --index-url https://download.pytorch.org/whl/cpu`, 2.15) for
+`cliffnpc/neural/`.
 
 ## Live viewer
 
@@ -815,6 +818,54 @@ geometric ones. Plausible reasons: the goal space is small (4 goals) and the
 trade-offs encountered so far are mild, so there is little curvature for the geometry
 to exploit; and the agent's estimates of its own geometry remain noisier than the
 gradient they would correct.
+
+## Neural NPCs (`cliffnpc/neural/`, PyTorch, CPU)
+
+After the Clifford thesis came out unsupported, the next direction is a small neural
+network shared by all NPCs, pretrained in controlled scenarios and adapted per NPC
+during play. The hardware target is CPU (this machine: 12-core Ivy Bridge Xeon, AVX
+only, 32 KB L1d / ~256 KB L2 per core), so **memory layout and contiguity are the core
+design rules** (`layout.py`):
+
+1. *Structure of arrays:* every per-NPC quantity is one contiguous float32 tensor,
+   slots world-major, so `[W, K, ...]` and `[N, ...]` views share memory; no Python
+   objects per NPC.
+2. *Fixed power-of-two capacities:* worlds, agents, patches, features and hidden units
+   never resize; death is a respawn into the same slot, a depleted patch is re-seeded in
+   place.
+3. *Preallocate, then write in place:* observation, hidden-state, scratch and rollout
+   buffers are allocated once (tests check buffers keep their identity across steps).
+4. *Batch and tile for the cache:* one matrix multiply per layer for a tile of NPCs; the
+   weights (~108 KB) stay in L2 while NPC rows stream past; tiles of ~1024 NPCs measured
+   best (larger batches spill out of cache).
+5. *Time-major rollouts, contiguous minibatches:* `[T, N, ...]` buffers; minibatches are
+   contiguous NPC blocks; a whole episode of a block runs through one fused GRU call.
+6. *Per-NPC adaptation is per-row:* each NPC's adapter (a scale and shift on the hidden
+   units) is a row of an `[N, H]` tensor; one batched backward pass gives every NPC's
+   adapter gradient (tested: an NPC's gradient depends only on its own row).
+7. *Threads:* 4 intra-op threads (12 ran ~10× slower on these small matrices); scale out
+   by sharding worlds across processes.
+
+**Pieces.** `world.py`: a batched two-tribe world (food with stock and false patches,
+need, knowledge bits, combat with the n/(n+m) rule, shelter, company; every NPC a
+learner, self-play), 968 bytes of persistent state per NPC. `brain.py`: encoder → GRU(64)
+→ policy (2-D velocity, fight flag) and one value head per goal; 27.5k parameters
+(108 KB); per-NPC adapters. `ppo.py`: PPO with per-goal advantages scalarised by each
+NPC's own preference vector, so one network serves every personality.
+
+**Speed.** The batched world steps 0.30 M NPC-steps/s alone (the Python commons managed
+~400/s per core). With brain inference, collection runs ~114k NPC-steps/s; training
+~31k NPC-steps/s (compute-bound, ~4 GFLOP/s sustained on this CPU). Two training fixes on
+the way: unnormalised returns let the value loss swamp the policy (scaled now by the
+running spread of each goal's discounted return), and per-step recurrent calls were
+overhead-bound (replaced by fused sequences).
+
+**E31 (pretraining, 1,024 NPCs, 150 iterations, 39 M NPC-steps in 27 min).** It learns —
+from starving to eating (food −0.70 → +1.25 per episode) and roughly four times the
+knowledge — and beats a random policy for every personality. But personalities do not
+differentiate: this world has no real trade-off (the tribes never fight — safety is
+exactly 0 — and company comes free), so one strategy is best for everyone, the same
+lesson as ladder rungs 0–1.
 
 ## Known limitations and next steps
 
