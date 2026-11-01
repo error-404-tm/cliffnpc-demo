@@ -19,12 +19,81 @@ Beyond the spec's phases, the project now has:
   that primes affect), and an older drive-sequence memory;
 * a **learned connection** (situation → drive generator), a **TD critic**, and
   **Pavlovian valence** (learned value → wanting);
-* a **learning gym** of controlled tasks with baselines (E12–E18), which is where
-  the current findings come from.
+* a **learning gym** of controlled tasks with baselines (E12–E19);
+* **spec v2** (`spec-v2.md`): measuring the geometry a world *induces* instead of
+  imposing one — a goal vector, experience records, a feature harness with paired
+  comparisons, and an agent that learns its own induced geometry (E20–E30).
 
-Start with [Current state](#current-state-october-2026) for the short version.
+Start with [Conclusions](#conclusions-november-2026) for the short version.
 
-## Current state (October 2026)
+## Conclusions (November 2026)
+
+**The thesis, in its current form, is not supported.** The idea was that a Clifford
+algebra — drives as vectors in Cl(p,q), personality as a metric, world events as
+bivector generators — would give NPCs a geometry that makes them *learn* better or
+behave more intelligently than standard methods. Across 30 experiments, with
+pre-registered criteria and baselines, the geometry never beat a plain learner at
+what it was meant to improve. It did prove useful as a *language for describing*
+worlds and agents.
+
+**Part I — imposed geometry (E1–E19).**
+* The algebra makes real, non-obvious predictions about its own dynamics: boosts
+  cannot cross the light cone alone (a "snap" needs a non-isometric partner); metric
+  updates add to first order and order shows up only in the frame's orientation (a
+  Thomas–Wigner-like holonomy, kept by the frame law); the signature decides which
+  forcing is bounded; affect as the trivector C∧B. These are correct mathematics, but
+  they are properties of the model, not advantages for behaviour.
+* As a learner the designed agent failed: in the gym (E12) it learned nothing a frozen
+  copy did not already do, and pain-aversion learning *erased* its built-in courage.
+* The reason is structural: a bivector connection preserves the drive interval
+  (d/dt C·gC = 0), so learned "habits" can only redirect motivation, never strengthen
+  or suppress it (E13). Adding the symmetric part (so(g) ⊕ p) helped a little (E14).
+* What finally worked was not geometric: a TD critic plus **Pavlovian valence** pushed
+  onto the drive that owns each stimulus (E15–E16: discrimination, reversal, fear
+  conditioning and extinction), **surprise-gated** value learning for one-shot fear
+  (E17), and confidence weighting (E19). Felt affect as reward produced lifelike but
+  rigid behaviour, including phobias that no fix removed (E18–E19, need features,
+  bounded valence).
+
+**Part II — induced geometry (E20–E30).**
+* Every choice of environment, faculties and measurements induces a geometry on what an
+  agent can do. Measured directly, it is real and readable: going for food costs safety
+  only when there is threat, and more so over longer time scales (E20–E21); following a
+  skilled forager aligns food and company (E22). But the local geometry is mostly a
+  property of the agent's *own behaviour* (policy explains 41–95% of each relation,
+  E21); the environment's own geometry is the frontier of the attainable set (E22).
+* The **feature harness** (E23) measures what each environment feature does — moving the
+  frontier (extent) versus bending it (shape, local geometry) — with paired
+  common-random-number comparisons and construct checks; it passed all validation
+  checks and caught flaws in the experiments, including my own.
+* Climbing the ladder (E25–E29), most features only *moved* the frontier; a few bent the
+  local geometry; none reshaped the frontier itself. An agent that learns its own
+  geometry reached the frontier on simple rungs and, with situation-dependent policies
+  and paired-episode estimates, absorbed the richest rung (rung 6: 0.84–0.90 of the
+  best).
+* But every geometric learning aid — natural gradient with the induced metric,
+  Pareto-first steps, detecting changes in the trade-off structure — failed to beat the
+  plain gradient on every rung tested (0, 1, 5, 6), with and without the noise fix
+  (E24–E30). The improvements that worked were standard: paired evaluation,
+  situation-dependent policies, more data.
+
+**Why, as far as the evidence goes.** The goal space is small and the trade-offs these
+worlds produce are mild, so there is little curvature for a geometry to exploit; and an
+agent's estimate of its own geometry is noisier than the gradient it would correct. The
+geometry is also partly an artefact of measurement choices (E20), which limits how much
+meaning it can carry.
+
+**What is worth keeping.** The methodology (pre-registered criteria, baselines, paired
+comparisons, the feature harness and construct checks); the learning mechanisms that
+worked (critic + valence, surprise-gated one-shot learning, value relative to a running
+average, a separate wanting channel); and the induced-geometry measurements as a
+descriptive and debugging tool for any agent, geometric or not.
+
+**Open, if the thesis is revisited:** a world built to strongly reshape the frontier, a
+larger goal space, and change detection that separates world changes from the agent's
+own movement.
+
+## Current state of the gym (October 2026)
 
 What works, from the gym experiments (20 seeds each, against frozen, random, a
 linear actor-critic and a hand-coded optimum):
