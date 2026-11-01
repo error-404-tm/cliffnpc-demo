@@ -1,0 +1,52 @@
+E29 Ladder rung 6: allies come to defend
+========================================
+agent estimator: spsa
+
+PART A: what defence does to the geometry (vs defend 0)
+## defend=0 -> defend=0.5
+   extent, average: food -0.006 [-0.061,+0.056]  safety -0.004 [-0.015,+0.008]  social +0.493 [-0.185,+1.231]  knowledge +0.001 [-0.039,+0.044]
+   frontier gap (smoothed/raw): food·safety +0.02/-0.01  food·social -0.02/+0.00  food·knowledge +0.04/+0.03  safety·social -0.05/-0.00  safety·knowledge -0.03/-0.00  social·knowledge -0.05/+0.06
+   frontier corr (smoothed/raw): food·safety +0.04/-0.03  food·social +0.01/-0.75  food·knowledge -0.16/+0.69  safety·social +0.09/+0.08  safety·knowledge +0.19/-0.46  social·knowledge -0.14/-0.17
+   local: families (of 5) with a significant cosine change: food·safety 1  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 0  social·knowledge 0
+   KINDS: none   flags: none
+## defend=0 -> defend=1
+   extent, average: food +0.027 [-0.021,+0.089]  safety +0.049 [+0.035,+0.063]  social +1.555 [+0.814,+2.128]  knowledge +0.051 [+0.010,+0.102]
+   frontier gap (smoothed/raw): food·safety +0.11/-0.03  food·social -0.02/+0.00  food·knowledge +0.06/-0.03  safety·social +0.05/-0.00  safety·knowledge +0.04/+0.01  social·knowledge +0.05/+0.00
+   frontier corr (smoothed/raw): food·safety +0.05/+0.00  food·social -0.02/-0.45  food·knowledge -0.05/+0.91  safety·social +0.11/+0.09  safety·knowledge -0.11/-1.11  social·knowledge -0.09/+0.25
+   local: families (of 5) with a significant cosine change: food·safety 2  food·social 0  food·knowledge 0  safety·social 0  safety·knowledge 1  social·knowledge 0
+   KINDS: extent (safety,social,knowledge); local (food·safety)   flags: none
+
+PART B: best policies in the defend=1 world (re-evaluated)
+   forager   best +7.28 (ctx #181)   fixed +7.04   situation-dependent +7.28   panel mean +1.15
+   balanced  best +7.76 (ctx #181)   fixed +7.42   situation-dependent +7.76   panel mean +1.49
+   cautious  best +3.67 (global #141)   fixed +3.67   situation-dependent +3.61   panel mean +0.36
+   curious   best +12.81 (ctx #181)   fixed +12.57   situation-dependent +12.81   panel mean +5.10
+
+PART C: agents (fraction of the re-evaluated best)
+## forager
+   global  pg +0.86 ± 0.04   ng +0.77 ± 0.11   pareto +0.87 ± 0.05   J/scale food +6.40 safety -1.61 social +3.29 knowledge +5.04
+   ctx     pg +0.88 ± 0.04   ng +0.89 ± 0.04   pareto +0.89 ± 0.03   J/scale food +6.70 safety -1.58 social +3.31 knowledge +5.13
+## balanced
+   global  pg +0.79 ± 0.07   ng +0.77 ± 0.12   pareto +0.67 ± 0.06   J/scale food +6.14 safety -1.63 social +3.26 knowledge +4.99
+   ctx     pg +0.82 ± 0.08   ng +0.84 ± 0.10   pareto +0.84 ± 0.17   J/scale food +6.30 safety -1.21 social +3.26 knowledge +4.90
+## cautious
+   global  pg +0.60 ± 0.16   ng +0.68 ± 0.10   pareto +0.60 ± 0.09   J/scale food +3.78 safety -0.44 social +2.86 knowledge +4.48
+   ctx     pg +0.90 ± 0.14   ng +0.69 ± 0.12   pareto +0.74 ± 0.20   J/scale food +4.27 safety -0.36 social +3.04 knowledge +4.56
+## curious
+   global  pg +0.84 ± 0.08   ng +0.74 ± 0.14   pareto +0.74 ± 0.13   J/scale food +5.95 safety -1.47 social +3.24 knowledge +4.96
+   ctx     pg +0.86 ± 0.09   ng +0.89 ± 0.07   pareto +0.86 ± 0.08   J/scale food +6.59 safety -1.47 social +3.30 knowledge +5.06
+
+Learned situation-dependent policy (ctx, balanced, all rules): rows primitives, columns bias, hunger, rival_in_view, forager_near, food_in_view
+   food     +0.67 +0.46 +0.15 +0.11 +0.86
+   forager  +1.66 +1.51 +0.33 +0.38 +1.26
+   shelter  +0.06 -0.14 +0.97 +0.10 -0.39
+   flee     +0.51 +0.02 +0.22 +0.26 +0.24
+   fight    -0.10 +0.65 +0.07 -0.27 -0.25
+   wander   +0.93 -0.53 +0.17 -0.60 +0.20
+
+CRITERIA (fixed before running)
+   FAIL  R1 defend changes the frontier's shape
+   FAIL  R2 geometry rule beats pg (ng - pg -0.04 ± 0.04; pareto - pg -0.04 ± 0.04)
+   PASS  R3 ctx beats global (+0.10 ± 0.04)
+   PASS  R4 absorption: forager 0.89, balanced 0.84, cautious 0.90, curious 0.89
+   PASS  R5 preferences differentiate (ctx: cautious safer, forager more fed)

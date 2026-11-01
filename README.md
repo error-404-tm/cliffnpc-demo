@@ -99,8 +99,8 @@ cliffnpc/
   harness.py      spec v2: environment dials, fingerprints, paired CRN comparisons
   phase_c.py      spec v2: agent that learns its own induced geometry and moves to the frontier
   config.py       every tunable constant
-experiments/      e1..e6, e8..e27, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            135 tests
+experiments/      e1..e6, e8..e30, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            137 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
@@ -108,7 +108,7 @@ spec-v2.md        the v2 plan: discover the induced geometry instead of imposing
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 135 tests, ~2.5 min
+.venv/bin/python -m pytest -q          # 137 tests, ~2.5 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -701,12 +701,61 @@ preferences × 6 seeds; the frontier's best re-evaluated with fresh episodes.
   not paid off on rungs 0, 1 or 5. The bend from competition is mild (local, not a
   frontier-shape change), and noise in the agent's own estimates still dominates.
 
+**Three follow-ups to the negative thesis test (E28–E30).**
+
+*1. Less estimation noise (E28, rung-5 world).* A new estimator runs pairs of episodes
+θ + Δ and θ − Δ with identical random streams and no within-episode noise
+(`estimator="spsa"`), so the environment's noise cancels in J₊ − J₋. It makes outcomes
+much more consistent across seeds (e.g. ±0.10 instead of ±0.40) and is slightly better
+overall (+0.07 ± 0.10, not significant). With less noise the natural gradient edges past
+the plain one (+0.07 ± 0.07, the interval just touching zero) — the closest the thesis
+came — but agents still reach only 0.61–0.65 of the best.
+
+*2. Rung 6: allies come to defend (E29).* A `defend` dial brings the skilled forager
+(0.5) or every ally (1) to the learner's side when a rival is within 15; at 0 the world
+is exactly rung 5 (tested). World: rung 5 + two extra allies. Paired estimator, both
+policy classes, 6 seeds × 300 episodes.
+* *Environment:* defence moves the frontier (safety, company and knowledge up) and
+  bends the local food·safety geometry, but does not change the frontier's shape.
+* **Absorption passes for the first time** (0.84–0.90 of the re-evaluated best for every
+  preference), **situation-dependent policies now clearly win** (+0.10 ± 0.04), and
+  preferences differentiate. The best policies in this world are situation-dependent
+  for three of four preferences. The learned table is sensible: head for the shelter
+  when a rival is in view, follow the forager and lean into fights when hungry, eat when
+  food is in view.
+* **Thesis: negative, now with less noise and a richer world.** The geometry-aware rules
+  are slightly *worse* than the plain gradient (natural −0.04 ± 0.04, Pareto
+  −0.04 ± 0.04).
+
+*3. Geometry as a change detector (E30).* The agent compares fast and slow estimates of
+its local goal metric's shape and, when they diverge, drops the stale estimate and
+learns and explores faster. Test: rivals appear halfway through 400 episodes. It
+**fails**: the switch is caught within 40 episodes in only 19% of runs, with 1.25 false
+alarms per run before it, and recovery is not faster (−0.33 ± 0.50). The agent's own
+learning turns its local geometry about as much as the world change does, so "my
+trade-offs changed" cannot be told from "I moved".
+
+**Where this leaves phase C.** The induced geometry is useful as a way to *describe*
+the world and an agent: it shows which relations each feature changes, separates moving
+the frontier from bending it, explains why some preferences cannot differ, and gives an
+interrogable picture of an agent's trade-offs. As a way to *steer learning* — natural
+gradient, Pareto-first, change detection — it has not beaten the plain gradient on any
+rung (0, 1, 5, 6), with or without the noise fix. The improvements that did work (paired
+episodes, situation-dependent policies, more episodes) are standard learning tools, not
+geometric ones. Plausible reasons: the goal space is small (4 goals) and the
+trade-offs encountered so far are mild, so there is little curvature for the geometry
+to exploit; and the agent's estimates of its own geometry remain noisier than the
+gradient they would correct.
+
 ## Known limitations and next steps
 
-* **Phase C:** agents reach the frontier on simple rungs (0.74–1.00 of the best) but
-  only 0.51–0.66 under competition; the geometry-aware update rules have not beaten
-  the plain gradient on any rung tested (0, 1, 5). Open: whether they help where the
-  frontier's *shape* changes strongly, with more episodes and less estimation noise.
+* **Phase C:** agents now absorb even the richest rung so far (rung 6: 0.84–0.90 of the
+  best), with situation-dependent policies and paired-episode estimates. The geometry
+  works as a description but not, so far, as a learning aid: natural gradient,
+  Pareto-first and change detection have not beaten the plain gradient on rungs 0, 1,
+  5 or 6. Open: a world whose frontier's *shape* changes strongly (none of the dials so
+  far did more than bend local geometry), a larger goal space, and change detection
+  that separates world changes from the agent's own movement.
 * **Phobias.** Under the felt-affect reward, avoided cues are never re-tested, so
   a slightly negative value becomes permanent avoidance. Confidence weighting, need
   features and bounded valence did not fix it.

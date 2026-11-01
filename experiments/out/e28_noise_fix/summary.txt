@@ -1,0 +1,23 @@
+E28 Less estimation noise: paired CRN perturbations (SPSA), rung 5
+================================================================
+6 seeds x 300 episodes; fraction of the re-evaluated best.
+
+   best balanced: +5.63 (global #36), panel mean -0.35
+   best cautious: +2.61 (global #96), panel mean -2.62
+
+## balanced
+   regress global  pg +0.45 ± 0.40   ng +0.57 ± 0.23   pareto +0.51 ± 0.21
+   regress ctx     pg +0.44 ± 0.12   ng +0.42 ± 0.19   pareto +0.28 ± 0.29
+   spsa    global  pg +0.45 ± 0.10   ng +0.65 ± 0.18   pareto +0.65 ± 0.25
+   spsa    ctx     pg +0.58 ± 0.13   ng +0.54 ± 0.15   pareto +0.51 ± 0.13
+## cautious
+   regress global  pg +0.57 ± 0.21   ng +0.42 ± 0.07   pareto +0.29 ± 0.50
+   regress ctx     pg +0.55 ± 0.14   ng +0.38 ± 0.49   pareto +0.61 ± 0.20
+   spsa    global  pg +0.54 ± 0.19   ng +0.61 ± 0.12   pareto +0.30 ± 0.51
+   spsa    ctx     pg +0.57 ± 0.13   ng +0.61 ± 0.14   pareto +0.38 ± 0.34
+
+CRITERIA (fixed before running)
+   FAIL  N1 spsa beats regress (+0.07 ± 0.10)
+   FAIL  N2 geometry rule beats pg with spsa (ng - pg +0.07 ± 0.07; pareto - pg -0.07 ± 0.20)
+   FAIL  N3 ctx beats global with spsa (+0.00 ± 0.09)
+   FAIL  N4 best cell >= 0.8: balanced 0.65, cautious 0.61

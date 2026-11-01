@@ -154,3 +154,29 @@ def test_stabilised_natural_gradient_always_ascends():
         for _ in range(20):
             ag.A = rng.normal(size=ag.A.shape) * rng.uniform(0.01, 1.0, (4, 1))   # some goals barely movable
             assert ag.omega @ (ag.A @ ag.direction()) > 0
+
+
+def test_spsa_pairs_recover_a_planted_gradient_and_set_world_keeps_counting():
+    from cliffnpc.commons import Dials
+    from cliffnpc.phase_c import GOAL_SCALE, GoalGeometryAgent
+    A_true = np.zeros((4, 6))
+    A_true[0, 1], A_true[2, 1], A_true[1, 3] = 2.0, 1.0, -1.5
+    ag = GoalGeometryAgent(Dials(threat=0.0), np.array([1.0, 1.0, 0.5, 0.0]), rule="pg", estimator="spsa",
+                           spsa_rho=0.05, warmup=10_000)
+    ag._run_with = lambda v, idx: (A_true @ v) * GOAL_SCALE      # a world whose returns are linear in theta
+    for _ in range(600):
+        ag._spsa_pair()
+    cos = np.sum(ag.A * A_true) / (np.linalg.norm(ag.A) * np.linalg.norm(A_true))
+    assert cos > 0.9
+    ep = ag.episode
+    ag.set_world(Dials(threat=0.3))
+    assert ag.episode == ep and ag.dials.threat == 0.3
+
+
+def test_defend_zero_leaves_rung5_unchanged():
+    from cliffnpc.commons import Commons, Dials
+    th = np.array([[0.8, 1.5, 0.2, 0.6, 0.1, 0.4]])
+    w = dict(need=1.0, depletion=0.5, rivals=1.0)
+    a = Commons(Dials(**w), seed=1, noise_override=0.2).run_policies(th, 2)
+    b = Commons(Dials(**w, defend=0.0), seed=1, noise_override=0.2).run_policies(th, 2)
+    assert np.allclose(a, b)

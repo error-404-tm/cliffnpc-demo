@@ -49,6 +49,7 @@ DIALS = {
     "false_frac": DialSpec((0.1, 0.5, 0.9), ("food·knowledge", "food·safety", "food·social"), "rung 3: share of false patches"),
     "allies": DialSpec((0.0, 0.5, 1.0), ("food·social", "safety·social"), "rung 4: extra foragers of graded skill"),
     "rivals": DialSpec((0.0, 0.5, 1.0), ("food·safety", "food·social", "safety·social"), "rung 5: rival foragers compete"),
+    "defend": DialSpec((0.0, 0.5, 1.0), ("food·safety", "safety·social", "food·social"), "rung 6: allies come to defend"),
 }
 
 
@@ -242,3 +243,53 @@ def world_for(dial: str, level: float, base: Dials = BASE) -> Dials:
 __all__ = ["DIALS", "BASE", "PAIRS", "PAIR_NAMES", "Sizes", "DialSpec", "frontier_panel", "world_run",
            "world_parts", "merge_parts",
            "fingerprint", "compare", "world_for"]
+
+
+def reevaluate_best(world: Dials, J_global: np.ndarray, J_ctx: np.ndarray, prefs: dict, scale: np.ndarray,
+                    top: int = 10, episodes: int = 16, seed: int = 900, pmap=None) -> dict:
+    """Unbiased best policy per preference: the top candidates of the fixed-theta panel
+    (J_global: n x eps x goals) and the situation-dependent panel (J_ctx) by raw mean
+    score, re-run with fresh episodes; returns, per preference, the best re-evaluated
+    score, its kind and index, the best of each panel, and the fixed panel's mean."""
+    theta, ctx = frontier_panel(len(J_global)), ctx_panel(len(J_ctx))
+    Jg, Jc = J_global.mean(1) / scale, J_ctx.mean(1) / scale
+    cands = set()
+    for w in prefs.values():
+        for kind, Jm in (("global", Jg), ("ctx", Jc)):
+            for i in np.argsort(-(Jm @ w))[:top]:
+                cands.add((kind, int(i)))
+    cands = sorted(cands)
+    jobs = [(world, kind, i, episodes, seed) for kind, i in cands]
+    res = (pmap or (lambda f, xs: [f(x) for x in xs]))(_reeval_one, jobs)
+    J = {c: r / scale for c, r in zip(cands, res)}
+    out = {}
+    for p, w in prefs.items():
+        sc = {c: float(v @ w) for c, v in J.items()}
+        kb = max(sc, key=sc.get)
+        out[p] = dict(score=sc[kb], kind=kb[0], index=kb[1], J=J[kb], panel_mean=float((Jg @ w).mean()),
+                      best_global=max(v for c, v in sc.items() if c[0] == "global"),
+                      best_ctx=max(v for c, v in sc.items() if c[0] == "ctx"))
+    return out
+
+
+def _reeval_one(job):
+    world, kind, i, episodes, seed = job
+    c = Commons(world, seed=seed, noise_override=0.2)
+    if kind == "global":
+        return c.run_policies(frontier_panel(Sizes().n_frontier)[i][None], episodes)[0].mean(0)
+    return c.run_ctx_policies(ctx_panel(192)[i][None], episodes)[0].mean(0)
+
+
+def run_ctx_panel(world: Dials, n: int = 192, episodes: int = 4, chunks: int = 12, pmap=None) -> np.ndarray:
+    """Episode returns of the situation-dependent panel in one world (n x episodes x goals)."""
+    jobs = [(world, k, n, episodes, chunks) for k in range(chunks)]
+    out = np.zeros((n, episodes, len(GOALS)))
+    for idx, J in (pmap or (lambda f, xs: [f(x) for x in xs]))(_ctx_chunk, jobs):
+        out[idx] = J
+    return out
+
+
+def _ctx_chunk(job):
+    world, k, n, episodes, chunks = job
+    idx = np.arange(k, n, chunks)
+    return idx, Commons(world, seed=500 + k, noise_override=0.2).run_ctx_policies(ctx_panel(n)[idx], episodes)

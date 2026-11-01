@@ -74,6 +74,21 @@ class GoalGeometryAgent:
     #         sum_t gamma^t r_t + gamma^T V(s_T) - V(s_0): a rare setback's value shows
     #         up when its predictor (rivals appearing) does, not only when it lands
     policy: str = "global"             # "global" theta or situation-dependent "ctx" Theta
+    # estimator of A: "regress" -- exploration noise within episodes regressed against
+    # vector TD errors (E24-E27); "spsa" -- pairs of episodes theta + D and theta - D run
+    # with the same random streams (common random numbers), no within-episode noise:
+    # A += (J+ - J-) / 2 (x) D / sigma^2 -- the environment's noise cancels in the pair
+    estimator: str = "regress"
+    spsa_sigma: float = 0.3
+    spsa_rho: float = 0.1              # EMA weight of each pair's estimate
+    # change detector (geometry where it is strong): a fast and a slow estimate of A; when
+    # the shape of the fast local goal metric (its cosine matrix) departs from the slow one
+    # beyond a running threshold, the world's trade-off structure is taken to have changed:
+    # drop the stale estimate, boost the learning rate, explore more for a while
+    detector: bool = False
+    det_rho_fast: float = 0.3
+    det_z: float = 3.0
+    det_boost_pairs: int = 10
     ng_damping: float = 1.0            # lam = ng_damping * tr(M) / k
     critic: str = "mc"
     td_tau: float = 10.0               # s, discount horizon of the TD critic
@@ -96,12 +111,100 @@ class GoalGeometryAgent:
         self._DL = np.zeros((k, n))                         #           sum delta lean^T
         self.A = np.zeros((k, n))
         self.episode = 0
+        if self.estimator == "spsa":
+            self.env = Commons(self.dials, seed=self.seed, noise_override=0.0)
+        self.rng = np.random.default_rng(self.seed + 777)
+        self.pair = 0
+        self.lr_t0 = 0                                      # episode of the last learning-rate reset
+        self.A_fast = np.zeros((k, n))
+        self._dstat = []                                    # detector statistic history
+        self.detections: list = []
+        self._boost_until = -1
         self.Vw = np.zeros((n_s, k))                        # TD critic weights (senses + bias -> goals)
         self.gamma = float(np.exp(-0.2 / self.td_tau))      # per tick (0.2 s)
         self._dsd = np.zeros(k)                             # running spread of TD errors per goal
 
     # -- one learning episode
+    def set_world(self, dials: Dials) -> None:
+        """Change the world mid-run (same seed and episode numbering)."""
+        self.dials = dials
+        ep = self.env.episode
+        self.env = Commons(dials, seed=self.seed, noise_override=0.0 if self.estimator == "spsa" else self.noise_sigma)
+        self.env.episode = ep
+
+    # -- parameters as a vector
+    def _params(self) -> np.ndarray:
+        return (self.Theta if self.policy == "ctx" else self.theta).ravel().copy()
+
+    def _set_params(self, v: np.ndarray) -> None:
+        v = np.clip(v, *THETA_BOUNDS)
+        if self.policy == "ctx":
+            self.Theta = v.reshape(self.Theta.shape)
+            self.theta = self.Theta[:, 0].copy()
+        else:
+            self.theta = v.copy()
+
+    def _run_with(self, v: np.ndarray, episode_index: int) -> np.ndarray:
+        c = self.env
+        if self.policy == "ctx":
+            c.Theta = v.reshape(self.Theta.shape)
+            c.theta_fixed = c.Theta[:, 0].copy()
+        else:
+            c.Theta, c.theta_fixed = None, v.copy()
+        c.episode = episode_index - 1                       # same index -> same random streams
+        n0 = len(c.log["r"])
+        c.run_episode()
+        J = np.sum(c.log["r"][n0:], axis=0)
+        for key in c.log:
+            del c.log[key][n0:]
+        return J
+
+    @staticmethod
+    def _cosines(A: np.ndarray) -> np.ndarray:
+        M = A @ A.T
+        d = np.sqrt(np.clip(np.diag(M), 1e-18, None))
+        return M / np.outer(d, d)
+
+    def _spsa_pair(self) -> dict:
+        v = self._params()
+        sig = self.spsa_sigma * (1.5 if self.pair < self._boost_until else 1.0)
+        D = self.rng.normal(0.0, sig, v.shape)
+        Jp = self._run_with(v + D, 10_000 + self.pair) / GOAL_SCALE
+        Jm = self._run_with(v - D, 10_000 + self.pair) / GOAL_SCALE
+        A_est = 0.5 * np.outer(Jp - Jm, D) / sig ** 2
+        self.A = (1 - self.spsa_rho) * self.A + self.spsa_rho * A_est
+        detected = False
+        if self.detector:
+            self.A_fast = (1 - self.det_rho_fast) * self.A_fast + self.det_rho_fast * A_est
+            if self.pair >= self.warmup:
+                stat = float(np.linalg.norm(self._cosines(self.A_fast) - self._cosines(self.A)))
+                hist = self._dstat[-40:]
+                if (len(hist) >= 10 and stat > np.mean(hist) + self.det_z * np.std(hist)
+                        and self.pair >= self._boost_until):
+                    detected = True
+                    self.detections.append(self.pair)
+                    self.A = self.A_fast.copy()               # drop the stale geometry
+                    self.lr_t0 = self.episode                 # restart the learning-rate schedule
+                    self._boost_until = self.pair + self.det_boost_pairs
+                self._dstat.append(stat)
+        d = self.direction() if self.pair >= self.warmup else np.zeros_like(v)
+        boost = 2.0 if self.pair < self._boost_until else 1.0
+        lr = boost * self.lr0 / (1 + (self.episode - self.lr_t0) / self.lr_tau)
+        nd = np.linalg.norm(d)
+        if nd > 1e-12:
+            self._set_params(v + lr * d / nd)
+        J = 0.5 * (Jp + Jm) * GOAL_SCALE
+        rec = dict(episode=self.episode, pair=self.pair, theta=self.theta.copy(), J=J, Jn=J / GOAL_SCALE,
+                   score=float(self.omega @ (J / GOAL_SCALE)), A=self.A.copy(), step=float(lr * (nd > 1e-12)),
+                   detected=detected)
+        self.history.append(rec)
+        self.episode += 2
+        self.pair += 1
+        return rec
+
     def step_episode(self) -> dict:
+        if self.estimator == "spsa":
+            return self._spsa_pair()
         c = self.env
         c.theta_fixed = self.theta.copy()
         c.Theta = self.Theta.copy() if self.policy == "ctx" else None
@@ -185,7 +288,9 @@ class GoalGeometryAgent:
         return np.array(out)
 
     def run(self, n_episodes: int) -> list:
-        for _ in range(n_episodes):
+        """Run until n_episodes more episodes have been used (spsa: n_episodes / 2 pairs)."""
+        stop = self.episode + n_episodes
+        while self.episode < stop:
             self.step_episode()
         return self.history
 

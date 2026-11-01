@@ -68,6 +68,9 @@ class Dials:
                   skills 0.5 and 0 (they share company and eat the same stock)
         rivals    rung 5: rival foragers (the other tribe): round(2 rivals) of them; they
                   know the real patches, eat the same stock, and contact is combat
+        defend    rung 6: allies come to the learner's defence when a rival is within 15
+                  of it (0: only allies already near join, as before; 0.5: the skilled
+                  forager comes; 1: every ally comes)
     Env's on/off settings are the end points, so E20-E22 are reproduced exactly."""
     skill: float = 1.0
     threat: float = 0.3
@@ -79,6 +82,7 @@ class Dials:
     false_frac: float = 0.5
     allies: float = 0.0
     rivals: float = 0.0
+    defend: float = 0.0
 
     def name(self) -> str:
         return "_".join(f"{k}{v:g}" for k, v in self.__dict__.items())
@@ -279,6 +283,9 @@ class Commons:
 
     def _forager_control(self, ar, me, p):
         me.npc.C[3] = 1.0
+        dv = self._defence(me, 0)
+        if dv is not None:
+            return dv
         pool = [q for q in ar.patches if not (q["false"] and q.get("forager_knows", False))]
         if not pool:
             return np.zeros(2)
@@ -286,10 +293,27 @@ class Commons:
         d = tgt["pos"] - me.pos
         return _unit(d) * min(4.0, np.linalg.norm(d) / ar.wcfg.dt)
 
+    def _defence(self, me, rank: int):
+        """Rung 6: velocity toward the rival nearest the learner, if this ally defends
+        (rank 0 = the skilled forager, defends from defend 0.5; others from defend 1) and a
+        rival is within 15 of the learner; else None."""
+        need = 0.5 if rank == 0 else 1.0
+        if self.d.defend < need - 1e-9:
+            return None
+        foes = [b for b in self.ar.agents if b.faction != self.learner.faction and b.mobile
+                and np.linalg.norm(b.pos - self.learner.pos) < 15.0]
+        if not foes:
+            return None
+        t = min(foes, key=lambda b: np.linalg.norm(b.pos - self.learner.pos))
+        return _unit(t.pos - me.pos) * 4.5
+
     def _extra_control(self, i: int):
         """Extra forager i: goes to the nearest patch it does not know to be false."""
         def f(ar, me, p):
             me.npc.C[3] = 1.0
+            dv = self._defence(me, 2 + i)
+            if dv is not None:
+                return dv
             pool = [q for q in ar.patches if not (q["false"] and q.get("extra_knows", [False, False])[i])]
             if not pool:
                 return np.zeros(2)
@@ -312,6 +336,9 @@ class Commons:
     def _companion_control(self, ar, me, p):
         """Wanders the world (company is available anywhere, sometimes)."""
         me.npc.C[3] = 1.0
+        dv = self._defence(me, 1)
+        if dv is not None:
+            return dv
         self.comp_heading += 0.5 * np.sqrt(ar.wcfg.dt) * self.r_comp.normal()
         d = np.array([np.cos(self.comp_heading), np.sin(self.comp_heading)])
         if np.any(me.pos < 8) or np.any(me.pos > 92):          # turn back from the walls
