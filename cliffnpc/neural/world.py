@@ -63,6 +63,8 @@ class WorldConfig:
     death_setback: float = 1.0         # safety progress at death
     patch_box: tuple = (10.0, 90.0, 10.0, 90.0)   # where patches spawn: x0, x1, y0, y1
     # per-NPC fragility (damage multiplier) is a world property set via VecWorld.fragility
+    poison_rate: float = 0.1           # health / s while an allergic NPC eats a poisoned look
+    nausea_rate: float = 0.2           # food setback / s while doing so
 
 
 def contested() -> "WorldConfig":
@@ -93,6 +95,8 @@ class VecWorld:
         self.hit = torch.zeros(W, K, **f32)
         self.pref = torch.zeros(W, K, layout.goals, **f32)
         self.fragility = torch.ones(W, K, **f32)         # per-NPC damage multiplier (unobserved)
+        self.allergic_b = torch.zeros(W, K, dtype=torch.bool)   # per-NPC: look B is poison (unobserved)
+        self.eating_b = torch.zeros(W, K, dtype=torch.bool)     # this tick: eating at a look-B patch
         tribe = torch.zeros(K, dtype=torch.bool)
         tribe[K // 2:] = True
         self.tribe = tribe                                 # False: A, True: B (static)
@@ -164,10 +168,18 @@ class VecWorld:
         d_ap = torch.cdist(self.pos, self.ppos)                       # [W, K, P]
         at = d_ap < c.eat_radius
         eatable = at & (self.real & (self.stock > 0))[:, None, :]
-        eating = eatable.any(-1)                                      # [W, K]
+        at_b = (eatable & self.look_b[:, None, :]).any(-1)            # eating where the look is B
+        self.eating_b.copy_(at_b)
+        poisoned = at_b & self.allergic_b                             # allergic NPCs: no food, harm
+        eating = eatable.any(-1) & ~poisoned                          # [W, K]
         gain = torch.minimum(1.0 - self.satiety, torch.full_like(self.satiety, c.eat_gain * dt)) * eating
         self.satiety.add_(gain)
         r[..., 0].add_(gain)
+        if bool(poisoned.any()):
+            pz = poisoned.float()
+            self.health.sub_(c.poison_rate * dt * pz)
+            r[..., 1].sub_(c.poison_rate * dt * pz)
+            r[..., 0].sub_(c.nausea_rate * dt * pz)
         n_eaters = at.float().sum(1)                                  # [W, P] (false patches too: probing)
         self.stock.sub_(c.take_rate * dt * n_eaters * self.real)
         self.satiety.sub_(c.satiety_decay * dt).clamp_(0.0, 1.0)

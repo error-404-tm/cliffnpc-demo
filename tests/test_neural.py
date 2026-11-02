@@ -119,3 +119,17 @@ def test_online_adapter_updates_only_adapters_and_stays_bounded():
     assert ad.updates == 3
     assert all(torch.equal(a, b) for a, b in zip(shared, tr.brain.parameters()))        # shared frozen
     assert float(st.shift.abs().sum()) > 0 and float(st.shift.norm(dim=-1).max()) <= 0.5 + 1e-5
+
+
+def test_allergic_npcs_are_poisoned_by_look_b_and_others_are_not():
+    w = VecWorld(SMALL, seed=0)
+    w.reset()
+    w.real[0, 0], w.stock[0, 0], w.look_b[0, 0] = True, 5.0, True
+    w.pos[0, 0] = w.ppos[0, 0]
+    w.pos[0, 1] = w.ppos[0, 0]
+    w.allergic_b[0, 0] = True                                       # slot 0 allergic, slot 1 not
+    w.satiety[0, :2] = 0.5
+    _, r = w.step(torch.zeros(4, 8, 2), torch.zeros(4, 8, dtype=torch.bool))
+    assert r[0, 0, 0] < 0 and r[0, 0, 1] < 0 and w.health[0, 0] < 1.0      # poisoned
+    assert r[0, 1, 0] > 0 and w.health[0, 1] == 1.0                         # fed
+    assert bool(w.eating_b[0, 0]) and bool(w.eating_b[0, 1])

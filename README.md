@@ -170,8 +170,8 @@ cliffnpc/
   neural/         PyTorch NPCs: memory layout, batched world, shared recurrent brain, PPO,
                   online per-NPC adapters
   config.py       every tunable constant
-experiments/      e1..e6, e8..e33, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            146 tests
+experiments/      e1..e6, e8..e34, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            147 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
@@ -179,7 +179,7 @@ spec-v2.md        the v2 plan: discover the induced geometry instead of imposing
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 146 tests, ~3 min
+.venv/bin/python -m pytest -q          # 147 tests, ~3 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -901,6 +901,20 @@ behaviour and a size cap guard against drift. Cost: 2.6 ms per tick per 1000 NPC
   ~0.1–0.2 against a cap of 2), but these tests gave it nothing to fix. A fair test
   needs a change that breaks the pretrained behaviour for some NPCs — e.g. food that is
   poisonous for some individuals only.
+
+**E34 (individual poison: half the NPCs allergic to look B).** For allergic NPCs, eating
+at a look-B patch gives no satiety, costs health and is a food setback; the look is
+observable, the allergy is not, so only an NPC's own experience can teach it — the case
+per-NPC adapters exist for, and one pooled training cannot solve. The poison really hurts
+(allergic NPCs: food +0.45, safety −0.35, against +1.25 and −0.02 for the others), but
+the adapters do not learn to avoid look B: allergic NPCs' look-B eating does not fall
+(no individual specialisation, −0.66 ± 2.75), their score is not better than frozen
+(−0.073 ± 0.108), a faster learning rate is worse, and pooled fine-tuning does nothing
+either. Likely cause — the same structural limit as the Clifford connection: a scale and
+shift on hidden units can only re-weight what the network already represents, and the
+pretrained brain learned to ignore food looks (E33's cue flip barely mattered), so no
+per-NPC re-weighting can create a dependence on a cue it discarded. The signal is also
+sparse (~10 poisoned ticks per episode).
 
 ## Known limitations and next steps
 

@@ -1,0 +1,33 @@
+E34 Individual poison (allergy to look B in half the NPCs)
+=========================================================
+1024 NPCs (496 allergic), lives of 8 episodes; brain from E32.
+
+## allergic NPCs
+   frozen     score by episode +9.63 +9.45 +9.27 +9.69 +9.54 +9.40 +9.36 +9.25   look-B eating ticks by episode  9.7 11.5 11.1 10.6  9.6 12.8 12.1 14.7
+              returns (eps 5-8) food +0.45 safety -0.35 social +50.31 knowledge +4.96
+   adapt      score by episode +9.68 +9.52 +9.35 +9.72 +9.17 +9.49 +9.23 +9.36   look-B eating ticks by episode  9.2 10.7  9.6  9.1 12.9 11.3 11.7 14.5
+              returns (eps 5-8) food +0.42 safety -0.36 social +50.32 knowledge +4.88
+   adapt_fast score by episode +9.62 +9.41 +9.21 +9.48 +9.15 +9.08 +9.18 +9.19   look-B eating ticks by episode  8.7 11.2 11.5  8.9 11.0 11.1 10.0  9.9
+              returns (eps 5-8) food +0.38 safety -0.31 social +48.94 knowledge +4.60
+   finetune   score by episode +9.68 +9.48 +9.37 +9.52 +9.42 +9.44 +9.32 +9.57   look-B eating ticks by episode  8.0 10.8 10.9 11.7 11.1 12.7 11.5 12.0
+              returns (eps 5-8) food +0.47 safety -0.33 social +50.44 knowledge +4.95
+
+## non-allergic NPCs
+   frozen     score by episode +9.86 +9.89 +9.71 +9.92 +9.80 +9.85 +9.76 +10.03   look-B eating ticks by episode 11.2 13.0 13.7 12.9 11.2 12.3 12.9 15.2
+              returns (eps 5-8) food +1.25 safety -0.02 social +50.43 knowledge +4.94
+   adapt      score by episode +9.87 +9.86 +9.74 +9.98 +9.77 +9.94 +9.88 +10.02   look-B eating ticks by episode 10.9 13.7 12.2 10.8 13.8 13.8 12.5 14.5
+              returns (eps 5-8) food +1.33 safety -0.03 social +50.53 knowledge +5.01
+   adapt_fast score by episode +9.82 +9.92 +9.77 +9.87 +9.67 +9.82 +9.69 +9.82   look-B eating ticks by episode 11.3 11.6 12.0 11.0 12.2 13.9 12.9 12.4
+              returns (eps 5-8) food +1.25 safety -0.02 social +50.18 knowledge +4.78
+   finetune   score by episode +9.78 +9.95 +9.87 +9.93 +9.83 +9.95 +9.89 +9.94   look-B eating ticks by episode 10.4 11.5 11.6 12.6 10.2 14.9 14.7 15.5
+              returns (eps 5-8) food +1.30 safety -0.03 social +50.51 knowledge +5.02
+
+specialisation (look-B eating drop, allergic minus non-allergic): adapt -0.66 ± 2.75, adapt_fast -0.29, finetune -0.37
+adapt_fast vs frozen: allergic -0.238 ± 0.117, non-allergic -0.108 ± 0.076; adapter shift norms: adapt 0.50, adapt_fast 0.94
+finetune vs frozen: allergic +0.053 ± 0.102, non-allergic +0.042 ± 0.073
+
+CRITERIA (fixed before running)
+   FAIL  I1 allergic: adapt beats frozen (-0.073 ± 0.108)
+   PASS  I2 non-allergic not harmed (+0.045 ± 0.068)
+   FAIL  I3 adapt specialises by individual (-0.66 ± 2.75)
+   FAIL  I4 allergic: adapt beats finetune (-0.126 ± 0.107)
