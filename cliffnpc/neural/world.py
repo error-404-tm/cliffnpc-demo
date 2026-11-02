@@ -96,6 +96,7 @@ class VecWorld:
         self.pref = torch.zeros(W, K, layout.goals, **f32)
         self.fragility = torch.ones(W, K, **f32)         # per-NPC damage multiplier (unobserved)
         self.allergic_b = torch.zeros(W, K, dtype=torch.bool)   # per-NPC: look B is poison (unobserved)
+        self.allergic_a = torch.zeros(W, K, dtype=torch.bool)   # per-NPC: look A is poison (unobserved)
         self.eating_b = torch.zeros(W, K, dtype=torch.bool)     # this tick: eating at a look-B patch
         tribe = torch.zeros(K, dtype=torch.bool)
         tribe[K // 2:] = True
@@ -136,6 +137,17 @@ class VecWorld:
         self.known[m] = 0.0
         self.seen[m] = False
 
+    def randomize_individuals(self, p_allergic: float = 0.5, p_fragile: float = 0.3) -> None:
+        """Individual variation for pretraining-for-adaptability: each NPC is allergic to
+        look A or B with probability p_allergic (half each), and fragile (3x damage) with
+        probability p_fragile."""
+        W, K = self.L.worlds, self.L.agents
+        allergic = self._rand(W, K) < p_allergic
+        to_b = self._rand(W, K) < 0.5
+        self.allergic_b.copy_(allergic & to_b)
+        self.allergic_a.copy_(allergic & ~to_b)
+        self.fragility.copy_(torch.where(self._rand(W, K) < p_fragile, 3.0, 1.0))
+
     def reset(self, pref: torch.Tensor | None = None) -> torch.Tensor:
         W, K = self.L.worlds, self.L.agents
         self.pos.copy_(self.home.expand(W, K, 2) + (self._rand(W, K, 2) - 0.5) * 6)
@@ -169,14 +181,17 @@ class VecWorld:
         at = d_ap < c.eat_radius
         eatable = at & (self.real & (self.stock > 0))[:, None, :]
         at_b = (eatable & self.look_b[:, None, :]).any(-1)            # eating where the look is B
+        at_a = (eatable & ~self.look_b[:, None, :]).any(-1)
         self.eating_b.copy_(at_b)
-        poisoned = at_b & self.allergic_b                             # allergic NPCs: no food, harm
+        poisoned = (at_b & self.allergic_b) | (at_a & self.allergic_a)  # allergic NPCs: no food, harm
         eating = eatable.any(-1) & ~poisoned                          # [W, K]
         gain = torch.minimum(1.0 - self.satiety, torch.full_like(self.satiety, c.eat_gain * dt)) * eating
         self.satiety.add_(gain)
         r[..., 0].add_(gain)
+        self._poison_hit = torch.zeros_like(self.health)
         if bool(poisoned.any()):
             pz = poisoned.float()
+            self._poison_hit = c.poison_rate * dt * pz
             self.health.sub_(c.poison_rate * dt * pz)
             r[..., 1].sub_(c.poison_rate * dt * pz)
             r[..., 0].sub_(c.nausea_rate * dt * pz)
@@ -208,7 +223,7 @@ class VecWorld:
         engaged = (in_contact | (fight & (m_side > 0))) & ~home_safe
         dmg = c.damage_rate * dt * m_side / (n_side + m_side).clamp_min(1e-6) / n_side * engaged * self.fragility
         self.health.sub_(dmg)
-        self.hit.copy_(dmg)
+        self.hit.copy_(dmg + self._poison_hit)            # felt harm: injury and poison alike
         r[..., 1].sub_(dmg)
         # death: respawn at home in the same slot
         dead = self.health <= 0.0

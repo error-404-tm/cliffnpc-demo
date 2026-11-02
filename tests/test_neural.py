@@ -133,3 +133,18 @@ def test_allergic_npcs_are_poisoned_by_look_b_and_others_are_not():
     assert r[0, 0, 0] < 0 and r[0, 0, 1] < 0 and w.health[0, 0] < 1.0      # poisoned
     assert r[0, 1, 0] > 0 and w.health[0, 1] == 1.0                         # fed
     assert bool(w.eating_b[0, 0]) and bool(w.eating_b[0, 1])
+
+
+def test_input_adapter_is_per_row_and_zero_means_no_change():
+    torch.manual_seed(3)
+    br = Brain(SMALL)
+    B = 5
+    obs = torch.rand(2, B, SMALL.features)
+    h, z = torch.zeros(B, SMALL.hidden), torch.zeros(B, SMALL.hidden)
+    inp = torch.zeros(B, 4, SMALL.hidden, requires_grad=True)
+    po0, _ = br.sequence(obs, h, z, z)
+    po1, v1 = br.sequence(obs, h, z, z, inp)
+    assert torch.allclose(po0, po1)                                          # zero adapter = shared brain
+    v1[1, 3, 0].backward()
+    g = inp.grad.flatten(1).abs().sum(-1)
+    assert g[3] > 0 and float(g.sum() - g[3]) == 0.0

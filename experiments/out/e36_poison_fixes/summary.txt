@@ -1,0 +1,44 @@
+E36 Two fixes for the individual poison test
+============================================
+1024 NPCs (496 allergic to look B), lives of 8 episodes; scores share one scale.
+
+## allergic NPCs
+   e32_frozen  score by episode +7.13 +7.22 +6.94 +7.09 +7.08 +7.04 +6.94 +7.12   look-B eating ticks  9.4  8.5 10.4 10.8 10.6 11.2 12.2 10.8
+               returns (eps 5-8) food +0.42 safety -0.31 social +50.58 knowledge +4.85
+   e32_input   score by episode +7.15 +6.70 +6.59 +6.37 +6.23 +6.25 +6.19 +5.99   look-B eating ticks  7.4  8.9  5.9  5.8  3.9  3.8  4.0  3.6
+               returns (eps 5-8) food +0.32 safety -0.11 social +44.08 knowledge +3.32
+   e32_both    score by episode +7.15 +6.71 +6.45 +6.36 +6.07 +5.92 +5.79 +5.64   look-B eating ticks  6.3  6.4  5.3  5.4  3.5  4.3  2.6  3.4
+               returns (eps 5-8) food +0.24 safety -0.10 social +42.02 knowledge +3.06
+   e35_frozen  score by episode +7.38 +7.53 +7.45 +7.44 +7.54 +7.43 +7.53 +7.38   look-B eating ticks  1.0  1.3  1.1  1.0  1.1  1.1  1.3  1.3
+               returns (eps 5-8) food +0.77 safety -0.05 social +50.62 knowledge +4.60
+   e35_hidden  score by episode +7.42 +7.48 +7.48 +7.46 +7.43 +7.61 +7.46 +7.52   look-B eating ticks  1.2  1.1  1.2  1.1  1.2  1.2  1.0  1.2
+               returns (eps 5-8) food +0.83 safety -0.05 social +50.55 knowledge +4.66
+   e35_both    score by episode +7.01 +6.34 +5.80 +5.30 +5.25 +4.97 +5.04 +4.84   look-B eating ticks  1.1  1.0  0.7  0.6  0.3  0.4  0.3  0.3
+               returns (eps 5-8) food -0.23 safety -0.01 social +39.65 knowledge +1.89
+
+## non-allergic NPCs
+   e32_frozen  score by episode +7.47 +7.56 +7.38 +7.66 +7.60 +7.57 +7.45 +7.55   look-B eating ticks 11.3 12.5 11.6 12.5 15.3 14.4 12.6 11.7
+               returns (eps 5-8) food +1.23 safety -0.02 social +50.43 knowledge +4.95
+   e32_input   score by episode +7.45 +7.44 +7.27 +7.29 +7.11 +7.06 +7.06 +6.85   look-B eating ticks 11.8 16.9 15.3 15.2 14.8 13.4 12.4 14.2
+               returns (eps 5-8) food +1.10 safety -0.02 social +48.31 knowledge +3.99
+   e32_both    score by episode +7.48 +7.40 +7.19 +7.07 +6.86 +6.95 +6.65 +6.49   look-B eating ticks 12.9 16.1 14.4 15.1 12.7 13.0 13.4 11.4
+               returns (eps 5-8) food +0.97 safety -0.02 social +46.96 knowledge +3.75
+   e35_frozen  score by episode +7.35 +7.45 +7.49 +7.57 +7.40 +7.40 +7.56 +7.43   look-B eating ticks 14.0 17.3 16.5 16.9 15.1 18.4 16.9 19.3
+               returns (eps 5-8) food +1.19 safety -0.03 social +50.61 knowledge +4.64
+   e35_hidden  score by episode +7.35 +7.54 +7.40 +7.56 +7.42 +7.56 +7.47 +7.44   look-B eating ticks 16.0 18.5 16.1 19.6 15.8 17.0 16.5 18.6
+               returns (eps 5-8) food +1.19 safety -0.03 social +50.65 knowledge +4.65
+   e35_both    score by episode +6.92 +6.39 +6.00 +5.59 +5.41 +5.15 +4.96 +4.80   look-B eating ticks 11.9  9.5 10.1  8.6  7.9  6.4  6.4  3.9
+               returns (eps 5-8) food +0.11 safety -0.01 social +39.74 knowledge +2.15
+
+   e32_frozen  poison cost +0.497 ± 0.377   specialisation +0.37 ± 2.85   adapter norms: hidden shift 0.00, input 0.00
+   e32_input   poison cost +0.857 ± 0.376   specialisation +5.42 ± 2.74   adapter norms: hidden shift 0.00, input 1.06
+   e32_both    poison cost +0.882 ± 0.370   specialisation +2.54 ± 2.75   adapter norms: hidden shift 0.29, input 1.10
+   e35_frozen  poison cost -0.023 ± 0.367   specialisation +3.14 ± 2.81   adapter norms: hidden shift 0.00, input 0.00
+   e35_hidden  poison cost -0.033 ± 0.366   specialisation +1.03 ± 3.13   adapter norms: hidden shift 0.23, input 0.00
+   e35_both    poison cost +0.056 ± 0.340   specialisation -4.99 ± 2.45   adapter norms: hidden shift 0.25, input 1.28
+
+CRITERIA (fixed before running)
+   FAIL  F1 fix 1: input adapters beat frozen for allergic NPCs (-0.884 ± 0.130) and specialise (+5.42 ± 2.74)
+   FAIL  F2 fix 2: poison cost e35 -0.023 ± 0.367 vs e32 +0.497 ± 0.377; allergic eat +16.2 fewer look-B ticks than non-allergic under e35_frozen
+   FAIL  F3 adapters add to fix 2 for allergic NPCs (-2.445 ± 0.146)
+   FAIL  F4 non-allergic not harmed: e32_input -0.524 ± 0.078, e32_both -0.807 ± 0.094, e35_hidden +0.024 ± 0.061, e35_both -2.367 ± 0.138

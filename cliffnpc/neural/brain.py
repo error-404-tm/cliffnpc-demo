@@ -25,18 +25,22 @@ from torch import nn
 
 from .layout import Layout
 
+# observation features the per-NPC input adapter acts on: the looks of the two nearest patches
+CUE_IDX = (9, 10, 30, 31)
+
 
 @dataclass
 class NPCState:
     """Per-NPC tensors, all [N, ...], contiguous, preallocated."""
     hidden: torch.Tensor
-    scale: torch.Tensor                 # adapter
-    shift: torch.Tensor                 # adapter
+    scale: torch.Tensor                 # hidden adapter
+    shift: torch.Tensor                 # hidden adapter
+    inp: torch.Tensor                   # input adapter [N, len(CUE_IDX), H]: per-NPC cue -> encoder
 
     @classmethod
     def zeros(cls, n: int, hidden: int) -> "NPCState":
         z = lambda: torch.zeros(n, hidden, dtype=torch.float32)  # noqa: E731
-        return cls(z(), z(), z())
+        return cls(z(), z(), z(), torch.zeros(n, len(CUE_IDX), hidden, dtype=torch.float32))
 
 
 class Brain(nn.Module):
@@ -57,16 +61,25 @@ class Brain(nn.Module):
         return sum(p.numel() for p in self.parameters())
 
     # ---- one step for a batch of rows
-    def step(self, obs: torch.Tensor, h: torch.Tensor, scale: torch.Tensor, shift: torch.Tensor):
+    def _encode(self, obs: torch.Tensor, inp: torch.Tensor | None) -> torch.Tensor:
+        x = self.enc(obs)
+        if inp is not None:                          # per-NPC: cues -> encoder, row-wise
+            cues = obs[..., list(CUE_IDX)]
+            x = x + torch.einsum("...bc,bch->...bh", cues, inp)
+        return torch.relu(x)
+
+    def step(self, obs: torch.Tensor, h: torch.Tensor, scale: torch.Tensor, shift: torch.Tensor,
+             inp: torch.Tensor | None = None):
         """obs [B, F], h [B, H] -> (pi_out [B, 3], value [B, G], h_new [B, H])."""
-        out, _ = self.gru(torch.relu(self.enc(obs)).unsqueeze(0), h.unsqueeze(0))
+        out, _ = self.gru(self._encode(obs, inp).unsqueeze(0), h.unsqueeze(0))
         h_new = out[0]
         he = h_new * (1.0 + scale) + shift
         return self.pi(he), self.v(he), h_new
 
-    def sequence(self, obs: torch.Tensor, h0: torch.Tensor, scale: torch.Tensor, shift: torch.Tensor):
+    def sequence(self, obs: torch.Tensor, h0: torch.Tensor, scale: torch.Tensor, shift: torch.Tensor,
+                 inp: torch.Tensor | None = None):
         """obs [T, B, F], h0 [B, H] -> (pi_out [T, B, 3], value [T, B, G]) in one fused pass."""
-        out, _ = self.gru(torch.relu(self.enc(obs)), h0.unsqueeze(0))
+        out, _ = self.gru(self._encode(obs, inp), h0.unsqueeze(0))
         he = out * (1.0 + scale) + shift
         return self.pi(he), self.v(he)
 
@@ -80,7 +93,7 @@ class Brain(nn.Module):
         std = self.log_std.exp()
         for s in range(0, N, T):
             e = min(s + T, N)
-            po, val, hn = self.step(obs[s:e], st.hidden[s:e], st.scale[s:e], st.shift[s:e])
+            po, val, hn = self.step(obs[s:e], st.hidden[s:e], st.scale[s:e], st.shift[s:e], st.inp[s:e])
             mu, fl = po[:, :2], po[:, 2]
             if greedy:
                 u = mu

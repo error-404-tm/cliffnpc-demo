@@ -1,0 +1,24 @@
+E35 Pretraining for adaptability (individual allergies and fragility)
+====================================================================
+128 worlds x 8 agents = 1024 NPCs; 300 iterations x 256 ticks; brain 27529 parameters (108 KB); persistent state 952 bytes per NPC.
+throughput: collection (world + brain inference) 124k NPC-steps/s; training 35k NPC-steps/s; 79M NPC-steps in 48.5 min.
+
+Per profile: score (omega . returns), and returns per goal (food, safety, social, knowledge)
+   forager   random   score  +10.44 ± 0.07   food -0.73 safety +0.00 social +48.00 knowledge +0.74
+   forager   start    score  +11.19 ± 0.00   food -0.73 safety +0.00 social +51.20 knowledge +0.44
+   forager   trained  score  +12.70 ± 0.06   food +0.74 safety -0.04 social +50.35 knowledge +4.50
+   balanced  random   score  +18.65 ± 0.12   food -0.73 safety -0.00 social +48.09 knowledge +0.76
+   balanced  start    score  +19.90 ± 0.00   food -0.73 safety +0.00 social +51.20 knowledge +0.42
+   balanced  trained  score  +20.69 ± 0.06   food +0.70 safety -0.04 social +50.41 knowledge +4.31
+   cautious  random   score  +15.77 ± 0.10   food -0.73 safety -0.00 social +48.05 knowledge +0.75
+   cautious  start    score  +16.82 ± 0.00   food -0.73 safety +0.00 social +51.20 knowledge +0.43
+   cautious  trained  score  +17.01 ± 0.04   food +0.70 safety -0.03 social +50.44 knowledge +4.19
+   curious   random   score  +13.74 ± 0.08   food -0.73 safety -0.00 social +48.05 knowledge +0.75
+   curious   start    score  +14.46 ± 0.01   food -0.73 safety +0.00 social +51.20 knowledge +0.43
+   curious   trained  score  +17.48 ± 0.06   food +0.75 safety -0.05 social +50.31 knowledge +4.73
+
+CRITERIA (fixed before running)
+   PASS  P1 learns: final score above the start for every profile
+   PASS  P2 beats a random policy for every profile
+   PASS  P3 preferences differentiate (forager food 0.74 vs cautious 0.70; cautious safety -0.03 vs forager -0.04; curious knowledge 4.73 vs balanced 4.31)
+   PASS  P5 allergic NPCs avoid their poisonous look (eating ticks: poisonous 5144 vs other 66112)

@@ -78,7 +78,11 @@ def sample_preferences(L: Layout, gen: torch.Generator) -> torch.Tensor:
 
 
 class Trainer:
-    def __init__(self, L: Layout, cfg: PPOConfig = PPOConfig(), seed: int = 0, world_cfg=None):
+    def __init__(self, L: Layout, cfg: PPOConfig = PPOConfig(), seed: int = 0, world_cfg=None,
+                 individual: dict | None = None):
+        """individual: e.g. dict(p_allergic=0.5, p_fragile=0.3) -- re-randomise each NPC's
+        allergy and fragility every episode (pretraining for adaptability)."""
+        self.individual = individual
         self.L, self.cfg = L, cfg
         torch.manual_seed(seed)
         self.gen = torch.Generator().manual_seed(seed + 1)
@@ -95,6 +99,8 @@ class Trainer:
     def collect(self, pref: torch.Tensor | None = None, greedy: bool = False) -> dict:
         L, b, st, a = self.L, self.buf, self.state, self.acts
         pref = sample_preferences(L, self.gen) if pref is None else pref
+        if self.individual:
+            self.world.randomize_individuals(**self.individual)
         obs = self.world.reset(pref).view(L.n, L.features)
         st.hidden.zero_()
         b.h0.copy_(st.hidden)

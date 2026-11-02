@@ -9,7 +9,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 PY=${PY:-.venv/bin/python}
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1   # tiny matrices: BLAS threads only add contention
-EXPS=(e1_foraging e2_lightcone e3_order e4_holonomy e5_threshold e6_village e8_sequence_memory e9_life_signature e10_trivector_affect e11_connection_basis e12_learning_gym e13_td_connection e14_cartan_connection e15_pavlovian_valence e16_fear_v2 e17_surprise_gated e18_affect_food e19_confidence e20_induced_geometry e21_geometry_v2 e22_frontier e23_harness_validation e24_phase_c_rung0 e24b_phase_c_fixes e25_rung1_need e26_rungs2to4_screen e27_rung5_competition e28_noise_fix e29_rung6_defend e30_change_detector e31_neural_pretrain e32_neural_contested e33_online_adaptation e34_individual_poison)
+EXPS=(e1_foraging e2_lightcone e3_order e4_holonomy e5_threshold e6_village e8_sequence_memory e9_life_signature e10_trivector_affect e11_connection_basis e12_learning_gym e13_td_connection e14_cartan_connection e15_pavlovian_valence e16_fear_v2 e17_surprise_gated e18_affect_food e19_confidence e20_induced_geometry e21_geometry_v2 e22_frontier e23_harness_validation e24_phase_c_rung0 e24b_phase_c_fixes e25_rung1_need e26_rungs2to4_screen e27_rung5_competition e28_noise_fix e29_rung6_defend e30_change_detector e31_neural_pretrain e32_neural_contested e33_online_adaptation e34_individual_poison e35_neural_adaptable e36_poison_fixes)
 
 start=$(date +%s)
 declare -A PIDS

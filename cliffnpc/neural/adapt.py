@@ -34,6 +34,10 @@ class AdaptConfig:
     gamma: float = 0.99
     lam: float = 0.9
     vf_coef: float = 0.5
+    hidden: bool = True              # learn the hidden-unit scale/shift
+    input: bool = False              # learn the per-NPC input adapter (cue -> encoder)
+    input_lr: float = 0.05
+    input_max_norm: float = 2.0
 
 
 class OnlineAdapter:
@@ -74,11 +78,12 @@ class OnlineAdapter:
         import time
         t0 = time.perf_counter()
         c, U = self.cfg, self.cfg.window
-        scale = st.scale.detach().requires_grad_(True)
-        shift = st.shift.detach().requires_grad_(True)
-        po, vals = self.brain.sequence(self.obs, self.h_start, scale, shift)       # [U, N, 3], [U, N, G]
+        scale = st.scale.detach().requires_grad_(c.hidden)
+        shift = st.shift.detach().requires_grad_(c.hidden)
+        inp = st.inp.detach().requires_grad_(c.input)
+        po, vals = self.brain.sequence(self.obs, self.h_start, scale, shift, inp)  # [U, N, 3], [U, N, G]
         with torch.no_grad():
-            _, v_end, _ = self.brain.step(next_obs, st.hidden, st.scale, st.shift)
+            _, v_end, _ = self.brain.step(next_obs, st.hidden, st.scale, st.shift, st.inp)
             r = self.reward / self.scale
             v = vals.detach()
             adv = torch.zeros_like(r)
@@ -97,10 +102,15 @@ class OnlineAdapter:
         loss = -(logp * a).sum() / U + c.vf_coef * ((vals - ret) ** 2).sum() / U
         loss.backward()
         with torch.no_grad():
-            for buf, g in ((st.scale, scale.grad), (st.shift, shift.grad)):
-                buf.sub_(c.lr * g).mul_(1.0 - c.decay)
-                n = buf.norm(dim=-1, keepdim=True)
-                buf.mul_((c.max_norm / n.clamp_min(1e-12)).clamp_max(1.0))
+            if c.hidden:
+                for buf, g in ((st.scale, scale.grad), (st.shift, shift.grad)):
+                    buf.sub_(c.lr * g).mul_(1.0 - c.decay)
+                    n = buf.norm(dim=-1, keepdim=True)
+                    buf.mul_((c.max_norm / n.clamp_min(1e-12)).clamp_max(1.0))
+            if c.input:
+                st.inp.sub_(c.input_lr * inp.grad).mul_(1.0 - c.decay)
+                n = st.inp.flatten(1).norm(dim=-1).view(-1, 1, 1)
+                st.inp.mul_((c.input_max_norm / n.clamp_min(1e-12)).clamp_max(1.0))
         self.k = 0
         self.updates += 1
         self.seconds += time.perf_counter() - t0

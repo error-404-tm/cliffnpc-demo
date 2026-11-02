@@ -170,8 +170,8 @@ cliffnpc/
   neural/         PyTorch NPCs: memory layout, batched world, shared recurrent brain, PPO,
                   online per-NPC adapters
   config.py       every tunable constant
-experiments/      e1..e6, e8..e34, each writes experiments/out/<name>/{*.png, summary.txt}
-tests/            147 tests
+experiments/      e1..e6, e8..e36, each writes experiments/out/<name>/{*.png, summary.txt}
+tests/            148 tests
 spec-v2.md        the v2 plan: discover the induced geometry instead of imposing it
 ```
 
@@ -179,7 +179,7 @@ spec-v2.md        the v2 plan: discover the induced geometry instead of imposing
 
 ```bash
 cd /home/joe/projects/cliffnpc-demo
-.venv/bin/python -m pytest -q          # 147 tests, ~3 min
+.venv/bin/python -m pytest -q          # 148 tests, ~3 min
 experiments/run_all.sh                 # all experiments in parallel (the gym ones take ~1 h)
 .venv/bin/python experiments/e2_lightcone.py   # or one at a time
 ```
@@ -915,6 +915,36 @@ shift on hidden units can only re-weight what the network already represents, an
 pretrained brain learned to ignore food looks (E33's cue flip barely mattered), so no
 per-NPC re-weighting can create a dependence on a cue it discarded. The signal is also
 sparse (~10 poisoned ticks per episode).
+
+**Two fixes for the poison test (E35, E36).**
+* *Fix 1 — input adapters:* each NPC gets a small matrix (4 × 64, 1 KB, one contiguous
+  `[N, 4, 64]` tensor) adding to how the four food-look features enter its encoder, so it
+  can learn a cue dependence the shared brain lacks.
+* *Fix 2 — pretraining for adaptability (E35):* during pretraining every NPC is
+  re-randomised each episode — allergic to look A or B with probability 0.5, fragile with
+  probability 0.3 — and poisoning is felt through the "hit" observation like an injury.
+  After 300 iterations, allergic NPCs eat their poisonous look 5,144 ticks against 66,112
+  for the other look (about 13× avoidance), with no adapter: the shared brain learned,
+  within each life, to read its own harm and avoid whatever poisons it (RL²-style
+  learning to learn). Personalities also differ more clearly than in E32.
+
+**E36 (same protocol and seeds as E34).**
+* **Fix 2 works.** With the adaptable brain and no adapters, allergic NPCs eat at look B
+  about 1 tick per episode (the original brain: 9–12) from the first episode, while
+  non-allergic NPCs keep eating it (14–19). Allergic NPCs' food rises from +0.42 to +0.77,
+  safety from −0.31 to −0.05, and the poison's cost to their score falls from +0.50 to
+  −0.02. (The pre-registered criterion formally fails because the two unpaired groups'
+  score intervals, ±0.37 each, overlap; behaviourally the effect is about tenfold.)
+* **Fix 1 learns the cue but damages everything else.** Input adapters make allergic NPCs
+  cut look-B eating from 9.4 to 3.6 ticks (significant individual specialisation,
+  +5.42 ± 2.74), but scores fall for everyone (allergic −0.88, non-allergic −0.52) as
+  company and knowledge decline.
+* **Online adapters on top of the adaptable brain are harmful** (hidden-only: neutral;
+  hidden + input: −2.4).
+* **Lesson:** for individual differences, train the shared network on individual
+  variation and let its recurrent state adapt within a life; online gradient updates of
+  per-NPC weights from sparse gameplay signals were neutral at best and destabilising at
+  worst in every test (E33, E34, E36).
 
 ## Known limitations and next steps
 
